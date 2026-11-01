@@ -4,6 +4,8 @@ All notable changes to the `mongo-client` extension. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-01
+
 ### Added
 - The connections linked to a project are listed in Kelbo's 📁 Projects panel before the project is removed (`projectLinks`, Kelbo ≥ 2.18; ignored by older versions).
 
