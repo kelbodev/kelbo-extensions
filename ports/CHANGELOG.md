@@ -4,6 +4,8 @@ All notable changes to the `ports` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-01
+
 ### Added
 - **Dashboard widget** (Kelbo 2.17): *Ports in use* of the project's npm processes, with stop; the npm owner of a port carries the project id (`owner.projectId`) when Kelbo gives it.
 

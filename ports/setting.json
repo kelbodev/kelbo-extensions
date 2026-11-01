@@ -4,7 +4,7 @@
     "en": "Ports"
   },
   "code": "ports",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "kelbo": "^2.0",
   "devdock": "^2.0",
   "description": {
