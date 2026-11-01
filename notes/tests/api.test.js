@@ -56,6 +56,9 @@ test('liste e voci: aggiunta, spunta, testo, ordine, completate tolte; contenuto
 
   r = await api('GET', '/boards');
   assert.deepEqual(r.json.boards, [{ board: 'shop', counts: { open: 2, items: 2, lists: 1, notes: 0 } }]);
+  // pannello 📁 Progetti del core: la bacheca è segnalata prima di rimuovere il progetto
+  r = await srv.request('GET', '/api/core/projects/shop/links');
+  assert.deepEqual(r.json.links, [{ code: 'notes', key: 'links.board', params: {} }]);
 });
 
 test('note: colore, salvataggio, modifica concorrente rifiutata; bacheca vuota tolta', async () => {

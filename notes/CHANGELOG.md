@@ -4,6 +4,9 @@ All notable changes to the `notes` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Added
+- A project's board is listed in Kelbo's 📁 Projects panel before the project is removed (`projectLinks`, Kelbo ≥ 2.18; ignored by older versions).
+
 ## [1.4.0] - 2026-11-01
 
 ### Added

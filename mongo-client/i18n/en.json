@@ -364,5 +364,6 @@
   "widget.unlock": "🔓 Unlock",
   "widget.retest": "Test again",
   "widget.open": "Open",
-  "widget.tunnelNotTested": "Not tested: testing it (↻) opens the tunnel"
+  "widget.tunnelNotTested": "Not tested: testing it (↻) opens the tunnel",
+  "links.connection": "Connection \"{name}\""
 }

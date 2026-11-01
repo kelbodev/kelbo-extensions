@@ -165,6 +165,10 @@ module.exports = function createNotes(ctx) {
   return {
     config,
 
+    // Dati collegati a un progetto (pannello 📁 Progetti di Kelbo ≥ 2.18, prima di rimuoverlo):
+    // la bacheca è cifrata, se ne segnala solo la presenza
+    projectLinks: project => (boards().some(b => b.board === project.id) ? [{ key: 'links.board' }] : []),
+
     handlers: guarded({
       // Contatori di ogni bacheca salvata (anche di progetti tolti da Kelbo)
       listBoards(req, res) {

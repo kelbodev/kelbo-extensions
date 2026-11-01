@@ -597,6 +597,10 @@ module.exports = function createMongoClient(ctx) {
   return {
     config,
 
+    // Dati collegati a un progetto (pannello 📁 Progetti di Kelbo ≥ 2.18, prima di rimuoverlo)
+    projectLinks: project => connections().filter(c => c.projectId === project.id)
+      .map(c => ({ key: 'links.connection', params: { name: c.label } })),
+
     handlers: guarded({
       listConnections(req, res) {
         res.json({ connections: connections().map(publicConnection), folders: folders(), tunnelsAvailable: !!tunnels, pageSizes: PAGE_SIZES, resultLimits: RESULT_LIMITS });

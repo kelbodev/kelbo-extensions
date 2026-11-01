@@ -84,5 +84,6 @@
   "widget.addPlaceholder": "Nuova voce (Invio)",
   "widget.lastNotes": "Ultime note",
   "widget.untitled": "(senza titolo)",
-  "widget.open": "Apri la bacheca del progetto"
+  "widget.open": "Apri la bacheca del progetto",
+  "links.board": "Bacheca con liste e note"
 }

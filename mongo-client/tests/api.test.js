@@ -3,12 +3,12 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
-const { startServer, mcpClient } = require('kelbo/testkit');
+const { startServer, mcpClient, tmpDir } = require('kelbo/testkit');
 
 const EXT = path.join(__dirname, '..');
 let srv, mcp;
 before(async () => {
-  srv = await startServer({ projects: [] }, { install: [EXT] });
+  srv = await startServer({ projects: [{ id: 'shop', label: 'Shop', path: tmpDir() }] }, { install: [EXT] });
   mcp = await mcpClient(srv);
 });
 after(async () => { await mcp?.close(); await srv?.stop(); });
@@ -39,6 +39,10 @@ test('connessioni: password cifrata nel vault, mai in chiaro né restituita', as
   r = await api('PUT', '/connections/loc', { label: 'Locale 2', host: '127.0.0.1', port: 27018, user: 'app', password: null });
   assert.equal(r.json.hasPassword, false);
   assert.equal((await api('POST', '/connections', { id: 'loc', label: 'x', host: 'h', port: 1 })).json.code, 'mongo-client.connection_exists');
+  // collegata a un progetto: elencata dal pannello 📁 Progetti del core prima di rimuoverlo
+  await api('PUT', '/connections/loc', { label: 'Locale 2', host: '127.0.0.1', port: 27018, projectId: 'shop' });
+  r = await srv.request('GET', '/api/core/projects/shop/links');
+  assert.deepEqual(r.json.links, [{ code: 'mongo-client', key: 'links.connection', params: { name: 'Locale 2' } }]);
 });
 
 test('validazione: URI con password, host e porta, nomi di database e collezioni', async () => {

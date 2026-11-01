@@ -84,5 +84,6 @@
   "widget.addPlaceholder": "New item (Enter)",
   "widget.lastNotes": "Last notes",
   "widget.untitled": "(untitled)",
-  "widget.open": "Open the project's board"
+  "widget.open": "Open the project's board",
+  "links.board": "Board with lists and notes"
 }
