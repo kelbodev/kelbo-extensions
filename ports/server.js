@@ -14,7 +14,7 @@ module.exports = function createPorts(ctx) {
   function ownerOf(p, known) {
     if (p.pid === process.pid) return { type: 'kelbo' };
     const npmProc = known.npm.find(x => x.pid === p.pgid || x.pid === p.pid);
-    if (npmProc) return { type: 'npm', id: npmProc.id, label: `${npmProc.project} — ${npmProc.script}` };
+    if (npmProc) return { type: 'npm', id: npmProc.id, label: `${npmProc.project} — ${npmProc.script}`, projectId: npmProc.projectId ?? null };
     const pm2Proc = known.pm2.find(x => x.pid === p.pid || x.pid === p.ppid);
     if (pm2Proc) return { type: 'pm2', id: pm2Proc.name, label: pm2Proc.name };
     const tunnel = known.tunnels.find(x => x.pid === p.pid || x.pid === p.ppid);

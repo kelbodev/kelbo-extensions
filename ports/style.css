@@ -10,3 +10,11 @@
 .ports-cmd{font-family:var(--font);font-size:11px;color:var(--muted);max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ports-owner{font-size:11px;padding:1px 6px;border-radius:8px;border:1px solid var(--ext-color);color:var(--ext-color);white-space:nowrap}
 .ports-addr{font-family:var(--font);font-size:11px;color:var(--muted)}
+
+/* Widget della dashboard */
+.pw-muted{color:var(--muted);font-size:11px;font-family:var(--font)}
+.pw-list{display:flex;flex-direction:column;gap:4px}
+.pw-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.pw-port{font-family:var(--font);font-weight:600;color:#388bfd;min-width:52px}
+.pw-owner{font-family:var(--font);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pw-row button{margin-inline-start:auto}

@@ -558,6 +558,8 @@ export default {
       const c = id ? conn(id) : { port: 27017 };
       if (!c) return;
       const servers = tunnelsAvailable ? (await ctx.apiFor('tunnels').get('/state').catch(() => ({ servers: [] }))).servers : [];
+      let projectList = [];
+      try { projectList = (await ctx.projects.load()).projects; } catch { /* nessun progetto */ }
       const mode = c.uri ? 'uri' : c.tunnel ? 'tunnel' : 'host';
       const opt = (value, label, sel) => `<option value="${esc(value)}" ${sel ? 'selected' : ''}>${esc(label)}</option>`;
       const check = (fid, key, value) => `<label class="mg-check"><input type="checkbox" id="${fid}" ${value ? 'checked' : ''}> ${esc(t(key))}</label>`;
@@ -576,6 +578,9 @@ export default {
           <div class="form-row"><label>${esc(t('form.folder'))}</label>
             <select class="form-input" id="f_mg_folder_id">${opt('', t('form.noFolder'), !c.folder)}${folders.map(f => opt(f.id, f.label, c.folder === f.id)).join('')}</select></div>
         </div>
+        ${projectList.length ? `<div class="form-row"><label>${esc(t('form.project'))}</label>
+          <select class="form-input" id="f_mg_project">${opt('', t('form.noProject'), !c.projectId)}${projectList.map(p => opt(p.id, p.label, c.projectId === p.id)).join('')}</select>
+          <p class="mg-muted">${esc(t('form.projectHint'))}</p></div>` : ''}
         <div class="form-row" data-mode="uri"><label>${esc(t('form.uri'))}</label>
           <input class="form-input mg-code" id="f_mg_uri" value="${esc(c.uri || '')}" spellcheck="false" placeholder="mongodb+srv://user@cluster0.example.net/?retryWrites=true">
           <p class="mg-muted">${esc(t('form.uriHint'))}</p></div>
@@ -624,6 +629,7 @@ export default {
         port: mode === 'host' ? byId('f_mg_port').value : '',
         tunnel: mode === 'tunnel' ? byId('f_mg_tunnel').value : '',
         folder: byId('f_mg_folder_id').value,
+        projectId: byId('f_mg_project')?.value ?? undefined,
         user: byId('f_mg_user').value.trim(), authSource: byId('f_mg_auth').value.trim(), database: byId('f_mg_db').value.trim(),
         tls: byId('f_mg_tls').checked, tlsInsecure: byId('f_mg_insecure').checked, readOnly: byId('f_mg_ro').checked,
         ...(byId('f_mg_nopassword')?.checked ? { password: null } : pwd ? { password: pwd } : {}),
@@ -1551,6 +1557,12 @@ export default {
     this.languageChanged = () => { renderTree(); renderWorkspace(); };
     this.unmount = () => ac.element.remove();
     this.show = () => { if (locked) load(); }; // sbloccato nel frattempo da un'altra sezione
+    // aperta da un widget o dalla dashboard: { connection } la seleziona
+    this.focus = async params => {
+      if (!params?.connection) return;
+      if (locked) await load();
+      if (connections.some(c => c.id === params.connection)) selectConnection(params.connection);
+    };
     await load();
   },
 };

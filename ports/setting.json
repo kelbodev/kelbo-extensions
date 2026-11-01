@@ -1,5 +1,8 @@
 {
-  "name": { "it": "Porte", "en": "Ports" },
+  "name": {
+    "it": "Porte",
+    "en": "Ports"
+  },
   "code": "ports",
   "version": "1.0.1",
   "kelbo": "^2.0",
@@ -13,27 +16,73 @@
   "position": "tab",
   "order": 35,
   "dependencies": [
-    { "code": "npm",     "required": false },
-    { "code": "pm2",     "required": false },
-    { "code": "tunnels", "required": false }
+    {
+      "code": "npm",
+      "required": false
+    },
+    {
+      "code": "pm2",
+      "required": false
+    },
+    {
+      "code": "tunnels",
+      "required": false
+    }
   ],
   "backend": {
     "module": "server.js",
     "routes": [
-      { "method": "GET",  "path": "/list", "handler": "list" },
-      { "method": "POST", "path": "/stop", "handler": "stop" }
+      {
+        "method": "GET",
+        "path": "/list",
+        "handler": "list"
+      },
+      {
+        "method": "POST",
+        "path": "/stop",
+        "handler": "stop"
+      }
     ]
   },
   "mcp": {
     "tools": [
-      { "name": "list", "handler": "list", "readOnly": true,
+      {
+        "name": "list",
+        "handler": "list",
+        "readOnly": true,
         "description": "List the listening TCP ports of this machine with the process (pid, name, user, command line) and, when known, what started it in Kelbo (npm project and script, PM2 process, SSH tunnel). Optional filter by port.",
-        "inputSchema": { "type": "object", "properties": { "port": { "type": "integer", "minimum": 1, "maximum": 65535, "description": "Only this port" } } } }
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "port": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65535,
+              "description": "Only this port"
+            }
+          }
+        }
+      }
     ]
   },
   "frontend": {
     "html": "view.html",
     "js": "view.js",
     "css": "style.css"
-  }
+  },
+  "widgets": [
+    {
+      "id": "project-ports",
+      "title": {
+        "it": "Porte in uso",
+        "en": "Ports in use"
+      },
+      "description": {
+        "it": "Porte in ascolto dei processi npm del progetto, con l'arresto",
+        "en": "Listening ports of the project's npm processes, with stop"
+      },
+      "size": "s",
+      "js": "widget.js"
+    }
+  ]
 }

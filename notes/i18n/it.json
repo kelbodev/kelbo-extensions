@@ -78,5 +78,11 @@
   "notes.title": "Titolo della nota",
   "notes.titlePlaceholder": "Titolo",
   "lists.progress": "{done} di {total} completate",
-  "errors.title_invalid": "Titolo non valido"
+  "errors.title_invalid": "Titolo non valido",
+  "widget.noLists": "Nessuna lista per questo progetto.",
+  "widget.allDone": "Tutto fatto ✓",
+  "widget.addPlaceholder": "Nuova voce (Invio)",
+  "widget.lastNotes": "Ultime note",
+  "widget.untitled": "(senza titolo)",
+  "widget.open": "Apri la bacheca del progetto"
 }

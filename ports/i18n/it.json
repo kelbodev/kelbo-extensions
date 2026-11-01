@@ -37,5 +37,9 @@
   "confirm.forceHint": "Ferma chiede al processo di chiudersi (SIGTERM). Forza chiusura lo termina subito (SIGKILL), senza dargli il tempo di salvare o liberare le risorse.",
   "confirm.forceHintWin": "Ferma chiede al processo di chiudersi. Forza chiusura lo termina subito (taskkill /F).",
   "stillListening": "La porta {port} è ancora occupata: il processo non si è chiuso. Forzare la chiusura?",
-  "stillListeningForced": "La porta {port} risulta ancora occupata anche dopo la chiusura forzata"
+  "stillListeningForced": "La porta {port} risulta ancora occupata anche dopo la chiusura forzata",
+  "widget.none": "Nessuna porta in ascolto dai processi npm del progetto.",
+  "widget.confirmStop": "Fermare il processo sulla porta {port} ({owner})?",
+  "widget.stopped": "Porta {port} liberata",
+  "widget.noNpm": "Serve la sezione NPM per sapere quali processi sono del progetto."
 }

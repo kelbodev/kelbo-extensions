@@ -355,5 +355,14 @@
   "errors.shell_unknown_value": "Unknown value at line {line}, column {column}: {near} (variables and functions are not supported)",
   "errors.shell_unsupported": "{method} is not supported by the editor",
   "errors.shell_argument": "Invalid argument for {what}",
-  "errors.shell_no_database": "Choose the active database (or use db.getSiblingDB(\"name\"))"
+  "errors.shell_no_database": "Choose the active database (or use db.getSiblingDB(\"name\"))",
+  "form.project": "Project",
+  "form.noProject": "None",
+  "form.projectHint": "The connection shows up in the MongoDB widget of that project's dashboard.",
+  "errors.connection_project": "Invalid project in the connection {id}",
+  "widget.none": "No MongoDB connection linked to the project (Project field of the connection).",
+  "widget.unlock": "🔓 Unlock",
+  "widget.retest": "Test again",
+  "widget.open": "Open",
+  "widget.tunnelNotTested": "Not tested: testing it (↻) opens the tunnel"
 }

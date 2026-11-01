@@ -355,5 +355,14 @@
   "errors.shell_unknown_value": "Valore non riconosciuto alla riga {line}, colonna {column}: {near} (variabili e funzioni non sono supportate)",
   "errors.shell_unsupported": "{method} non è supportato dall'editor",
   "errors.shell_argument": "Argomento non valido per {what}",
-  "errors.shell_no_database": "Scegli il database attivo (o usa db.getSiblingDB(\"nome\"))"
+  "errors.shell_no_database": "Scegli il database attivo (o usa db.getSiblingDB(\"nome\"))",
+  "form.project": "Progetto",
+  "form.noProject": "Nessuno",
+  "form.projectHint": "La connessione compare nel widget MongoDB della dashboard di quel progetto.",
+  "errors.connection_project": "Progetto non valido nella connessione {id}",
+  "widget.none": "Nessuna connessione MongoDB collegata al progetto (campo Progetto della connessione).",
+  "widget.unlock": "🔓 Sblocca",
+  "widget.retest": "Prova di nuovo",
+  "widget.open": "Apri",
+  "widget.tunnelNotTested": "Non provata: la prova (↻) apre il tunnel"
 }

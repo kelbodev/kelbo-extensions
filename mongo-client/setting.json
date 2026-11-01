@@ -301,5 +301,20 @@
     "sidebar": "sidebar.html",
     "js": "view.js",
     "css": "style.css"
-  }
+  },
+  "widgets": [
+    {
+      "id": "connections",
+      "title": {
+        "it": "MongoDB",
+        "en": "MongoDB"
+      },
+      "description": {
+        "it": "Connessioni MongoDB collegate al progetto, con la prova e l'apertura nella sezione",
+        "en": "MongoDB connections linked to the project, with test and opening in the section"
+      },
+      "size": "s",
+      "js": "widget.js"
+    }
+  ]
 }

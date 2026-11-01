@@ -78,5 +78,11 @@
   "notes.title": "Note title",
   "notes.titlePlaceholder": "Title",
   "lists.progress": "{done} of {total} done",
-  "errors.title_invalid": "Invalid title"
+  "errors.title_invalid": "Invalid title",
+  "widget.noLists": "No lists for this project.",
+  "widget.allDone": "All done ✓",
+  "widget.addPlaceholder": "New item (Enter)",
+  "widget.lastNotes": "Last notes",
+  "widget.untitled": "(untitled)",
+  "widget.open": "Open the project's board"
 }

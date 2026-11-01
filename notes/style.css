@@ -62,3 +62,17 @@
 .nt-progress span{display:block;height:100%;background:var(--success,#3fb950);transition:width .2s}
 .nt-note-title{background:none;border:none;outline:none;color:var(--fg-note);font-family:var(--sans);font-size:14px;font-weight:600;padding:8px 12px 0;min-width:0}
 .nt-note-title::placeholder{color:var(--fg-note);opacity:.45;font-weight:400}
+
+/* Widget della dashboard */
+.ntw-list{margin-bottom:10px}
+.ntw-list-head{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:4px}
+.ntw-item{display:flex;align-items:flex-start;gap:6px;font-size:12.5px;padding:2px 0;cursor:pointer}
+.ntw-item input{margin-top:2px}
+.ntw-done{padding:2px 0}
+.ntw-add{display:flex;gap:6px;margin:4px 0 8px}
+.ntw-add .form-input{padding:4px 8px;font-size:12px}
+.ntw-select{width:auto;max-width:40%}
+.ntw-head{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:8px 0 4px}
+.ntw-note{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;text-align:start;border:none;border-radius:5px;padding:5px 8px;margin-bottom:4px;background:var(--bg-note);color:var(--fg-note);cursor:pointer;font:inherit;font-size:12px}
+.ntw-note strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ntw-note .nt-muted{color:var(--fg-note);opacity:.7}

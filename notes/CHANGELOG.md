@@ -4,6 +4,9 @@ All notable changes to the `notes` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Added
+- **Dashboard widget** (Kelbo 2.17, M4.6): open items of the project's lists (check them, add one with Enter, the completion of each list) and the last notes changed; ↗ opens the project's board. Encrypted like the section: with the vault locked the widget asks to unlock it.
+
 ### Changed
 - Manifest field `"kelbo"` (the new name of DevDock) next to `"devdock"`, with the same range.
 

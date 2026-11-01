@@ -460,6 +460,8 @@ export default {
 
     this.refresh = load;
     this.show = () => load(); // il vault può essere stato sbloccato (o bloccato) da un'altra sezione
+    // aperta da un widget o dalla dashboard: { project } apre la sua bacheca
+    this.focus = params => { if (params?.project) actions.select(params.project); };
     this.hide = flushNotes;
     this.languageChanged = () => { renderSidebar(); renderBoard(); };
   },

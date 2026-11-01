@@ -116,5 +116,20 @@
     "js": "view.js",
     "css": "style.css",
     "preload": true
-  }
+  },
+  "widgets": [
+    {
+      "id": "board",
+      "title": {
+        "it": "To-do e note",
+        "en": "To-dos and notes"
+      },
+      "description": {
+        "it": "Voci aperte delle liste del progetto (spunta, aggiungi) e ultime note modificate",
+        "en": "Open items of the project's lists (check, add) and the last notes changed"
+      },
+      "size": "m",
+      "js": "widget.js"
+    }
+  ]
 }

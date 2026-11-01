@@ -9,7 +9,7 @@ const { toJson, parse, shell, EjsonError, EJSON } = require('./ejson');
 const mongosh = require('./mongosh');
 const runner = require('./runner');
 
-const FIELDS = ['id', 'label', 'uri', 'host', 'port', 'user', 'password', 'authSource', 'database', 'tls', 'tlsInsecure', 'tunnel', 'readOnly', 'folder'];
+const FIELDS = ['id', 'label', 'uri', 'host', 'port', 'user', 'password', 'authSource', 'database', 'tls', 'tlsInsecure', 'tunnel', 'readOnly', 'folder', 'projectId'];
 const FOLDER_FIELDS = ['id', 'label'];
 const HOST_RE = /^(\[[0-9a-f:.]+\]|[A-Za-z0-9._-]{1,253})$/i;
 const NAME_RE = /^[^\x00$/\\. "]{1,64}$/;                 // nome di database
@@ -89,6 +89,7 @@ module.exports = function createMongoClient(ctx) {
     if (c.database != null && c.database !== '' && !NAME_RE.test(c.database)) throw bad('database');
     for (const k of ['tls', 'tlsInsecure', 'readOnly']) if (c[k] != null && typeof c[k] !== 'boolean') throw bad(k === 'readOnly' ? 'read_only' : 'tls');
     if (c.folder != null && !KEY_RE.test(c.folder)) throw bad('folder');
+    if (c.projectId != null && !KEY_RE.test(c.projectId)) throw bad('project');
   }
 
   const folders = () => ctx.config.get('mongoFolders');
@@ -557,9 +558,9 @@ module.exports = function createMongoClient(ctx) {
 
   // password: stringa = nuova (cifrata subito), null = rimossa, assente o '' = invariata
   function buildConnection(body, existing = {}) {
-    const c = { ...existing, ...pick(body || {}, ['label', 'uri', 'host', 'port', 'user', 'authSource', 'database', 'tls', 'tlsInsecure', 'tunnel', 'readOnly', 'folder']) };
+    const c = { ...existing, ...pick(body || {}, ['label', 'uri', 'host', 'port', 'user', 'authSource', 'database', 'tls', 'tlsInsecure', 'tunnel', 'readOnly', 'folder', 'projectId']) };
     if (!existing.id) c.id = body.id;
-    for (const k of ['uri', 'host', 'user', 'authSource', 'database', 'tunnel', 'folder']) if (c[k] === '' || c[k] === undefined) c[k] = null;
+    for (const k of ['uri', 'host', 'user', 'authSource', 'database', 'tunnel', 'folder', 'projectId']) if (c[k] === '' || c[k] === undefined) c[k] = null;
     if (c.folder && !folders().some(f => f.id === c.folder)) throw ctx.error(400, 'folder_unknown', { folder: String(c.folder) });
     if (c.port !== undefined && c.port !== null && c.port !== '') c.port = Number(c.port); else c.port = null;
     for (const k of ['tls', 'tlsInsecure', 'readOnly']) c[k] = !!c[k];

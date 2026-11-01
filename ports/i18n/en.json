@@ -37,5 +37,9 @@
   "confirm.forceHint": "Stop asks the process to exit (SIGTERM). Force stop kills it immediately (SIGKILL), without giving it time to save or release resources.",
   "confirm.forceHintWin": "Stop asks the process to exit. Force stop kills it immediately (taskkill /F).",
   "stillListening": "Port {port} is still in use: the process did not exit. Force it to stop?",
-  "stillListeningForced": "Port {port} is still in use even after the forced stop"
+  "stillListeningForced": "Port {port} is still in use even after the forced stop",
+  "widget.none": "No listening port from the project's npm processes.",
+  "widget.confirmStop": "Stop the process on port {port} ({owner})?",
+  "widget.stopped": "Port {port} freed",
+  "widget.noNpm": "The NPM section is needed to know which processes belong to the project."
 }
