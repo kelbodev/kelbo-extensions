@@ -4,6 +4,8 @@ All notable changes to the `notes` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-01
+
 ### Added
 - **Dashboard widget** (Kelbo 2.17, M4.6): open items of the project's lists (check them, add one with Enter, the completion of each list) and the last notes changed; ↗ opens the project's board. Encrypted like the section: with the vault locked the widget asks to unlock it.
 

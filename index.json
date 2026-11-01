@@ -28,7 +28,7 @@
         "en": "To-dos and notes per project: lists of items to check and sticky notes, encrypted with the master password"
       },
       "icon": "📝",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "kelbo": "^2.3",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "notes"
