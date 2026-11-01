@@ -4,6 +4,8 @@ All notable changes to the `mongo-client` extension. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-01
+
 ### Added
 - **Project and dashboard widget**: a connection can be linked to a project (Project field, like the Database section); the **MongoDB** widget of the Kelbo project dashboard (Kelbo 2.17) lists the connections of the project with their test (not those through a tunnel, which the test would open) and opens one in the section.
 
