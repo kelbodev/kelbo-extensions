@@ -35,3 +35,6 @@
 .proc-uptime{font-family:var(--font);font-size:10px;color:var(--muted);white-space:nowrap}
 .btn-script{background:var(--ext-color, #3fb950);color:#fff;border-color:var(--ext-color, #3fb950)}
 .btn-script:hover:not(:disabled){opacity:.85}
+.scr-pre{font-family:var(--font);font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ext-color, #3fb950) 45%,transparent);color:var(--ext-color, #3fb950);white-space:nowrap;cursor:help}
+.scr-pre-project{border-style:dashed;opacity:.8}
+.scr-pre-input{font-family:var(--font);font-size:12px;resize:vertical;width:100%}

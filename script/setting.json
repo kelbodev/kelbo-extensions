@@ -31,7 +31,8 @@
         "tools",
         "tasks",
         ".scripts"
-      ]
+      ],
+      "detect": true
     }
   ],
   "projects": {
@@ -39,6 +40,26 @@
       "scripts"
     ]
   },
+  "config": [
+    "scriptPrescripts"
+  ],
+  "export": [
+    {
+      "id": "prescripts",
+      "label": {
+        "it": "Prescript degli script",
+        "en": "Script prescripts"
+      },
+      "description": {
+        "it": "Comandi di shell lanciati prima degli script, cifrati (serve la stessa master password)",
+        "en": "Shell commands run before the scripts, encrypted (the same master password is needed)"
+      },
+      "sections": [
+        "scriptPrescripts",
+        "vault"
+      ]
+    }
+  ],
   "backend": {
     "module": "server.js",
     "routes": [
@@ -46,6 +67,11 @@
         "method": "GET",
         "path": "/projects/:id/scripts",
         "handler": "list"
+      },
+      {
+        "method": "PUT",
+        "path": "/projects/:id/prescripts",
+        "handler": "setPrescript"
       },
       {
         "method": "POST",

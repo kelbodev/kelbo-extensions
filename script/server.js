@@ -90,7 +90,8 @@ module.exports = function createScript(ctx) {
   const toRel = (root, file) => path.relative(root, file).split(path.sep).join('/');
 
   // { folders: [nomi trovati], scripts: [{ id, name, folder, path, kind, runner, available, missing? }] }
-  function discover(p) {
+  // limit: si ferma al primo n-esimo script eseguibile (per il rilevamento del tratto)
+  function discover(p, { limit = MAX_FILES, onlyAvailable = false } = {}) {
     const root = p.path;
     const found = [];
     const folders = [];
@@ -99,7 +100,7 @@ module.exports = function createScript(ctx) {
       try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
       entries.sort((a, b) => a.name.localeCompare(b.name));
       for (const e of entries) {
-        if (found.length >= MAX_FILES) return;
+        if (found.length >= limit) return;
         if (e.name.startsWith('.') || e.name === 'node_modules') continue;
         const full = path.join(dir, e.name);
         if (e.isDirectory()) { if (depth < MAX_DEPTH) walk(full, depth + 1); continue; }
@@ -107,7 +108,7 @@ module.exports = function createScript(ctx) {
         // che punti dentro il progetto
         if (!e.isFile() && !(e.isSymbolicLink() && (() => { try { return fs.statSync(full).isFile(); } catch { return false; } })())) continue;
         const r = runnerFor(full, root);
-        if (!r) continue;
+        if (!r || (onlyAvailable && r.missing)) continue;
         const id = toRel(root, full);
         found.push({
           id, name: e.name, folder: toRel(root, dir), kind: r.kind, runner: r.label,
@@ -122,6 +123,7 @@ module.exports = function createScript(ctx) {
       if (!st.isDirectory()) continue;
       folders.push(f);
       walk(dir, 0);
+      if (found.length >= limit) break;
     }
     return { folders, scripts: found };
   }
@@ -149,6 +151,66 @@ module.exports = function createScript(ctx) {
     return args;
   }
 
+  // ---- prescript: comandi di shell prima dello script, cifrati con la master password ----
+  // Possono contenere token e password: in config.json (sezione scriptPrescripts) c'è solo una
+  // scatola del vault per progetto, { <progetto>: box }, che contiene { all?, scripts?: { <script>: comando } };
+  // quello dello script vince su quello del progetto. Con il vault bloccato non si leggono né si
+  // usano: avviare uno script di un progetto che ne ha chiede la master password (423)
+
+  const MAX_PRESCRIPT = 2000;
+  const vault = ctx.vault;
+  const boxes = () => ctx.config.get('scriptPrescripts') || {};
+  const isCommand = c => typeof c === 'string' && c.trim().length > 0 && c.length <= MAX_PRESCRIPT && !c.includes('\0');
+
+  // { all, scripts } del progetto (vuoto se non ne ha); lancia 423 con il vault bloccato
+  function readPrescripts(projectId) {
+    const box = boxes()[projectId];
+    if (!box) return { all: null, scripts: {} };
+    let data;
+    try { data = JSON.parse(vault.decrypt(box)); } catch (e) { if (e.code) throw e; throw ctx.error(500, 'prescripts_unreadable'); }
+    const scripts = {};
+    for (const [id, cmd] of Object.entries(data?.scripts || {})) if (isCommand(cmd)) scripts[id] = cmd;
+    return { all: isCommand(data?.all) ? data.all : null, scripts };
+  }
+  function writePrescripts(projectId, { all, scripts }) {
+    const rest = { ...boxes() };
+    if (all || Object.keys(scripts).length) rest[projectId] = vault.encrypt(JSON.stringify({ ...(all ? { all } : {}), scripts }));
+    else delete rest[projectId];
+    ctx.config.set('scriptPrescripts', rest);
+  }
+  function prescriptOf(projectId, script) {
+    if (!boxes()[projectId]) return null; // senza prescript non serve il vault
+    const { all, scripts } = readPrescripts(projectId);
+    return scripts[script] || all || null;
+  }
+  // bash o zsh dell'utente se è una di quelle (stessa sintassi del suo terminale), altrimenti bash o sh
+  function preShell() {
+    const user = process.env.SHELL;
+    if (user && ['bash', 'zsh', 'sh'].includes(path.basename(user)) && fs.existsSync(user)) return user;
+    return has('bash') ? 'bash' : 'sh';
+  }
+
+  const config = {
+    scriptPrescripts: {
+      empty: {},
+      validate(value, cfg) {
+        if (!value || typeof value !== 'object' || Array.isArray(value)) throw ctx.error.config('prescripts_invalid');
+        for (const [projectId, box] of Object.entries(value)) {
+          if (!ctx.lib.validate.KEY_RE.test(projectId) || !vault.isBox(box)) throw ctx.error.config('prescripts_invalid');
+        }
+        if (Object.keys(value).length && !cfg.vault) throw ctx.error.config('prescripts_without_vault');
+      },
+    },
+  };
+  // ri-cifrati al cambio della master password; persi con il reset
+  vault.register({
+    rekey(reencrypt, cfg) {
+      const all = cfg.scriptPrescripts || {};
+      return { sections: { scriptPrescripts: Object.fromEntries(Object.entries(all).map(([k, box]) => [k, reencrypt(box)])) }, count: Object.keys(all).length };
+    },
+    reset: () => ({ scriptPrescripts: {} }),
+  });
+
   // ---- processi tracciati (come gli script npm) ----
 
   function log(pd, text) {
@@ -161,16 +223,27 @@ module.exports = function createScript(ctx) {
   function spawnScript(pd, p, header = '') {
     const { file, runner } = resolveScript(p, pd.script);
     const argv = [...runner.args, file, ...pd.args];
-    const proc = spawn(runner.cmd, argv, {
-      cwd: p.path, env: { ...process.env }, detached: !WIN, windowsHide: true,
+    const pre = prescriptOf(p.id, pd.script);
+    const options = { cwd: p.path, env: { ...process.env }, detached: !WIN, windowsHide: true };
+    let proc;
+    if (pre && !WIN) {
+      // stessa shell: variabili, nvm use, cd… del prescript valgono per lo script; se il prescript
+      // fallisce lo script non parte. Script e argomenti arrivano come "$@", mai dentro il testo
+      const sh = preShell();
+      proc = spawn(sh, ['-c', `set -e\n${pre}\nset +e\nexec "$@"`, 'kelbo-prescript', runner.cmd, ...argv], options);
+    } else if (pre) {
+      const q = s => `"${String(s).replace(/"/g, '""')}"`;
+      proc = spawn('cmd.exe', ['/d', '/s', '/c', `"${pre} && ${[runner.cmd, ...argv].map(q).join(' ')}"`], { ...options, windowsVerbatimArguments: true });
+    } else {
       // tsx.cmd su Windows passa da cmd.exe: argomenti già validati, senza spazi interpretati
-      ...(runner.shell ? { shell: true } : {}),
-    });
-    pd.process = proc; pd.pid = proc.pid; pd.runner = runner.label;
+      proc = spawn(runner.cmd, argv, { ...options, ...(runner.shell ? { shell: true } : {}) });
+    }
+    pd.process = proc; pd.pid = proc.pid; pd.runner = runner.label; pd.prescript = !!pre;
     pd.startedAt = new Date().toISOString();
     pd.running = true; pd.exitCode = null;
     const shown = [...runner.args, pd.script, ...pd.args].map(x => (!x || /[\s"'\\]/.test(x) ? JSON.stringify(x) : x)).join(' ');
-    log(pd, `${header}$ ${runner.label} ${shown} (pid ${proc.pid})\n`);
+    // il testo del prescript non va nell'output (può contenere token): solo che c'è
+    log(pd, `${header}$ ${pre ? '(prescript) && ' : ''}${runner.label} ${shown} (pid ${proc.pid})\n`);
     const current = () => pd.process === proc;
     proc.stdout.on('data', d => log(pd, d.toString()));
     proc.stderr.on('data', d => log(pd, d.toString()));
@@ -206,7 +279,7 @@ module.exports = function createScript(ctx) {
 
   const publicProcess = pd => ({
     id: pd.id, projectId: pd.projectId, projectLabel: pd.projectLabel,
-    script: pd.script, args: pd.args, runner: pd.runner, pid: pd.pid,
+    script: pd.script, args: pd.args, runner: pd.runner, prescript: !!pd.prescript, pid: pd.pid,
     startedAt: pd.startedAt, running: pd.running, exitCode: pd.exitCode,
   });
 
@@ -228,6 +301,18 @@ module.exports = function createScript(ctx) {
   };
 
   return {
+    config,
+
+    // Tratto "scripts" (Kelbo ≥ 2.19): la cartella c'è (filtro del core), qui si conferma che
+    // contiene almeno uno script eseguibile su questo computer
+    detectTrait(id, dir) {
+      return id === 'scripts' && discover({ path: dir }, { limit: 1, onlyAvailable: true }).scripts.length > 0;
+    },
+
+    // Dati collegati a un progetto (pannello 📁 Progetti, prima di rimuoverlo)
+    // (cifrati: se ne segnala solo la presenza)
+    projectLinks: project => (boxes()[project.id] ? [{ key: 'links.prescripts' }] : []),
+
     services: {
       // per l'estensione ports o altre: processi in esecuzione (pid = process group)
       processes: () => [...processes.values()].filter(pd => pd.running).map(pd => ({ id: pd.id, pid: pd.pid, project: pd.projectLabel, projectId: pd.projectId, script: pd.script })),
@@ -262,7 +347,25 @@ module.exports = function createScript(ctx) {
       // Script del progetto: { folders, scripts, platform }
       list(req, res) {
         const p = projectOr404(req.params.id);
-        res.json({ ...discover(p), platform: process.platform });
+        // prescript solo con il vault sbloccato; bloccato: si sa solo che ci sono
+        let prescripts = { all: null, scripts: {} }, prescriptsLocked = false;
+        try { prescripts = readPrescripts(p.id); } catch (e) { if (e.status !== 423) throw e; prescripts = null; prescriptsLocked = true; }
+        res.json({ ...discover(p), platform: process.platform, prescripts, prescriptsLocked });
+      },
+
+      // { script?, command }: prescript dello script (o del progetto senza script); vuoto lo toglie
+      setPrescript(req, res) {
+        const p = projectOr404(req.params.id);
+        const { script, command } = req.body || {};
+        const text = typeof command === 'string' ? command.replace(/\r\n/g, '\n').trim() : command;
+        if (text !== '' && text != null && !isCommand(text)) throw ctx.error(400, 'prescript_invalid');
+        if (script !== undefined && script !== null && !discover(p).scripts.some(s => s.id === script)) throw ctx.error(404, 'script_not_found', { script: String(script) });
+        // serve il vault anche per togliere: la scatola contiene gli altri prescript del progetto
+        const entry = readPrescripts(p.id);
+        if (script) { if (text) entry.scripts[script] = text; else delete entry.scripts[script]; }
+        else entry.all = text || null;
+        writePrescripts(p.id, entry);
+        res.json({ all: entry.all, scripts: entry.scripts });
       },
 
       run(req, res) {
@@ -284,6 +387,7 @@ module.exports = function createScript(ctx) {
         const pd = processOr404(req.params.id);
         const p = ctx.projects.get(pd.projectId);
         if (!p) throw ctx.error(400, 'project_gone');
+        prescriptOf(p.id, pd.script); // vault bloccato: 423 prima di fermare quello che gira
         killTree(pd);
         spawnScript(pd, p, '\n--- ↻ ---\n');
         res.json({ ok: true, pid: pd.pid });

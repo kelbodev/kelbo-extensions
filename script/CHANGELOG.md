@@ -4,6 +4,14 @@ All notable changes to the `script` extension. The format follows [Keep a Change
 
 ## [Unreleased]
 
+### Added
+- **Prescript**: shell commands run before a script (`$_` on its row) or before every script of the project (**$_ Prescript** in the header; a script's own prescript replaces the project's). They run in the same shell as the script — the user's bash or zsh on macOS and Linux, `cmd` on Windows — in the project folder, so exported variables, `nvm use` or `cd` apply to the script too; if a command fails the script doesn't start. The script and its arguments reach the shell as `"$@"`, never inside the command text. Rows show which prescript applies.
+- **Prescripts encrypted with the master password**, since they can hold tokens: `config.json` (section `scriptPrescripts`) keeps one vault box per project, re-encrypted when the master password changes, lost on a vault reset; *Script prescripts* export checkbox (with the vault). With the vault locked the rows show 🔒 and running a script of a project with prescripts asks for the master password. The prescript text never goes into the output (it shows `(prescript) &&`) nor into the MCP tools.
+- The 📁 Projects panel lists a project's prescripts before it is removed.
+
+### Fixed
+- **Projects with a scripts folder but no runnable script** got the *Scripts* trait: with Kelbo 2.19 the extension confirms the trait only when the folder holds a script that can run on this computer (`detect`); Kelbo 2.18 still uses the folder alone.
+
 ## [1.0.0] - 2026-11-02
 
 ### Added

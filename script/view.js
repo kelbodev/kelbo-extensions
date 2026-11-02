@@ -105,11 +105,16 @@ export default {
       const live = procs.find(pr => pr.running);
       const last = live || procs[procs.length - 1];
       const disabled = s.available ? '' : `disabled title="${esc(t('missing', { command: s.missing }))}"`;
+      const own = data.prescripts?.scripts?.[s.id];
+      const pre = own || data.prescripts?.all;
+      const locked = data.prescriptsLocked;
       return `<div class="scr-row ${live ? 'running' : ''} ${s.available ? '' : 'scr-unavailable'}">
         ${live ? `<span class="proc-dot" title="${esc(t('runningPid', { pid: String(live.pid) }))}"></span>`
           : last ? `<span class="proc-dot ${last.exitCode === 0 ? 'ok' : 'dead'}" title="${esc(t('exited', { code: String(last.exitCode) }))}"></span>` : '<span class="proc-dot none"></span>'}
         <span class="scr-name" title="${esc(s.id)}">${esc(s.name)}</span>
         <span class="scr-runner scr-kind-${esc(s.kind)}">${esc(s.runner)}</span>
+        ${pre ? `<span class="scr-pre ${own ? '' : 'scr-pre-project'}" title="${esc(t('prescript.badgeTitle'))}">$_ ${esc(t(own ? 'prescript.badge' : 'prescript.badgeProject'))}</span>` : ''}
+        ${locked ? `<span class="scr-pre scr-pre-project" title="${esc(t('prescript.lockedTitle'))}">🔒 ${esc(t('prescript.badge'))}</span>` : ''}
         ${live ? `<span class="scr-args">${esc(live.args.length ? label('', live.args).trim() : '')}</span>
           <span class="proc-uptime">${esc(formatUptime(live.startedAt))}</span>` : `<span class="scr-args">${s.available ? '' : esc(t('missing', { command: s.missing }))}</span>`}
         <div class="scr-actions">
@@ -118,6 +123,7 @@ export default {
             <button class="btn btn-ghost btn-sm" onclick="Ext.script.restart(${js(live.id)})" title="${esc(t('restart'))}">↺</button>
             <button class="btn btn-disconnect btn-sm" onclick="Ext.script.stop(${js(live.id)})" title="${esc(t('stop'))}">⏹</button>
           ` : `
+            <button class="btn btn-ghost btn-sm" onclick="Ext.script.editPrescript(${js(s.id)})" title="${esc(t('prescript.edit'))}">$_</button>
             <button class="btn btn-ghost btn-sm" onclick="Ext.script.askArgs(${js(s.id)})" ${disabled || `title="${esc(t('runWithArgs'))}"`}>▶…</button>
             <button class="btn btn-script btn-sm" onclick="Ext.script.run(${js(s.id)})" ${disabled}>▶ ${esc(t('run'))}</button>
             ${last ? `<button class="btn btn-ghost btn-sm" onclick="Ext.script.dismiss(${js(last.id)})" title="${esc(t('dismiss'))}">✕</button>` : ''}
@@ -173,6 +179,16 @@ export default {
       if (activeProject === id) renderContent();
     }
 
+    // Esegue fn; con il vault bloccato (prescript cifrati) chiede la master password e riprova
+    async function withVault(fn) {
+      try { return await fn(); }
+      catch (e) {
+        if (!ctx.vault.isVaultError(e)) throw e;
+        if (await ctx.vault.ensure()) { const r = await fn(); await loadScripts(); renderContent(); return r; }
+        return undefined;
+      }
+    }
+
     // ---- azioni (handler inline) ----
     const actions = {
       async open(projectId, procId) {
@@ -186,7 +202,8 @@ export default {
         const p = project();
         if (!p) return;
         try {
-          const r = await ctx.api.post(`/projects/${encodeURIComponent(p.id)}/run`, { script, args });
+          const r = await withVault(() => ctx.api.post(`/projects/${encodeURIComponent(p.id)}/run`, { script, args }));
+          if (!r) return;
           await refreshAll();
           stream(r.id);
         } catch (e) { toast(e.message, 'error'); }
@@ -219,7 +236,7 @@ export default {
       },
       async restart(procId) {
         try {
-          await ctx.api.post(`/processes/${encodeURIComponent(procId)}/restart`);
+          if (!(await withVault(() => ctx.api.post(`/processes/${encodeURIComponent(procId)}/restart`)))) return;
           await refreshAll();
           stream(procId);
         } catch (e) { toast(e.message, 'error'); }
@@ -231,12 +248,47 @@ export default {
         } catch (e) { toast(e.message, 'error'); }
       },
       logs: procId => stream(procId),
+
+      // Prescript: comando di shell prima dello script (script: id) o di tutti quelli del progetto
+      async editPrescript(script = null) {
+        if (!data) return;
+        if (data.prescriptsLocked) { // cifrati: prima la master password
+          if (!(await ctx.vault.ensure())) return;
+          await loadScripts(); renderContent();
+          if (!data || data.prescriptsLocked) return;
+        }
+        const current = script ? data.prescripts?.scripts?.[script] || '' : data.prescripts?.all || '';
+        const fallback = script && !current && data.prescripts?.all;
+        openModal(t(script ? 'prescript.titleScript' : 'prescript.titleProject', { script: script || '' }), `
+          <div class="form-row"><label>${esc(t('prescript.label'))}</label>
+            <textarea class="form-input scr-pre-input" id="scr_pre" rows="4" spellcheck="false" placeholder="source ~/.nvm/nvm.sh &amp;&amp; nvm use">${esc(current)}</textarea></div>
+          <p class="scr-muted">${esc(t('prescript.hint'))}</p>
+          ${fallback ? `<p class="scr-muted">${esc(t('prescript.inherited'))}<br><code>${esc(data.prescripts.all)}</code></p>` : ''}`,
+          `${current ? `<button class="btn btn-ghost" onclick="Ext.script.savePrescript(${js(script)}, true)">${esc(t('prescript.remove'))}</button>` : ''}
+           <button class="btn btn-ghost" onclick="UI.closeModal()">${esc(t('core.action.cancel'))}</button>
+           <button class="btn btn-script" onclick="Ext.script.savePrescript(${js(script)})">${esc(t('core.action.save'))}</button>`);
+        document.getElementById('scr_pre')?.focus();
+      },
+      async savePrescript(script, remove = false) {
+        const p = project();
+        if (!p) return;
+        const command = remove ? '' : document.getElementById('scr_pre')?.value || '';
+        try {
+          const saved = await withVault(() => ctx.api.put(`/projects/${encodeURIComponent(p.id)}/prescripts`, { ...(script ? { script } : {}), command }));
+          if (!saved) return;
+          data.prescripts = saved;
+          closeModal();
+          toast(t(command.trim() ? 'prescript.saved' : 'prescript.removed'), 'success');
+          renderContent();
+        } catch (e) { toast(e.message, 'error'); }
+      },
     };
 
     ctx.sidebar.addEventListener('click', e => {
       if (e.target.closest('[data-action="manage-projects"]')) ctx.projects.openPanel();
       if (e.target.closest('[data-action="reload"]')) this.refresh();
     });
+    ctx.root.addEventListener('click', e => { if (e.target.closest('[data-action="project-prescript"]')) actions.editPrescript(null); });
     $(ctx.root, 'filter').addEventListener('input', e => { filter = e.target.value; renderContent(); });
 
     ctx.bus.on('core:projects-changed', async () => { await loadProjects(); renderProjects(); renderContent(); });
