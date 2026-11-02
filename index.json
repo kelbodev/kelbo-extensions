@@ -63,6 +63,22 @@
       "path": "ports"
     },
     {
+      "code": "script",
+      "name": {
+        "it": "Script",
+        "en": "Scripts"
+      },
+      "description": {
+        "it": "Script delle cartelle bin, scripts, tools… dei progetti (JavaScript, TypeScript, shell, PowerShell) avviati come processi tracciati, con l'output nel pannello in basso",
+        "en": "Scripts in the projects' bin, scripts, tools… folders (JavaScript, TypeScript, shell, PowerShell) run as tracked processes, with their output in the bottom panel"
+      },
+      "icon": "📜",
+      "version": "0.0.0",
+      "kelbo": "^2.18",
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "script"
+    },
+    {
       "code": "swagger",
       "name": "Swagger",
       "description": {

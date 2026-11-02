@@ -1,0 +1,188 @@
+{
+  "name": {
+    "it": "Script",
+    "en": "Scripts"
+  },
+  "code": "script",
+  "version": "0.0.0",
+  "kelbo": "^2.18",
+  "description": {
+    "it": "Script delle cartelle bin, scripts, tools… dei progetti (JavaScript, TypeScript, shell, PowerShell) avviati come processi tracciati, con l'output nel pannello in basso",
+    "en": "Scripts in the projects' bin, scripts, tools… folders (JavaScript, TypeScript, shell, PowerShell) run as tracked processes, with their output in the bottom panel"
+  },
+  "color": "#3fb950",
+  "icon": "📜",
+  "position": "tab",
+  "order": 25,
+  "projectTraits": [
+    {
+      "id": "scripts",
+      "label": {
+        "it": "Script",
+        "en": "Scripts"
+      },
+      "files": [
+        "bin",
+        "script",
+        "scripts",
+        "local-scripts",
+        "local_scripts",
+        "dev-scripts",
+        "tools",
+        "tasks",
+        ".scripts"
+      ]
+    }
+  ],
+  "projects": {
+    "traits": [
+      "scripts"
+    ]
+  },
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/projects/:id/scripts",
+        "handler": "list"
+      },
+      {
+        "method": "POST",
+        "path": "/projects/:id/run",
+        "handler": "run"
+      },
+      {
+        "method": "GET",
+        "path": "/processes",
+        "handler": "listProcesses"
+      },
+      {
+        "method": "DELETE",
+        "path": "/processes/:id",
+        "handler": "stopProcess"
+      },
+      {
+        "method": "POST",
+        "path": "/processes/:id/restart",
+        "handler": "restartProcess"
+      },
+      {
+        "method": "DELETE",
+        "path": "/processes/:id/dismiss",
+        "handler": "dismissProcess"
+      },
+      {
+        "method": "GET",
+        "path": "/processes/:id/stream",
+        "handler": "processStream",
+        "stream": true
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css",
+    "preload": true
+  },
+  "mcp": {
+    "tools": [
+      {
+        "name": "list",
+        "handler": "scripts",
+        "readOnly": true,
+        "description": "List the scripts Kelbo finds in the projects' script folders (bin, scripts, tools…): id (path relative to the project), interpreter, whether it can run on this machine.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Project id; all the projects with script folders when omitted"
+            }
+          }
+        }
+      },
+      {
+        "name": "processes",
+        "handler": "processes",
+        "readOnly": true,
+        "description": "List the scripts started by Kelbo (running or exited) with pid, start time and exit code.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "run",
+        "handler": "run",
+        "readOnly": false,
+        "description": "Run a script of a project (one listed by script_list) as a tracked background process, like the Run button of Kelbo. Returns the process id: read its output with script_output.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "script": {
+              "type": "string",
+              "description": "Script id from script_list (path relative to the project)"
+            },
+            "args": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 50
+            }
+          },
+          "required": [
+            "project",
+            "script"
+          ]
+        }
+      },
+      {
+        "name": "stop",
+        "handler": "stop",
+        "readOnly": false,
+        "description": "Stop a script started by Kelbo (the whole process tree).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "process": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "process"
+          ]
+        }
+      },
+      {
+        "name": "output",
+        "handler": "output",
+        "readOnly": true,
+        "description": "Last lines of the output of a script started by Kelbo, with its status.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "process": {
+              "type": "string"
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2000,
+              "default": 100
+            }
+          },
+          "required": [
+            "process"
+          ]
+        }
+      }
+    ]
+  }
+}

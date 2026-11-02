@@ -7,10 +7,11 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | ⚙️ PM2 | [`pm2`](pm2) | PM2 processes: list, start/stop/restart/delete, streaming logs; npm scripts started under PM2 from the NPM section |
 | 🔌 Ports | [`ports`](ports) | Listening TCP ports with their process, linked to what Kelbo started (npm, PM2, tunnels); stop of the process that holds a port |
 | 🍃 MongoDB | [`mongo-client`](mongo-client) | MongoDB client with the features of the Kelbo Database section: connections (host, URI or SSH tunnel) in folders with passwords in the Kelbo vault, mongosh editor with history, documents as JSON or table with inline edit, every change shown and confirmed, collections and indexes designer, structure, export as JSON/CSV/script, read-only MCP tools |
+| 📜 Scripts | [`script`](script) | Scripts of the projects' `bin`, `scripts`, `tools`… folders (JavaScript, TypeScript, shell, PowerShell, `#!` files) run as tracked processes like npm scripts: live output in the bottom panel, stop, restart, arguments (Kelbo 2.18 or later) |
 | 📝 Notes | [`notes`](notes) | To-do lists and sticky notes per project (plus *General*), encrypted with the master password, placed and resized freely on one board: lists of items to check, reorderable, with the open items on the tab; coloured notes saved automatically |
 | 📄 Swagger | [`swagger`](swagger) | Preview of an OpenAPI `.yaml`/`.json` file loaded from disk (Swagger UI from CDN) |
 
-PM2 and Ports were built into Kelbo up to 1.23, Swagger up to 2.0. All of them require Kelbo 2.0 or later.
+PM2 and Ports were built into Kelbo up to 1.23, Swagger up to 2.0. All of them require Kelbo 2.0 or later, Scripts 2.18 or later.
 
 ## Install
 
@@ -22,9 +23,10 @@ npm run ext -- install ports
 npm run ext -- install mongo-client
 npm run ext -- install swagger
 npm run ext -- install notes
+npm run ext -- install script
 ```
 
-Any extension can also be installed by URL (🧩 → **From URL**): `https://github.com/kelbodev/kelbo-extensions.git` with the folder of the extension (`pm2`, `ports`, `mongo-client`, `swagger`, `notes`).
+Any extension can also be installed by URL (🧩 → **From URL**): `https://github.com/kelbodev/kelbo-extensions.git` with the folder of the extension (`pm2`, `ports`, `mongo-client`, `swagger`, `notes`, `script`).
 
 ## Versions
 
