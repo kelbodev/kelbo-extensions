@@ -44,7 +44,7 @@
   "prescript.titleScript": "Prescript of {script}",
   "prescript.titleProject": "Prescript of every script of the project",
   "prescript.label": "Shell commands",
-  "prescript.hint": "Encrypted with the master password (they can hold tokens). Run in the same shell as the script (bash or zsh on macOS and Linux, cmd on Windows), in the project folder: exported variables, nvm use, cd also apply to the script. If a command fails the script doesn't start. A script's prescript replaces the project's.",
+  "prescript.hint": "Encrypted with the master password (they can hold tokens). Run in the same shell as the script, in the project folder: your shell ($SHELL: bash, zsh or fish; otherwise bash) on macOS and Linux, cmd on Windows. Exported variables, nvm use, cd also apply to the script. If a command fails the script doesn't start (with fish the last one counts: chain with and). A script's prescript replaces the project's.",
   "prescript.inherited": "The project prescript applies now:",
   "prescript.remove": "Remove",
   "prescript.saved": "Prescript saved",

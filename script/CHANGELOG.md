@@ -4,6 +4,9 @@ All notable changes to the `script` extension. The format follows [Keep a Change
 
 ## [Unreleased]
 
+### Added
+- **Prescripts in fish** when it is the user's shell (`$SHELL`): run with `fish -c`, which also loads `config.fish` (nvm.fish, fnm…); the script starts when the prescript's last command succeeds (fish has no `set -e`: chain with `and`), its arguments reach fish as `$argv`.
+
 ## [1.1.0] - 2026-11-02
 
 ### Added

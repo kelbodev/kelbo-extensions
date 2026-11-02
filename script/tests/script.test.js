@@ -236,3 +236,28 @@ test('prescript: cifrati, nella stessa shell dello script, quello dello script v
   r = await put({ command: '' });
   assert.deepEqual(srv.readConfig().scriptPrescripts, {});
 });
+
+// fish come shell dell'utente: sintassi di fish, argomenti come $argv, conta l'ultimo comando
+const FISH = (() => { try { return require('child_process').execFileSync('sh', ['-c', 'command -v fish'], { encoding: 'utf8' }).trim(); } catch { return null; } })();
+test('prescript con fish ($SHELL)', { skip: WIN || !FISH ? 'fish non installato' : false }, async () => {
+  const fishSrv = await startServer({ projects: [{ id: 'app', label: 'App', path: dir }] }, { install: [EXT], env: { SHELL: FISH } });
+  try {
+    const call = (method, p, body) => fishSrv.request(method, `/api/ext/script${p}`, { body });
+    await fishSrv.request('POST', '/api/core/vault/init', { body: { password: 'master-password-fish' } });
+    const runEnv = async args => {
+      const r = await call('POST', '/projects/app/run', { script: 'scripts/env.js', args });
+      let pd;
+      for (let i = 0; i < 100; i++) { pd = (await call('GET', '/processes')).json.find(x => x.id === r.json.id); if (!pd.running) break; await wait(100); }
+      const out = (await fishSrv.request('GET', `/api/ext/script/processes/${r.json.id}/stream`)).events.filter(e => typeof e.data === 'string').map(e => e.data).join('');
+      return { pd, out };
+    };
+    await call('PUT', '/projects/app/prescripts', { command: 'set -gx GREETING pesce\necho (string upper ciao)' });
+    let { pd, out } = await runEnv(['a b', '$HOME']);
+    assert.equal(pd.exitCode, 0);
+    assert.match(out, /CIAO[\s\S]*greeting=pesce a b\|\$HOME/);
+    await call('PUT', '/projects/app/prescripts', { command: 'echo prima\nfalse' });
+    ({ pd, out } = await runEnv());
+    assert.notEqual(pd.exitCode, 0);
+    assert.doesNotMatch(out, /greeting=/);
+  } finally { await fishSrv.stop(); }
+});

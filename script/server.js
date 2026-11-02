@@ -183,10 +183,10 @@ module.exports = function createScript(ctx) {
     const { all, scripts } = readPrescripts(projectId);
     return scripts[script] || all || null;
   }
-  // bash o zsh dell'utente se è una di quelle (stessa sintassi del suo terminale), altrimenti bash o sh
+  // la shell dell'utente se è una di queste (stessa sintassi del suo terminale), altrimenti bash o sh
   function preShell() {
     const user = process.env.SHELL;
-    if (user && ['bash', 'zsh', 'sh'].includes(path.basename(user)) && fs.existsSync(user)) return user;
+    if (user && ['bash', 'zsh', 'sh', 'fish'].includes(path.basename(user)) && fs.existsSync(user)) return user;
     return has('bash') ? 'bash' : 'sh';
   }
 
@@ -230,7 +230,10 @@ module.exports = function createScript(ctx) {
       // stessa shell: variabili, nvm use, cd… del prescript valgono per lo script; se il prescript
       // fallisce lo script non parte. Script e argomenti arrivano come "$@", mai dentro il testo
       const sh = preShell();
-      proc = spawn(sh, ['-c', `set -e\n${pre}\nset +e\nexec "$@"`, 'kelbo-prescript', runner.cmd, ...argv], options);
+      proc = path.basename(sh) === 'fish'
+        // fish: niente "set -e", conta l'esito dell'ultimo comando; gli argomenti sono $argv
+        ? spawn(sh, ['-c', `begin\n${pre}\nend; or exit $status\nexec $argv`, runner.cmd, ...argv], options)
+        : spawn(sh, ['-c', `set -e\n${pre}\nset +e\nexec "$@"`, 'kelbo-prescript', runner.cmd, ...argv], options);
     } else if (pre) {
       const q = s => `"${String(s).replace(/"/g, '""')}"`;
       proc = spawn('cmd.exe', ['/d', '/s', '/c', `"${pre} && ${[runner.cmd, ...argv].map(q).join(' ')}"`], { ...options, windowsVerbatimArguments: true });

@@ -44,7 +44,7 @@
   "prescript.titleScript": "Prescript di {script}",
   "prescript.titleProject": "Prescript di tutti gli script del progetto",
   "prescript.label": "Comandi di shell",
-  "prescript.hint": "Cifrati con la master password (possono contenere token). Eseguiti nella stessa shell dello script (bash o zsh su macOS e Linux, cmd su Windows), nella cartella del progetto: variabili esportate, nvm use, cd valgono anche per lo script. Se un comando fallisce lo script non parte. Quello di uno script sostituisce quello del progetto.",
+  "prescript.hint": "Cifrati con la master password (possono contenere token). Eseguiti nella stessa shell dello script, nella cartella del progetto: la tua shell ($SHELL: bash, zsh o fish; altrimenti bash) su macOS e Linux, cmd su Windows. Variabili esportate, nvm use, cd valgono anche per lo script. Se un comando fallisce lo script non parte (con fish conta l'ultimo: concatena con and). Quello di uno script sostituisce quello del progetto.",
   "prescript.inherited": "Ora vale il prescript del progetto:",
   "prescript.remove": "Togli",
   "prescript.saved": "Prescript salvato",
