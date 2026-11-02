@@ -4,6 +4,8 @@ All notable changes to the `script` extension. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-02
+
 ### Added
 - **Scripts section**: the projects with a scripts folder — `bin`, `script`, `scripts`, `local-scripts`, `local_scripts`, `dev-scripts`, `tools`, `tasks`, `.scripts` (project trait `scripts`, Kelbo 2.18) — and their scripts, grouped by folder (two levels deep), with filter.
 - **Interpreter by file type and operating system**: `.js`/`.mjs`/`.cjs` with Kelbo's Node; `.ts`/`.mts`/`.cts` with the project's `tsx` when installed, otherwise Node with the types stripped; `.sh`/`.bash` with bash, `.zsh` with zsh; `.ps1` with PowerShell (`pwsh` on macOS/Linux); `.bat`/`.cmd` on Windows only; files without extension through their `#!` line (macOS/Linux). Files that can't run on this system are not listed; those whose interpreter is missing are shown disabled with the reason.
