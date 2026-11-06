@@ -4,6 +4,8 @@ All notable changes to the `script` extension. The format follows [Keep a Change
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-06
+
 ### Changed
 - **Lucide icons instead of emoji** (Kelbo 2.25): the tab, the buttons, menus, badges and the dashboard widget use the icons bundled in the Kelbo core, coloured like the text around them; the manifest `icon` is a Lucide name. Requires Kelbo 2.25 or later.
 
