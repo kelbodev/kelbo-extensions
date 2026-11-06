@@ -4,7 +4,7 @@
     "en": "Notes"
   },
   "code": "notes",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "kelbo": "^2.25",
   "devdock": "^2.25",
   "description": {
