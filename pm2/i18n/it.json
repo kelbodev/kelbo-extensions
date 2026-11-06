@@ -1,7 +1,7 @@
 {
   "toolbar.title": "Processi attivi",
-  "toolbar.allLogs": "📋 Tutti i log",
-  "toolbar.refresh": "↻ Aggiorna",
+  "toolbar.allLogs": "Tutti i log",
+  "toolbar.refresh": "Aggiorna",
   "loading": "Caricamento...",
   "notInstalled": "PM2 non è installato o non è nel PATH del server.",
   "stats.online": "Online",

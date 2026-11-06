@@ -1,6 +1,6 @@
 {
   "sidebar.title": "Swagger Preview",
-  "sidebar.load": "📂 Load YAML file",
+  "sidebar.load": "Load YAML file",
   "empty": "Load a .yml, .yaml or .json file to see the Swagger preview",
   "error.load": "Loading error: {error}",
   "error.script": "unable to load {url}"

@@ -11,7 +11,7 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | 📝 Notes | [`notes`](notes) | To-do lists and sticky notes per project (plus *General*), encrypted with the master password, placed and resized freely on one board: lists of items to check, reorderable, with the open items on the tab; coloured notes saved automatically |
 | 📄 Swagger | [`swagger`](swagger) | Preview of an OpenAPI `.yaml`/`.json` file loaded from disk (Swagger UI from CDN) |
 
-PM2 and Ports were built into Kelbo up to 1.23, Swagger up to 2.0. All of them require Kelbo 2.0 or later, Scripts 2.18 or later.
+PM2 and Ports were built into Kelbo up to 1.23, Swagger up to 2.0. All of them require Kelbo 2.25 or later (Lucide icons from the core); older Kelbo versions keep the previous releases.
 
 ## Install
 

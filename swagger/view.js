@@ -71,7 +71,7 @@ export default {
     input.addEventListener('change', async () => {
       const file = input.files[0];
       if (!file) return;
-      ctx.sidebar.querySelector('[data-role="file-info"]').textContent = `📄 ${file.name}`;
+      ctx.sidebar.querySelector('[data-role="file-info"]').innerHTML = `${ctx.ui.icon('file-code')} ${ctx.ui.esc(file.name)}`;
       input.value = ''; // permette di ricaricare lo stesso file
 
       el('empty').hidden = true;

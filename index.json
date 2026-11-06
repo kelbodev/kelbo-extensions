@@ -11,9 +11,9 @@
         "it": "Client MongoDB: connessioni con password nel vault, editor mongosh, documenti in JSON o tabella, modifiche sempre confermate, collezioni e indici, export JSON/CSV/script",
         "en": "MongoDB client: connections with passwords in the vault, mongosh editor, documents as JSON or table, changes always confirmed, collections and indexes, JSON/CSV/script export"
       },
-      "icon": "🍃",
+      "icon": "leaf",
       "version": "1.4.0",
-      "kelbo": "^2.0",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "mongo-client"
     },
@@ -27,9 +27,9 @@
         "it": "To-do e note per progetto: liste di frasi da spuntare e note tipo post-it, cifrate con la master password",
         "en": "To-dos and notes per project: lists of items to check and sticky notes, encrypted with the master password"
       },
-      "icon": "📝",
+      "icon": "notebook-pen",
       "version": "1.5.0",
-      "kelbo": "^2.3",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "notes"
     },
@@ -40,9 +40,9 @@
         "it": "Processi PM2: lista, start/stop/restart/delete e log in streaming",
         "en": "PM2 processes: list, start/stop/restart/delete and streaming logs"
       },
-      "icon": "⚙️",
+      "icon": "server-cog",
       "version": "1.0.0",
-      "kelbo": "^2.0",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "pm2"
     },
@@ -56,9 +56,9 @@
         "it": "Porte TCP in ascolto con il processo che le usa, collegate a script npm, PM2 e tunnel; arresto del processo che occupa una porta",
         "en": "Listening TCP ports with the process using them, linked to npm scripts, PM2 and tunnels; stop the process that holds a port"
       },
-      "icon": "🔌",
+      "icon": "plug",
       "version": "1.1.0",
-      "kelbo": "^2.0",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "ports"
     },
@@ -72,9 +72,9 @@
         "it": "Script delle cartelle bin, scripts, tools… dei progetti (JavaScript, TypeScript, shell, PowerShell) avviati come processi tracciati, con l'output nel pannello in basso",
         "en": "Scripts in the projects' bin, scripts, tools… folders (JavaScript, TypeScript, shell, PowerShell) run as tracked processes, with their output in the bottom panel"
       },
-      "icon": "📜",
+      "icon": "scroll-text",
       "version": "1.2.0",
-      "kelbo": "^2.18",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "script"
     },
@@ -85,9 +85,9 @@
         "it": "Anteprima di specifiche OpenAPI (.yaml/.json) caricate dal disco",
         "en": "Preview of OpenAPI specifications (.yaml/.json) loaded from disk"
       },
-      "icon": "📄",
+      "icon": "file-code",
       "version": "1.0.0",
-      "kelbo": "^2.0",
+      "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "swagger"
     }

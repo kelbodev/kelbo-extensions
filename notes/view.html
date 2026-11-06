@@ -1,15 +1,15 @@
 <div class="empty-state" data-role="locked" hidden>
-  <div class="icon">🔒</div>
+  <div class="icon"><i data-icon="lock"></i></div>
   <p data-i18n="locked.text"></p>
-  <button class="btn btn-primary" data-action="unlock" data-i18n="locked.unlock"></button>
+  <button class="btn btn-primary" data-action="unlock"><i data-icon="lock-open"></i> <span data-i18n="locked.unlock"></span></button>
 </div>
 <div class="nt-board" data-role="board" hidden>
   <div class="nt-head">
     <h2 class="nt-title" data-role="title"></h2>
     <span class="nt-muted" data-role="summary"></span>
     <div class="nt-head-actions">
-      <button class="btn btn-ghost btn-sm" data-action="add-list" data-i18n="lists.add"></button>
-      <button class="btn btn-ghost btn-sm" data-action="add-note" data-i18n="notes.add"></button>
+      <button class="btn btn-ghost btn-sm" data-action="add-list"><i data-icon="list-plus"></i> <span data-i18n="lists.add"></span></button>
+      <button class="btn btn-ghost btn-sm" data-action="add-note"><i data-icon="sticky-note"></i> <span data-i18n="notes.add"></span></button>
     </div>
   </div>
   <div class="nt-canvas" data-role="canvas"></div>

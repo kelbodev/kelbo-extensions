@@ -5,13 +5,13 @@
   },
   "code": "script",
   "version": "1.2.0",
-  "kelbo": "^2.18",
+  "kelbo": "^2.25",
   "description": {
     "it": "Script delle cartelle bin, scripts, tools… dei progetti (JavaScript, TypeScript, shell, PowerShell) avviati come processi tracciati, con l'output nel pannello in basso",
     "en": "Scripts in the projects' bin, scripts, tools… folders (JavaScript, TypeScript, shell, PowerShell) run as tracked processes, with their output in the bottom panel"
   },
   "color": "#3fb950",
-  "icon": "📜",
+  "icon": "scroll-text",
   "position": "tab",
   "order": 25,
   "projectTraits": [

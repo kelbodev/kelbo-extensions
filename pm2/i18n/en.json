@@ -1,7 +1,7 @@
 {
   "toolbar.title": "Running processes",
-  "toolbar.allLogs": "📋 All logs",
-  "toolbar.refresh": "↻ Refresh",
+  "toolbar.allLogs": "All logs",
+  "toolbar.refresh": "Refresh",
   "loading": "Loading...",
   "notInstalled": "PM2 is not installed or not in the server's PATH.",
   "stats.online": "Online",

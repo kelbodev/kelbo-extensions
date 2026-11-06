@@ -1,7 +1,7 @@
 {
   "search": "Search port, process, project…",
   "onlyMine": "Only my processes",
-  "refresh": "↻ Refresh",
+  "refresh": "Refresh",
   "loading": "Loading...",
   "count": {
     "one": "{count} port",

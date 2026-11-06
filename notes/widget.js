@@ -24,8 +24,8 @@ function render(ctx, el) {
   const { t } = ctx;
   const st = states.get(el);
   if (st.locked) {
-    ctx.widget.setBadge('🔒');
-    ctx.ui.patch(el, `<p class="nt-muted">${esc(t('locked.text'))}</p><button class="btn btn-primary btn-sm" data-ntw="unlock">${esc(t('locked.unlock'))}</button>`);
+    ctx.widget.setBadge({ icon: 'lock' });
+    ctx.ui.patch(el, `<p class="nt-muted">${esc(t('locked.text'))}</p><button class="btn btn-primary btn-sm" data-ntw="unlock">${ctx.ui.icon('lock-open')} ${esc(t('locked.unlock'))}</button>`);
     return;
   }
   const { lists, notes, counts } = st.board;

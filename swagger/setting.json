@@ -2,14 +2,14 @@
   "name": "Swagger",
   "code": "swagger",
   "version": "1.0.0",
-  "kelbo": "^2.0",
-  "devdock": "^2.0",
+  "kelbo": "^2.25",
+  "devdock": "^2.25",
   "description": {
     "it": "Anteprima di specifiche OpenAPI (.yaml/.json) caricate dal disco",
     "en": "Preview of OpenAPI specifications (.yaml/.json) loaded from disk"
   },
   "color": "#e8b84b",
-  "icon": "📄",
+  "icon": "file-code",
   "position": "tab",
   "order": 40,
   "frontend": {

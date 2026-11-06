@@ -26,7 +26,7 @@ function render(ctx, el) {
       <span class="pw-port">:${esc(p.port)}</span>
       <span class="pw-owner" title="${esc(p.command || '')}">${esc(p.owner.label.split(' — ').pop())}</span>
       <span class="pw-muted">${esc(p.name || '')} · ${esc(p.pid)}</span>
-      ${p.own ? `<button class="btn btn-ghost btn-sm" data-pw="stop" data-port="${esc(p.port)}" data-pid="${esc(p.pid)}" title="${esc(t('stop'))}">■</button>` : ''}
+      ${p.own ? `<button class="btn btn-ghost btn-sm" data-pw="stop" data-port="${esc(p.port)}" data-pid="${esc(p.pid)}" title="${esc(t('stop'))}"><i data-icon="square"></i></button>` : ''}
     </div>`).join('')}</div>`);
 }
 

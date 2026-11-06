@@ -50,7 +50,7 @@ export default {
       try { processes = await ctx.api.get('/processes'); } catch { return; }
       renderPills();
       const n = processes.filter(p => p.running).length;
-      ctx.setBadge(n ? `${fmt.number(n)}▶` : null);
+      ctx.setBadge(n ? { icon: 'play', text: fmt.number(n) } : null);
     }
 
     async function loadScripts() {
@@ -65,7 +65,7 @@ export default {
       ctx.setPills(processes.filter(p => p.running).map(p => `
         <span class="pill pill-script" onclick="Ext.script.open(${js(p.projectId)},${js(p.id)})" title="${esc(p.projectLabel)} — ${esc(label(p.script, p.args))}">
           <span class="pill-dot"></span>${esc(p.projectLabel)}<span class="pill-sub"> ${esc(p.script.split('/').pop())}</span>
-          <span class="pill-close" onclick="event.stopPropagation();Ext.script.stop(${js(p.id)})" title="${esc(t('stop'))}">✕</span>
+          <span class="pill-close" onclick="event.stopPropagation();Ext.script.stop(${js(p.id)})" title="${esc(t('stop'))}"><i data-icon="x"></i></span>
         </span>`).join(''));
     }
 
@@ -80,8 +80,8 @@ export default {
         const n = runningIn(p.id);
         return `<div class="sb-item ${activeProject === p.id ? 'active' : ''}" role="button" tabindex="0"
              onclick="Ext.script.select(${js(p.id)})" onkeydown="if(event.key==='Enter')Ext.script.select(${js(p.id)})">
-          <span class="sb-icon">${n ? '🟢' : '📜'}</span><span class="scr-proj-label">${esc(p.label)}</span>
-          ${n ? `<span class="scr-run-count">▶${esc(fmt.number(n))}</span>` : ''}
+          <span class="sb-icon">${ctx.ui.icon(n ? 'circle-play' : 'scroll-text')}</span><span class="scr-proj-label">${esc(p.label)}</span>
+          ${n ? `<span class="scr-run-count">${ctx.ui.icon('play')}${esc(fmt.number(n))}</span>` : ''}
         </div>`;
       }) + ctx.projects.hiddenNote(hidden));
     }
@@ -113,20 +113,20 @@ export default {
           : last ? `<span class="proc-dot ${last.exitCode === 0 ? 'ok' : 'dead'}" title="${esc(t('exited', { code: String(last.exitCode) }))}"></span>` : '<span class="proc-dot none"></span>'}
         <span class="scr-name" title="${esc(s.id)}">${esc(s.name)}</span>
         <span class="scr-runner scr-kind-${esc(s.kind)}">${esc(s.runner)}</span>
-        ${pre ? `<span class="scr-pre ${own ? '' : 'scr-pre-project'}" title="${esc(t('prescript.badgeTitle'))}">$_ ${esc(t(own ? 'prescript.badge' : 'prescript.badgeProject'))}</span>` : ''}
-        ${locked ? `<span class="scr-pre scr-pre-project" title="${esc(t('prescript.lockedTitle'))}">🔒 ${esc(t('prescript.badge'))}</span>` : ''}
+        ${pre ? `<span class="scr-pre ${own ? '' : 'scr-pre-project'}" title="${esc(t('prescript.badgeTitle'))}">${ctx.ui.icon('terminal')} ${esc(t(own ? 'prescript.badge' : 'prescript.badgeProject'))}</span>` : ''}
+        ${locked ? `<span class="scr-pre scr-pre-project" title="${esc(t('prescript.lockedTitle'))}"><i data-icon="lock"></i> ${esc(t('prescript.badge'))}</span>` : ''}
         ${live ? `<span class="scr-args">${esc(live.args.length ? label('', live.args).trim() : '')}</span>
           <span class="proc-uptime">${esc(formatUptime(live.startedAt))}</span>` : `<span class="scr-args">${s.available ? '' : esc(t('missing', { command: s.missing }))}</span>`}
         <div class="scr-actions">
-          ${last ? `<button class="btn btn-ghost btn-sm" onclick="Ext.script.logs(${js(last.id)})" title="${esc(t('output'))}">📋</button>` : ''}
+          ${last ? `<button class="btn btn-ghost btn-sm" onclick="Ext.script.logs(${js(last.id)})" title="${esc(t('output'))}"><i data-icon="scroll-text"></i></button>` : ''}
           ${live ? `
-            <button class="btn btn-ghost btn-sm" onclick="Ext.script.restart(${js(live.id)})" title="${esc(t('restart'))}">↺</button>
-            <button class="btn btn-disconnect btn-sm" onclick="Ext.script.stop(${js(live.id)})" title="${esc(t('stop'))}">⏹</button>
+            <button class="btn btn-ghost btn-sm" onclick="Ext.script.restart(${js(live.id)})" title="${esc(t('restart'))}"><i data-icon="rotate-ccw"></i></button>
+            <button class="btn btn-disconnect btn-sm" onclick="Ext.script.stop(${js(live.id)})" title="${esc(t('stop'))}"><i data-icon="square"></i></button>
           ` : `
-            <button class="btn btn-ghost btn-sm" onclick="Ext.script.editPrescript(${js(s.id)})" title="${esc(t('prescript.edit'))}">$_</button>
-            <button class="btn btn-ghost btn-sm" onclick="Ext.script.askArgs(${js(s.id)})" ${disabled || `title="${esc(t('runWithArgs'))}"`}>▶…</button>
-            <button class="btn btn-script btn-sm" onclick="Ext.script.run(${js(s.id)})" ${disabled}>▶ ${esc(t('run'))}</button>
-            ${last ? `<button class="btn btn-ghost btn-sm" onclick="Ext.script.dismiss(${js(last.id)})" title="${esc(t('dismiss'))}">✕</button>` : ''}
+            <button class="btn btn-ghost btn-sm" onclick="Ext.script.editPrescript(${js(s.id)})" title="${esc(t('prescript.edit'))}">${ctx.ui.icon('terminal')}</button>
+            <button class="btn btn-ghost btn-sm" onclick="Ext.script.askArgs(${js(s.id)})" ${disabled || `title="${esc(t('runWithArgs'))}"`}>${ctx.ui.icon('square-chevron-right')}</button>
+            <button class="btn btn-script btn-sm" onclick="Ext.script.run(${js(s.id)})" ${disabled}><i data-icon="play"></i> ${esc(t('run'))}</button>
+            ${last ? `<button class="btn btn-ghost btn-sm" onclick="Ext.script.dismiss(${js(last.id)})" title="${esc(t('dismiss'))}"><i data-icon="x"></i></button>` : ''}
           `}
         </div>
       </div>`;
@@ -143,7 +143,7 @@ export default {
       const groups = [...new Set(shown.map(s => s.folder))];
       ctx.ui.patch(el, groups.map(g => `
         <div class="scr-group">
-          <div class="scr-group-title">📁 ${esc(g)}/ <span class="scr-count">${esc(fmt.number(shown.filter(s => s.folder === g).length))}</span></div>
+          <div class="scr-group-title"><i data-icon="folder"></i> ${esc(g)}/ <span class="scr-count">${esc(fmt.number(shown.filter(s => s.folder === g).length))}</span></div>
           ${shown.filter(s => s.folder === g).map(row).join('')}
         </div>`).join(''));
     }
@@ -218,7 +218,7 @@ export default {
                    onkeydown="if(event.key==='Enter')Ext.script.runWithArgs(${js(script)})"></div>
           <p class="scr-muted">${esc(t('argsHint'))}</p>`,
           `<button class="btn btn-ghost" onclick="UI.closeModal()">${esc(t('core.action.cancel'))}</button>
-           <button class="btn btn-script" onclick="Ext.script.runWithArgs(${js(script)})">▶ ${esc(t('run'))}</button>`);
+           <button class="btn btn-script" onclick="Ext.script.runWithArgs(${js(script)})"><i data-icon="play"></i> ${esc(t('run'))}</button>`);
         document.getElementById('scr_args')?.focus();
       },
       runWithArgs(script) {

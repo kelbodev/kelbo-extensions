@@ -34,20 +34,20 @@ function render(ctx, el) {
   const { t } = ctx;
   const st = states.get(el);
   if (st.locked) {
-    ctx.widget.setBadge('🔒');
-    ctx.ui.patch(el, `<p class="mg-muted">${esc(t('sidebar.locked'))}</p><button class="btn btn-primary btn-sm" data-mgw="unlock">${esc(t('widget.unlock'))}</button>`);
+    ctx.widget.setBadge({ icon: 'lock' });
+    ctx.ui.patch(el, `<p class="mg-muted">${ctx.ui.icon('lock')} ${esc(t('sidebar.locked'))}</p><button class="btn btn-primary btn-sm" data-mgw="unlock">${ctx.ui.icon('lock-open')} ${esc(t('widget.unlock'))}</button>`);
     return;
   }
   const failed = st.list.filter(c => st.tests.get(c.id)?.ok === false).length;
-  ctx.widget.setBadge(failed ? `✖ ${fmt.number(failed)}` : null);
+  ctx.widget.setBadge(failed ? { icon: 'circle-x', text: fmt.number(failed) } : null);
   if (!st.list.length) { ctx.ui.patch(el, `<p class="mg-muted">${esc(t('widget.none'))}</p>`); return; }
   ctx.ui.patch(el, `<div class="mgw-list">${st.list.map(c => {
     const tst = st.tests.get(c.id);
     const dot = tst === 'testing' || !tst ? 'mgw-wait' : tst.ok ? 'mgw-ok' : 'mgw-err';
     return `<div class="mgw-conn">
-      <div class="mgw-row"><span class="mgw-dot ${dot}"></span><strong>${c.readOnly ? '🔒 ' : ''}${esc(c.label)}</strong>
+      <div class="mgw-row"><span class="mgw-dot ${dot}"></span><strong>${c.readOnly ? `${ctx.ui.icon('lock')} ` : ''}${esc(c.label)}</strong>
         <span class="mgw-actions">
-          <button class="btn btn-ghost btn-sm" data-mgw="test" data-id="${esc(c.id)}" title="${esc(t('widget.retest'))}">↻</button>
+          <button class="btn btn-ghost btn-sm" data-mgw="test" data-id="${esc(c.id)}" title="${esc(t('widget.retest'))}"><i data-icon="refresh-cw"></i></button>
           <button class="btn btn-ghost btn-sm" data-mgw="open" data-id="${esc(c.id)}">${esc(t('widget.open'))}</button>
         </span></div>
       ${tst && tst !== 'testing' ? `<div class="mgw-detail ${tst.ok ? 'mg-muted' : 'mgw-error'}">${esc(tst.text)}</div>`

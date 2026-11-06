@@ -36,7 +36,7 @@ export default {
       content.innerHTML = !list.length
         ? `<p class="pm2-muted">${esc(t('empty'))}</p>`
         : `<table class="pm2-table">
-            <thead><tr><th>${esc(t('col.id'))}</th><th>${esc(t('col.name'))}</th><th>${esc(t('col.status'))}</th><th>${esc(t('col.pid'))}</th><th>${esc(t('col.cpu'))}</th><th>${esc(t('col.memory'))}</th><th title="${esc(t('col.restarts'))}">↺</th><th></th></tr></thead>
+            <thead><tr><th>${esc(t('col.id'))}</th><th>${esc(t('col.name'))}</th><th>${esc(t('col.status'))}</th><th>${esc(t('col.pid'))}</th><th>${esc(t('col.cpu'))}</th><th>${esc(t('col.memory'))}</th><th title="${esc(t('col.restarts'))}"><i data-icon="rotate-ccw"></i></th><th></th></tr></thead>
             <tbody>${list.map(p => `<tr>
               <td class="pm2-dim">${esc(p.id)}</td>
               <td><span class="pm2-name-link" onclick="Ext.pm2.logs(${js(p.name)})">${esc(p.name)}</span></td>
@@ -47,11 +47,11 @@ export default {
               <td>${esc(fmt.number(p.restarts || 0))}</td>
               <td><div class="pm2-actions">
                 ${p.status === 'online'
-                  ? `<button class="btn btn-ghost btn-sm" onclick="Ext.pm2.action('restart',${js(p.name)})" title="${esc(t('action.restart'))}">↺</button>
-                     <button class="btn btn-ghost btn-sm" onclick="Ext.pm2.action('stop',${js(p.name)})" title="${esc(t('action.stop'))}">⏹</button>
-                     <button class="btn btn-ghost btn-sm" onclick="Ext.pm2.logs(${js(p.name)})" title="${esc(t('action.logs'))}">📋</button>`
-                  : `<button class="btn btn-ghost btn-sm pm2-start" onclick="Ext.pm2.action('start',${js(p.name)})" title="${esc(t('action.start'))}">▶</button>`}
-                <button class="btn btn-ghost btn-sm pm2-delete" onclick="Ext.pm2.action('delete',${js(p.name)})" title="${esc(t('action.delete'))}">✕</button>
+                  ? `<button class="btn btn-ghost btn-sm" onclick="Ext.pm2.action('restart',${js(p.name)})" title="${esc(t('action.restart'))}"><i data-icon="rotate-ccw"></i></button>
+                     <button class="btn btn-ghost btn-sm" onclick="Ext.pm2.action('stop',${js(p.name)})" title="${esc(t('action.stop'))}"><i data-icon="square"></i></button>
+                     <button class="btn btn-ghost btn-sm" onclick="Ext.pm2.logs(${js(p.name)})" title="${esc(t('action.logs'))}"><i data-icon="scroll-text"></i></button>`
+                  : `<button class="btn btn-ghost btn-sm pm2-start" onclick="Ext.pm2.action('start',${js(p.name)})" title="${esc(t('action.start'))}"><i data-icon="play"></i></button>`}
+                <button class="btn btn-ghost btn-sm pm2-delete" onclick="Ext.pm2.action('delete',${js(p.name)})" title="${esc(t('action.delete'))}"><i data-icon="x"></i></button>
               </div></td>
             </tr>`).join('')}</tbody>
           </table>`;

@@ -88,7 +88,7 @@ export default {
       const el = $(ctx.sidebar, 'boards');
       if (locked) {
         ctx.ui.patch(el, `<p class="nt-muted" style="padding:12px">${esc(t('locked.text'))}<br><br>
-          <button class="btn btn-primary btn-sm" onclick="${EXT}.unlock()">${esc(t('locked.unlock'))}</button></p>`);
+          <button class="btn btn-primary btn-sm" onclick="${EXT}.unlock()">${ctx.ui.icon('lock-open')} ${esc(t('locked.unlock'))}</button></p>`);
         return;
       }
       const item = (id, icon, label) => {
@@ -98,9 +98,9 @@ export default {
           ${open ? `<span class="sb-count nt-open" title="${esc(t('sidebar.openTitle', { count: open }))}">${esc(fmt.number(open))}</span>` : ''}</button>`;
       };
       const orphans = [...info.keys()].filter(id => id !== GENERAL && !projects.some(p => p.id === id));
-      ctx.ui.patch(el, item(GENERAL, '📌', t('sidebar.general'))
-        + ctx.projects.tree(folders, projects, p => item(p.id, info.has(p.id) ? '📝' : '·', p.label))
-        + (orphans.length ? `<div class="nt-sb-sep">${esc(t('sidebar.orphans'))}</div>${orphans.map(id => item(id, '⚠', id)).join('')}` : ''));
+      ctx.ui.patch(el, item(GENERAL, ctx.ui.icon('pin'), t('sidebar.general'))
+        + ctx.projects.tree(folders, projects, p => item(p.id, info.has(p.id) ? ctx.ui.icon('notebook-pen') : '·', p.label))
+        + (orphans.length ? `<div class="nt-sb-sep">${esc(t('sidebar.orphans'))}</div>${orphans.map(id => item(id, ctx.ui.icon('triangle-alert'), id)).join('')}` : ''));
     }
 
     // ---- bacheca ----
@@ -150,13 +150,13 @@ export default {
           <input type="checkbox" ${i.done ? 'checked' : ''} aria-label="${esc(t(i.done ? 'items.reopen' : 'items.check'))}" data-check>
           <input class="nt-item-text" value="${esc(i.text)}" maxlength="1000" data-text aria-label="${esc(t('items.text'))}">
           ${i.done && i.doneAt ? `<span class="nt-item-date" title="${esc(fmt.date(i.doneAt, { dateStyle: 'medium', timeStyle: 'short' }))}">${esc(fmt.relative(i.doneAt))}</span>` : ''}
-          <button class="nt-del" data-del-item title="${esc(t('core.action.delete'))}">✕</button></li>`;
+          <button class="nt-del" data-del-item title="${esc(t('core.action.delete'))}"><i data-icon="x"></i></button></li>`;
       return `<section class="nt-card nt-list" data-card="list" data-id="${esc(l.id)}" data-list="${esc(l.id)}" style="${cardStyle(l, false)}">
         <div class="nt-list-head">
           <span class="nt-grip" data-drag title="${esc(t('board.drag'))}">⠿</span>
           <input class="nt-list-title" value="${esc(l.title)}" maxlength="200" data-list-title aria-label="${esc(t('lists.name'))}">
           ${l.items.length ? `<span class="nt-pct" title="${esc(t('lists.progress', { done: fmt.number(done.length), total: fmt.number(l.items.length) }))}">${esc(fmt.number(done.length / l.items.length, { style: 'percent' }))}</span>` : ''}
-          <button class="sb-item-act" onclick="${EXT}.listMenu(event, ${js(l.id)})" title="${esc(t('lists.actions'))}">⋯</button>
+          <button class="sb-item-act" onclick="${EXT}.listMenu(event, ${js(l.id)})" title="${esc(t('lists.actions'))}"><i data-icon="ellipsis"></i></button>
         </div>
         ${l.items.length ? `<div class="nt-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${l.items.length}" aria-valuenow="${done.length}"><span style="width:${(done.length / l.items.length) * 100}%"></span></div>` : ''}
         <ul class="nt-items">${open.map(itemHtml).join('')}</ul>
@@ -176,7 +176,7 @@ export default {
           <footer>
             ${COLORS.map(c => `<button class="nt-dot nt-c-${c} ${c === n.color ? 'active' : ''}" data-color="${c}" title="${esc(t(`colors.${c}`))}" aria-label="${esc(t(`colors.${c}`))}"></button>`).join('')}
             <span class="nt-saved" data-saved>${n.updatedAt ? esc(fmt.relative(n.updatedAt)) : ''}</span>
-            <button class="nt-del" data-del-note title="${esc(t('core.action.delete'))}">✕</button>
+            <button class="nt-del" data-del-note title="${esc(t('core.action.delete'))}"><i data-icon="x"></i></button>
           </footer>
           ${cardTools('note')}</div>`;
     }
@@ -336,9 +336,9 @@ export default {
         event.stopPropagation();
         const r = event.currentTarget.getBoundingClientRect();
         ctx.ui.contextMenu(r.left, r.bottom, [
-          { label: t('items.clearDone'), icon: '✓', disabled: !l.items.some(x => x.done), action: () => actions.clearDone(listId) },
+          { label: t('items.clearDone'), icon: 'check', disabled: !l.items.some(x => x.done), action: () => actions.clearDone(listId) },
           'separator',
-          { label: t('lists.delete'), icon: '🗑', danger: true, action: () => {
+          { label: t('lists.delete'), icon: 'trash-2', danger: true, action: () => {
             if (l.items.length && !confirm(t('lists.confirmDelete', { name: l.title, count: l.items.length }))) return;
             call(api => api.del(url(active, 'lists', listId))).then(res => res && renderLists());
           } },

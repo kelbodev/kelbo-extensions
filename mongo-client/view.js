@@ -334,9 +334,9 @@ export default {
       return `<div class="sb-item mg-row mg-row-conn ${c.id === activeId ? 'active' : ''}" role="button" tabindex="0" aria-expanded="${cOpen}" title="${esc(target(c))}"
           onclick="${EXT}.selectConnection(${js(c.id)})" oncontextmenu="event.preventDefault();${EXT}.connMenu(event,${js(c.id)})">
           <span class="mg-caret" onclick="event.stopPropagation();${EXT}.toggle(${js(ck)})">${chevron(cOpen)}</span>
-          <span class="mg-icon">${c.readOnly ? '🔒' : '🍃'}</span><span class="mg-name">${esc(c.label)}</span>
-          ${c.tunnelMissing ? `<span class="mg-warn" title="${esc(t('tree.tunnelMissing', { tunnel: c.tunnel }))}">⚠</span>` : ''}
-          <button class="mg-more" onclick="event.stopPropagation();${EXT}.connMenu(event,${js(c.id)})" aria-label="${esc(t('tree.actions'))}">⋯</button>
+          <span class="mg-icon">${ctx.ui.icon(c.readOnly ? 'lock' : 'leaf')}</span><span class="mg-name">${esc(c.label)}</span>
+          ${c.tunnelMissing ? `<span class="mg-warn" title="${esc(t('tree.tunnelMissing', { tunnel: c.tunnel }))}"><i data-icon="triangle-alert"></i></span>` : ''}
+          <button class="mg-more" onclick="event.stopPropagation();${EXT}.connMenu(event,${js(c.id)})" aria-label="${esc(t('tree.actions'))}"><i data-icon="ellipsis"></i></button>
         </div>
         ${cOpen ? childrenHtml(ck, 1, visibleDatabases(c), d => {
           const dk = `d|${c.id}|${d.name}`, dOpen = open.has(dk) || (!!treeFilter && !matchText(d.name) && !matchText(c.label));
@@ -344,7 +344,7 @@ export default {
           return `<div class="sb-item mg-row ${isActiveDb ? 'mg-row-db-active' : ''}" style="padding-inline-start:26px" role="button" tabindex="0" aria-expanded="${dOpen}"
               onclick="${EXT}.selectDatabase(${js(c.id)},${js(d.name)})" oncontextmenu="event.preventDefault();${EXT}.dbMenu(event,${js(c.id)},${js(d.name)})">
               <span class="mg-caret" onclick="event.stopPropagation();${EXT}.toggle(${js(dk)})">${chevron(dOpen)}</span>
-              <span class="mg-icon">🗄️</span><span class="mg-name">${esc(d.name)}</span>
+              <span class="mg-icon"><i data-icon="database"></i></span><span class="mg-name">${esc(d.name)}</span>
               ${d.sizeOnDisk != null ? `<span class="mg-count">${esc(fmt.bytes(d.sizeOnDisk))}</span>` : ''}
             </div>
             ${dOpen ? childrenHtml(dk, 3, visibleCollections(c, d), x => {
@@ -353,7 +353,7 @@ export default {
               return `<div class="sb-item mg-row ${isCurrent ? 'active' : ''}" style="padding-inline-start:52px" role="button" tabindex="0"
                   onclick="${EXT}.openCollection(${js(c.id)},${js(d.name)},${js(x.name)})"
                   oncontextmenu="event.preventDefault();${EXT}.collMenu(event,${js(c.id)},${js(d.name)},${js(x.name)})">
-                  <span class="mg-icon">${x.type === 'view' ? '👁' : '📄'}</span><span class="mg-name">${esc(x.name)}</span>
+                  <span class="mg-icon">${ctx.ui.icon(x.type === 'view' ? 'eye' : 'file-json')}</span><span class="mg-name">${esc(x.name)}</span>
                   ${x.count != null ? `<span class="mg-count">${esc(fmt.number(x.count))}</span>` : ''}
                 </div>`;
             }) : ''}`;
@@ -362,7 +362,7 @@ export default {
 
     function renderTree() {
       const el = $(ctx.sidebar, 'tree');
-      if (locked) { patch(el, `<p class="mg-muted mg-pad">${esc(t('sidebar.locked'))}<br><br><button class="btn btn-primary btn-sm" onclick="${EXT}.unlock()">${esc(t('sidebar.unlock'))}</button></p>`); return; }
+      if (locked) { patch(el, `<p class="mg-muted mg-pad">${ctx.ui.icon('lock')} ${esc(t('sidebar.locked'))}<br><br><button class="btn btn-primary btn-sm" onclick="${EXT}.unlock()">${esc(t('sidebar.unlock'))}</button></p>`); return; }
       if (!connections.length && !folders.length) { patch(el, `<p class="mg-muted mg-pad">${esc(t('sidebar.none'))}</p>`); return; }
       const closed = closedFolders();
       const known = new Set(folders.map(f => f.id));
@@ -372,9 +372,9 @@ export default {
         const isOpen = !closed.has(f.id) || !!treeFilter;
         return `<div class="sb-item mg-row mg-row-folder" role="button" tabindex="0" aria-expanded="${isOpen}"
             onclick="${EXT}.toggleFolder(${js(f.id)})" oncontextmenu="event.preventDefault();${EXT}.folderMenu(event,${js(f.id)})">
-            ${chevron(isOpen)}<span class="mg-icon">📁</span><span class="mg-name">${esc(f.label)}</span>
+            ${chevron(isOpen)}<span class="mg-icon"><i data-icon="folder"></i></span><span class="mg-name">${esc(f.label)}</span>
             <span class="mg-folder-count">${esc(fmt.number(list.length))}</span>
-            <button class="mg-more" onclick="event.stopPropagation();${EXT}.folderMenu(event,${js(f.id)})" aria-label="${esc(t('folders.actions'))}">⋯</button>
+            <button class="mg-more" onclick="event.stopPropagation();${EXT}.folderMenu(event,${js(f.id)})" aria-label="${esc(t('folders.actions'))}"><i data-icon="ellipsis"></i></button>
           </div>
           ${isOpen ? `<div class="mg-children">${list.map(connNode).join('')}</div>` : ''}`;
       };
@@ -408,8 +408,8 @@ export default {
 
     function folderMenu(e, id) {
       ctx.ui.contextMenu(e.clientX, e.clientY, [
-        { label: t('folders.rename'), icon: '✎', action: () => folderDialog(id) },
-        { label: t('folders.delete'), icon: '🗑', danger: true, action: () => deleteFolder(id) },
+        { label: t('folders.rename'), icon: 'pencil', action: () => folderDialog(id) },
+        { label: t('folders.delete'), icon: 'trash-2', danger: true, action: () => deleteFolder(id) },
       ]);
     }
     function folderDialog(id) {
@@ -443,23 +443,23 @@ export default {
       const c = conn(id);
       if (!c) return;
       ctx.ui.contextMenu(e.clientX, e.clientY, [
-        { label: t('menu.openEditor'), icon: '⌨', action: () => selectConnection(id) },
-        { label: t('menu.test'), icon: '⚡', action: () => testConnection(id) },
-        { label: t('menu.refresh'), icon: '↻', action: () => refreshConnection(id) },
+        { label: t('menu.openEditor'), icon: 'square-terminal', action: () => selectConnection(id) },
+        { label: t('menu.test'), icon: 'zap', action: () => testConnection(id) },
+        { label: t('menu.refresh'), icon: 'refresh-cw', action: () => refreshConnection(id) },
         'separator',
-        { label: t('menu.edit'), icon: '✎', action: () => connectionDialog(id) },
-        { label: t('menu.delete'), icon: '🗑', danger: true, action: () => deleteConnection(id) },
+        { label: t('menu.edit'), icon: 'pencil', action: () => connectionDialog(id) },
+        { label: t('menu.delete'), icon: 'trash-2', danger: true, action: () => deleteConnection(id) },
       ]);
     }
 
     function dbMenu(e, id, db) {
       const ro = conn(id)?.readOnly;
       ctx.ui.contextMenu(e.clientX, e.clientY, [
-        { label: t('menu.useDatabase'), icon: '⌨', action: () => selectDatabase(id, db, true) },
-        { label: t('menu.refresh'), icon: '↻', action: () => refreshDatabase(id, db) },
-        { label: t('menu.newCollection'), icon: '＋', disabled: ro, action: () => collectionDialog(id, db) },
+        { label: t('menu.useDatabase'), icon: 'square-terminal', action: () => selectDatabase(id, db, true) },
+        { label: t('menu.refresh'), icon: 'refresh-cw', action: () => refreshDatabase(id, db) },
+        { label: t('menu.newCollection'), icon: 'plus', disabled: ro, action: () => collectionDialog(id, db) },
         'separator',
-        { label: t('menu.dropDatabase'), icon: '🗑', danger: true, disabled: ro, action: () => dropDatabase(id, db) },
+        { label: t('menu.dropDatabase'), icon: 'trash-2', danger: true, disabled: ro, action: () => dropDatabase(id, db) },
       ]);
     }
 
@@ -467,16 +467,16 @@ export default {
       const ro = conn(id)?.readOnly;
       const view = (loaded(`d|${id}|${db}`) || []).find(x => x.name === coll)?.type === 'view';
       ctx.ui.contextMenu(e.clientX, e.clientY, [
-        { label: t('menu.open'), icon: '📄', action: () => openCollection(id, db, coll) },
-        { label: t('menu.structure'), icon: '🧬', action: () => openStructure(id, db, coll) },
-        { label: t('menu.insert'), icon: '＋', disabled: ro || view, action: () => openCollection(id, db, coll).then(() => documentDialog(null)) },
-        { label: t('menu.exportJson'), icon: '⤓', action: () => exportDocuments(id, { database: db, collection: coll, format: 'json' }) },
-        { label: t('menu.exportCsv'), icon: '⤓', action: () => exportDocuments(id, { database: db, collection: coll, format: 'csv' }) },
-        { label: t('menu.exportJs'), icon: '⤓', action: () => exportDocuments(id, { database: db, collection: coll, format: 'js' }) },
+        { label: t('menu.open'), icon: 'file-text', action: () => openCollection(id, db, coll) },
+        { label: t('menu.structure'), icon: 'list-tree', action: () => openStructure(id, db, coll) },
+        { label: t('menu.insert'), icon: 'plus', disabled: ro || view, action: () => openCollection(id, db, coll).then(() => documentDialog(null)) },
+        { label: t('menu.exportJson'), icon: 'download', action: () => exportDocuments(id, { database: db, collection: coll, format: 'json' }) },
+        { label: t('menu.exportCsv'), icon: 'download', action: () => exportDocuments(id, { database: db, collection: coll, format: 'csv' }) },
+        { label: t('menu.exportJs'), icon: 'download', action: () => exportDocuments(id, { database: db, collection: coll, format: 'js' }) },
         'separator',
-        { label: t('menu.newIndex'), icon: '⚡', disabled: ro || view, action: () => indexDialog(id, db, coll) },
-        { label: t('menu.rename'), icon: '✎', disabled: ro, action: () => renameDialog(id, db, coll) },
-        { label: t('menu.drop'), icon: '🗑', danger: true, disabled: ro, action: () => dropCollection(id, db, coll) },
+        { label: t('menu.newIndex'), icon: 'zap', disabled: ro || view, action: () => indexDialog(id, db, coll) },
+        { label: t('menu.rename'), icon: 'pencil', disabled: ro, action: () => renameDialog(id, db, coll) },
+        { label: t('menu.drop'), icon: 'trash-2', danger: true, disabled: ro, action: () => dropCollection(id, db, coll) },
       ]);
     }
 
@@ -539,15 +539,15 @@ export default {
       limit.innerHTML = resultLimits.map(n => `<option value="${n}" ${n === cur ? 'selected' : ''}>${esc(t('toolbar.limitOption', { count: n }))}</option>`).join('');
       $(ctx.root, 'new-collection').hidden = !!c.readOnly;
       $(ctx.root, 'conn-header').innerHTML = `
-        <h3>🍃 ${esc(c.label)}</h3>
+        <h3><i data-icon="leaf"></i> ${esc(c.label)}</h3>
         <span class="mg-conn-meta">${c.user ? `${esc(c.user)}@` : ''}${esc(target(c))}${c.database ? ` / ${esc(c.database)}` : ''}</span>
         ${c.readOnly ? `<span class="mg-badge" title="${esc(t('main.readOnlyTitle'))}">${esc(t('main.readOnly'))}</span>` : ''}
         ${c.user && !c.hasPassword ? `<span class="mg-badge mg-badge-warn">${esc(t('conn.noPassword'))}</span>` : ''}
         ${c.tunnelMissing ? `<span class="mg-badge mg-badge-danger">${esc(t('tree.tunnelMissing', { tunnel: c.tunnel }))}</span>` : ''}
         <div class="mg-conn-actions">
-          <button class="btn btn-ghost btn-sm" onclick="${EXT}.testConnection(${js(c.id)})">${esc(t('conn.test'))}</button>
-          <button class="btn btn-ghost btn-sm" onclick="${EXT}.connectionDialog(${js(c.id)})">${esc(t('conn.edit'))}</button>
-          <button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.deleteConnection(${js(c.id)})" title="${esc(t('core.action.delete'))}">🗑</button>
+          <button class="btn btn-ghost btn-sm" onclick="${EXT}.testConnection(${js(c.id)})">${ctx.ui.icon('zap')} ${esc(t('conn.test'))}</button>
+          <button class="btn btn-ghost btn-sm" onclick="${EXT}.connectionDialog(${js(c.id)})">${ctx.ui.icon('pencil')} ${esc(t('conn.edit'))}</button>
+          <button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.deleteConnection(${js(c.id)})" title="${esc(t('core.action.delete'))}"><i data-icon="trash-2"></i></button>
         </div>`;
       renderResults();
     }
@@ -677,7 +677,7 @@ export default {
         <div class="form-row"><label>${esc(t('vault.repeatPassword'))}</label><input class="form-input" type="password" id="f_vault_new2" autocomplete="off"></div>
         <div class="form-row"><label>${esc(t('vault.lockAfter'))}</label><input class="form-input" type="number" min="1" max="1440" id="f_vault_minutes" value="${esc(String(vault.lockAfterMinutes))}"></div>`,
       `<button class="btn btn-ghost" onclick="UI.closeModal()">${esc(t('core.action.cancel'))}</button>
-       <button class="btn btn-ghost" onclick="${EXT}.lockVault()">${esc(t('vault.lockNow'))}</button>
+       <button class="btn btn-ghost" onclick="${EXT}.lockVault()">${ctx.ui.icon('lock')} ${esc(t('vault.lockNow'))}</button>
        <button class="btn btn-primary" onclick="${EXT}.saveVault(${Number(vault.lockAfterMinutes)})">${esc(t('core.action.save'))}</button>`);
     }
     async function saveVault(currentMinutes) {
@@ -770,7 +770,7 @@ export default {
       openModal(t('history.title'), list.length ? `
         <div class="mg-history">${list.map((h, i) => `
           <button class="mg-history-item" onclick="${EXT}.useHistory(${i})" title="${esc(t('history.load'))}">
-            <span class="mg-history-meta">${esc(fmt.date(h.at, { timeStyle: 'medium' }))} · ${esc(label(h.connId))}${h.db ? ` / ${esc(h.db)}` : ''} · ${h.ok ? `✓ ${esc(h.summary || '')}` : esc(t('history.error'))}</span>
+            <span class="mg-history-meta">${esc(fmt.date(h.at, { timeStyle: 'medium' }))} · ${esc(label(h.connId))}${h.db ? ` / ${esc(h.db)}` : ''} · ${h.ok ? `${ctx.ui.icon('check')} ${esc(h.summary || '')}` : esc(t('history.error'))}</span>
             <code>${esc(h.code.length > 300 ? h.code.slice(0, 300) + '…' : h.code)}</code>
           </button>`).join('')}</div>` : `<p class="mg-muted">${esc(t('history.none'))}</p>`,
       `${list.length ? `<button class="btn btn-ghost" onclick="${EXT}.clearHistory()">${esc(t('history.clear'))}</button>` : ''}
@@ -924,9 +924,9 @@ export default {
             ${tgt && d._id !== undefined ? `<input type="checkbox" onchange="${EXT}.select(${i},this.checked)" ${p.selected.has(i) ? 'checked' : ''} aria-label="${esc(t('docs.select'))}">` : ''}
             <span class="mg-doc-id">${d._id !== undefined ? esc(idText(d._id)) : esc(t('docs.noId'))}</span>
             <span class="mg-doc-actions">
-              <button class="btn btn-ghost btn-sm" onclick="${EXT}.copyDoc(${i})" title="${esc(t('docs.copy'))}">⧉</button>
-              ${tgt && d._id !== undefined ? `<button class="btn btn-ghost btn-sm" onclick="${EXT}.editDoc(${i})" title="${esc(t('docs.edit'))}">✎</button>
-              <button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.deleteDoc(${i})" title="${esc(t('docs.delete'))}">🗑</button>` : ''}
+              <button class="btn btn-ghost btn-sm" onclick="${EXT}.copyDoc(${i})" title="${esc(t('docs.copy'))}"><i data-icon="copy"></i></button>
+              ${tgt && d._id !== undefined ? `<button class="btn btn-ghost btn-sm" onclick="${EXT}.editDoc(${i})" title="${esc(t('docs.edit'))}"><i data-icon="pencil"></i></button>
+              <button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.deleteDoc(${i})" title="${esc(t('docs.delete'))}"><i data-icon="trash-2"></i></button>` : ''}
             </span>
           </div>
           <pre class="mg-json">${renderValue(d, esc)}</pre>
@@ -943,7 +943,7 @@ export default {
       const sortKey = p.mode === 'browse' ? Object.entries(safeJson(p.query.sort) || {})[0] : p.sort ? [p.sort.col, p.sort.dir] : null;
       const order = p.mode === 'shell' && p.sort ? docs.map((d, i) => i).sort((a, b) => compareValues(docs[a][p.sort.col], docs[b][p.sort.col]) * p.sort.dir) : docs.map((d, i) => i);
       return `<div class="mg-table-wrap"><table class="data-table mg-table">
-        <thead><tr>${tgt ? '<th class="mg-col-check"></th>' : ''}${cols.map(k => `<th class="mg-sortable" onclick="${EXT}.sortBy(${js(k)})" title="${esc(t('grid.sortTitle'))}">${esc(k)}${sortKey && sortKey[0] === k ? (Number(sortKey[1]) < 0 ? ' ▼' : ' ▲') : ''}</th>`).join('')}</tr></thead>
+        <thead><tr>${tgt ? '<th class="mg-col-check"></th>' : ''}${cols.map(k => `<th class="mg-sortable" onclick="${EXT}.sortBy(${js(k)})" title="${esc(t('grid.sortTitle'))}">${esc(k)}${sortKey && sortKey[0] === k ? (Number(sortKey[1]) < 0 ? ` ${ctx.ui.icon('arrow-down-wide-narrow')}` : ` ${ctx.ui.icon('arrow-up-narrow-wide')}`) : ''}</th>`).join('')}</tr></thead>
         <tbody>${order.map(i => {
           const d = docs[i], edits = p.pending.get(i) || {};
           const editable = tgt && d._id !== undefined;
@@ -1047,9 +1047,9 @@ export default {
       const head = `<div class="mg-browse-head">
           <span class="mg-path"><span class="mg-path-conn">${esc(p.db)}</span><span class="mg-sep">›</span><strong>${esc(p.coll)}</strong>${p.isView ? ` <span class="mg-badge">${esc(t('docs.isView'))}</span>` : ''}</span>
           <span class="mg-browse-actions">
-            <button class="btn btn-ghost btn-sm" onclick="${EXT}.openStructure(${js(c.id)},${js(p.db)},${js(p.coll)})">${esc(t('main.structure'))}</button>
-            <button class="btn btn-ghost btn-sm" onclick="${EXT}.exportMenu(event)">${esc(t('main.export'))}</button>
-            ${c.readOnly || p.isView ? '' : `<button class="btn btn-ghost btn-sm" onclick="${EXT}.insertDoc()">${esc(t('main.insert'))}</button>`}
+            <button class="btn btn-ghost btn-sm" onclick="${EXT}.openStructure(${js(c.id)},${js(p.db)},${js(p.coll)})">${ctx.ui.icon('list-tree')} ${esc(t('main.structure'))}</button>
+            <button class="btn btn-ghost btn-sm" onclick="${EXT}.exportMenu(event)">${ctx.ui.icon('download')} ${esc(t('main.export'))}</button>
+            ${c.readOnly || p.isView ? '' : `<button class="btn btn-ghost btn-sm" onclick="${EXT}.insertDoc()">${ctx.ui.icon('plus')} ${esc(t('main.insert'))}</button>`}
           </span>
         </div>
         <form class="mg-query" onsubmit="event.preventDefault();${EXT}.applyQuery()" autocomplete="off">
@@ -1367,9 +1367,9 @@ export default {
 
     function structureHtml(p, c) {
       const head = `<div class="mg-browse-head">
-          <span class="mg-path"><span class="mg-path-conn">${esc(p.db)}</span><span class="mg-sep">›</span><strong>${esc(p.coll)}</strong> · ${esc(t('main.structure'))}</span>
+          <span class="mg-path"><span class="mg-path-conn">${esc(p.db)}</span><span class="mg-sep">›</span><strong>${esc(p.coll)}</strong> · ${ctx.ui.icon('list-tree')} ${esc(t('main.structure'))}</span>
           <span class="mg-browse-actions">
-            <button class="btn btn-ghost btn-sm" onclick="${EXT}.openCollection(${js(c.id)},${js(p.db)},${js(p.coll)})">${esc(t('main.documents'))}</button>
+            <button class="btn btn-ghost btn-sm" onclick="${EXT}.openCollection(${js(c.id)},${js(p.db)},${js(p.coll)})">${ctx.ui.icon('file-json')} ${esc(t('main.documents'))}</button>
             ${c.readOnly || p.data?.type === 'view' ? '' : `<button class="btn btn-ghost btn-sm" onclick="${EXT}.indexDialog(${js(c.id)},${js(p.db)},${js(p.coll)})">${esc(t('menu.newIndex'))}</button>`}
           </span>
         </div>`;
@@ -1399,7 +1399,7 @@ export default {
             return `<tr><td><code>${esc(name)}</code></td><td><pre class="mg-json mg-inline">${renderValue(key, esc)}</pre></td>
               <td>${Object.keys(rest).length ? `<pre class="mg-json mg-inline">${renderValue(rest, esc)}</pre>` : ''}</td>
               <td>${s?.indexSizes?.[name] != null ? esc(fmt.bytes(s.indexSizes[name])) : ''}</td>
-              <td>${!c.readOnly && name !== '_id_' ? `<button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.dropIndex(${js(name)})" title="${esc(t('indexes.drop'))}">🗑</button>` : ''}</td></tr>`;
+              <td>${!c.readOnly && name !== '_id_' ? `<button class="btn btn-ghost btn-sm mg-danger" onclick="${EXT}.dropIndex(${js(name)})" title="${esc(t('indexes.drop'))}"><i data-icon="trash-2"></i></button>` : ''}</td></tr>`;
           }).join('')}</tbody></table>` : `<p class="mg-muted">${esc(t('indexes.none'))}</p>`}
         ${d.options && Object.keys(d.options).length ? `<h4 class="mg-h">${esc(t('structure.options'))}</h4><pre class="mg-json mg-value">${renderValue(d.options, esc)}</pre>` : ''}
       </div>`;
@@ -1429,9 +1429,9 @@ export default {
 
     function formatItems(make) {
       return [
-        { label: t('menu.exportJson'), icon: '⤓', action: () => make('json') },
-        { label: t('menu.exportCsv'), icon: '⤓', action: () => make('csv') },
-        { label: t('menu.exportJs'), icon: '⤓', action: () => make('js') },
+        { label: t('menu.exportJson'), icon: 'download', action: () => make('json') },
+        { label: t('menu.exportCsv'), icon: 'download', action: () => make('csv') },
+        { label: t('menu.exportJs'), icon: 'download', action: () => make('js') },
       ];
     }
 
