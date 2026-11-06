@@ -41,7 +41,7 @@
         "en": "PM2 processes: list, start/stop/restart/delete and streaming logs"
       },
       "icon": "server-cog",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "pm2"
