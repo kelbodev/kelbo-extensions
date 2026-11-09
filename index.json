@@ -73,7 +73,7 @@
         "en": "Scripts in the projects' bin, scripts, tools… folders (JavaScript, TypeScript, shell, PowerShell) run as tracked processes, with their output in the bottom panel"
       },
       "icon": "scroll-text",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "kelbo": "^2.26",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "script"
