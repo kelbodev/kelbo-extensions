@@ -1,0 +1,24 @@
+{
+  "name": {
+    "it": "Monitor",
+    "en": "Monitor"
+  },
+  "code": "monitor",
+  "version": "1.0.0",
+  "kelbo": "^2.28.1",
+  "devdock": "^2.28.1",
+  "description": {
+    "it": "Output di più script npm e dell'estensione Script affiancati, ognuno con riavvio, arresto e nuovo avvio",
+    "en": "Output of several npm scripts and scripts of the Scripts extension side by side, each with restart, stop and run again"
+  },
+  "color": "#56d4dd",
+  "icon": "columns-3",
+  "position": "tab",
+  "order": 22,
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css"
+  }
+}

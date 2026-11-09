@@ -1,0 +1,31 @@
+{
+  "sidebar.title": "Processes",
+  "sidebar.addRunning": "Show every running process side by side",
+  "sidebar.closeAll": "Close all panes",
+  "sidebar.none": "No processes: run a script from the NPM or Scripts section.",
+  "sidebar.noSources": "Monitor needs the NPM or Scripts extension: it shows the output of their processes.",
+  "empty": "Choose in the sidebar the processes whose output you want side by side.",
+  "count": {
+    "one": "{count} pane",
+    "other": "{count} panes"
+  },
+  "layout.auto": "Auto",
+  "layout.one": "One column",
+  "layout.two": "Two columns",
+  "layout.three": "Three columns",
+  "exited": "exited (exit {code})",
+  "notRunning": "not running",
+  "action.restart": "Restart",
+  "action.stop": "Stop",
+  "action.run": "Run again",
+  "action.clear": "Clear the output",
+  "action.maximize": "Maximize",
+  "action.restore": "Back to the grid",
+  "action.close": "Close the pane",
+  "stream.exit": "[process exited, exit {code}]",
+  "stream.removed": "[process stopped]",
+  "stream.lost": "[connection lost]",
+  "toast.restarted": "Restarted: {name}",
+  "toast.stopped": "Stopped: {name}",
+  "toast.started": "Started: {name}"
+}

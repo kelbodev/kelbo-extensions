@@ -1,0 +1,31 @@
+{
+  "sidebar.title": "Processi",
+  "sidebar.addRunning": "Affianca tutti quelli in esecuzione",
+  "sidebar.closeAll": "Chiudi tutti i riquadri",
+  "sidebar.none": "Nessun processo: avvia uno script dalle sezioni NPM o Script.",
+  "sidebar.noSources": "Serve l'estensione NPM o Script: Monitor mostra l'output dei loro processi.",
+  "empty": "Scegli nella sidebar i processi di cui vedere l'output affiancato.",
+  "count": {
+    "one": "{count} riquadro",
+    "other": "{count} riquadri"
+  },
+  "layout.auto": "Auto",
+  "layout.one": "Una colonna",
+  "layout.two": "Due colonne",
+  "layout.three": "Tre colonne",
+  "exited": "terminato (exit {code})",
+  "notRunning": "non in esecuzione",
+  "action.restart": "Riavvia",
+  "action.stop": "Ferma",
+  "action.run": "Avvia di nuovo",
+  "action.clear": "Pulisci l'output",
+  "action.maximize": "Ingrandisci",
+  "action.restore": "Torna alla griglia",
+  "action.close": "Chiudi il riquadro",
+  "stream.exit": "[processo terminato, exit {code}]",
+  "stream.removed": "[processo fermato]",
+  "stream.lost": "[connessione persa]",
+  "toast.restarted": "Riavviato: {name}",
+  "toast.stopped": "Fermato: {name}",
+  "toast.started": "Avviato: {name}"
+}
