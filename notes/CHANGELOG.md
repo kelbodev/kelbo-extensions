@@ -4,6 +4,9 @@ All notable changes to the `notes` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Fixed
+- The board's top bar no longer covers Kelbo's menus and pop-ups (context menus, the theme and language menus): the cards keep their stacking order inside the board, and the bar only needs to stay above them.
+
 ## [1.7.0] - 2026-11-09
 
 ### Changed
