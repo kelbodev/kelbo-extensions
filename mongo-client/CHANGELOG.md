@@ -4,6 +4,8 @@ All notable changes to the `mongo-client` extension. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-09
+
 ### Changed
 - **Follows the color theme** (Kelbo 2.26): mongosh editor and document highlighting, autocomplete menu and changed cells use the core's theme variables instead of fixed colors, so they read well with *Kelbo Light*, *Kelbo Dim* or any other theme. Requires Kelbo 2.26 or later.
 
