@@ -4,6 +4,8 @@ All notable changes to the `ports` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-09
+
 ### Changed
 - **Follows the color theme** (Kelbo 2.26): port numbers in the dashboard widget use the core's theme variables instead of fixed colors, so they read well with *Kelbo Light*, *Kelbo Dim* or any other theme. Requires Kelbo 2.26 or later.
 
