@@ -1,0 +1,60 @@
+/* Kelbo Dim: a softer dark theme, slate grey instead of near-black, with muted colors.
+   Only redefines the variables of the Kelbo core (docs/EXTENSIONS.md → Themes). */
+:root[data-theme] {
+  --bg: #22272e;
+  --surface: #2a3038;
+  --surface2: #313842;
+  --border: #444c56;
+  --text: #cdd5de;
+  --muted: #8b949e;
+  --danger: #e5534b;
+  --success: #57ab5a;
+  --warning: #c69026;
+  --accent: #539bf5;
+
+  --border-strong: #636e7b;
+  --on-accent: #ffffff;
+  --on-warning: #1c2128;
+  --info: #6cb6ff;
+  --purple: #b083f0;
+  --orange: #e0823d;
+  --cyan: #56b6c2;
+  --overlay: rgba(28,33,40,.65);
+  --shadow: rgba(0,0,0,.35);
+  --hover: rgba(205,217,229,.05);
+  --terminal-bg: #1c2128;
+  --terminal-text: #c5d1de;
+
+  --ansi-black: #545d68;   --ansi-bright-black: #768390;
+  --ansi-red: #f47067;     --ansi-bright-red: #ff938a;
+  --ansi-green: #57ab5a;   --ansi-bright-green: #6bc46d;
+  --ansi-yellow: #c69026;  --ansi-bright-yellow: #daaa3f;
+  --ansi-blue: #539bf5;    --ansi-bright-blue: #6cb6ff;
+  --ansi-magenta: #b083f0; --ansi-bright-magenta: #dcbdfb;
+  --ansi-cyan: #39c5cf;    --ansi-bright-cyan: #56d4dd;
+  --ansi-white: #909dab;   --ansi-bright-white: #cdd9e5;
+
+  --code-keyword: #f47067;
+  --code-string: #96d0ff;
+  --code-number: #6cb6ff;
+  --code-function: #dcbdfb;
+  --code-key: #6cb6ff;
+  --code-literal: #f69d50;
+  --code-comment: #768390;
+  --code-variable: #e0823d;
+
+  --diff-add: #57ab5a;
+  --diff-del: #e5534b;
+
+  --http-get: #57ab5a; --http-post: #c69026; --http-put: #6cb6ff; --http-patch: #b083f0; --http-delete: #e5534b; --http-other: #768390;
+
+  --graph-0: #57ab5a; --graph-1: #539bf5; --graph-2: #b083f0; --graph-3: #e0823d; --graph-4: #6cb6ff;
+  --graph-5: #6bc46d; --graph-6: #dcbdfb; --graph-7: #f69d50; --graph-8: #96d0ff; --graph-9: #fc8dc7;
+
+  --note-yellow-bg: #4d4227; --note-yellow-fg: #f5e7b6;
+  --note-green-bg: #2b4636;  --note-green-fg: #cdeed6;
+  --note-blue-bg: #2a3f5c;   --note-blue-fg: #d2e3fb;
+  --note-pink-bg: #4f3042;   --note-pink-fg: #fbd6e8;
+  --note-purple-bg: #3d3457; --note-purple-fg: #e3daff;
+  --note-gray-bg: #373e47;   --note-gray-fg: #d7dde4;
+}

@@ -1,0 +1,76 @@
+/* Kelbo Light: light background, dark text. Only redefines the variables of the Kelbo core
+   (docs/EXTENSIONS.md → Themes); :root[data-theme] wins over the defaults of shell.css. */
+:root[data-theme] {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --surface2: #eef1f4;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --muted: #59636e;
+  --danger: #cf222e;
+  --success: #1a7f37;
+  --warning: #9a6700;
+  --accent: #0969da;
+
+  --border-strong: #8c959f;
+  --on-accent: #ffffff;
+  --on-warning: #ffffff;
+  --info: #0969da;
+  --purple: #8250df;
+  --orange: #bc4c00;
+  --cyan: #1b7c83;
+  --overlay: rgba(31,35,40,.45);
+  --shadow: rgba(31,35,40,.16);
+  --hover: rgba(31,35,40,.04);
+  --terminal-bg: #f6f8fa;
+  --terminal-text: #1f2328;
+
+  --ansi-black: #24292f;   --ansi-bright-black: #57606a;
+  --ansi-red: #cf222e;     --ansi-bright-red: #a40e26;
+  --ansi-green: #116329;   --ansi-bright-green: #1a7f37;
+  --ansi-yellow: #7d4e00;  --ansi-bright-yellow: #633c01;
+  --ansi-blue: #0969da;    --ansi-bright-blue: #218bff;
+  --ansi-magenta: #8250df; --ansi-bright-magenta: #a475f9;
+  --ansi-cyan: #1b7c83;    --ansi-bright-cyan: #3192aa;
+  --ansi-white: #6e7781;   --ansi-bright-white: #8c959f;
+
+  --code-keyword: #cf222e;
+  --code-string: #0a3069;
+  --code-number: #0550ae;
+  --code-function: #8250df;
+  --code-key: #0550ae;
+  --code-literal: #953800;
+  --code-comment: #6e7781;
+  --code-variable: #953800;
+
+  --diff-add: #1a7f37;
+  --diff-del: #cf222e;
+
+  --http-get: #1a7f37; --http-post: #9a6700; --http-put: #0969da; --http-patch: #8250df; --http-delete: #cf222e; --http-other: #6e7781;
+
+  --graph-0: #1a7f37; --graph-1: #0969da; --graph-2: #8250df; --graph-3: #bc4c00; --graph-4: #1b7c83;
+  --graph-5: #4d8a1f; --graph-6: #a475f9; --graph-7: #9a6700; --graph-8: #218bff; --graph-9: #bf3989;
+
+  --note-yellow-bg: #fff8c5; --note-yellow-fg: #3b2e00;
+  --note-green-bg: #dafbe1;  --note-green-fg: #0f3d1f;
+  --note-blue-bg: #ddf4ff;   --note-blue-fg: #0a3069;
+  --note-pink-bg: #ffeff7;   --note-pink-fg: #6b1840;
+  --note-purple-bg: #fbefff; --note-purple-fg: #3e1f79;
+  --note-gray-bg: #eaeef2;   --note-gray-fg: #24292f;
+
+  /* extension colors that are too light on a white background */
+  --ext-git: #1a7f37;
+  --ext-env: #2f8132;
+  --ext-db-client: #9a6700;
+  --ext-npm: #bc4c00;
+  --ext-tunnels: #0969da;
+  --ext-http-client: #bf3989;
+  --ext-mock-server: #1b7c83;
+  --ext-dashboard: #8250df;
+  --ext-notes: #9a6700;
+  --ext-script: #1a7f37;
+  --ext-mongo-client: #2c7a32;
+  --ext-pm2: #8250df;
+  --ext-ports: #bf3989;
+  --ext-swagger: #8a6100;
+}

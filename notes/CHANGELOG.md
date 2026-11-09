@@ -4,6 +4,9 @@ All notable changes to the `notes` extension. The format follows [Keep a Changel
 
 ## [Unreleased]
 
+### Changed
+- **Follows the color theme** (Kelbo 2.26): sticky note colours, shadows and the colour dots use the core's theme variables instead of fixed colors, so they read well with *Kelbo Light*, *Kelbo Dim* or any other theme. Requires Kelbo 2.26 or later.
+
 ## [1.6.0] - 2026-11-06
 
 ### Changed

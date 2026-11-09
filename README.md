@@ -10,6 +10,8 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | 📜 Scripts | [`script`](script) | Scripts of the projects' `bin`, `scripts`, `tools`… folders (JavaScript, TypeScript, shell, PowerShell, `#!` files) run as tracked processes like npm scripts: live output in the bottom panel, stop, restart, arguments (Kelbo 2.18 or later) |
 | 📝 Notes | [`notes`](notes) | To-do lists and sticky notes per project (plus *General*), encrypted with the master password, placed and resized freely on one board: lists of items to check, reorderable, with the open items on the tab; coloured notes saved automatically |
 | 📄 Swagger | [`swagger`](swagger) | Preview of an OpenAPI `.yaml`/`.json` file loaded from disk (Swagger UI from CDN) |
+| ☀️ Light theme | [`theme-light`](theme-light) | *Kelbo Light*: light background and dark text for the whole interface, extensions included (Kelbo 2.26 or later) |
+| 🌙 Dim theme | [`theme-dim`](theme-dim) | *Kelbo Dim*: a softer dark theme, slate grey instead of near-black, with less saturated colors (Kelbo 2.26 or later) |
 
 PM2 and Ports were built into Kelbo up to 1.23, Swagger up to 2.0. All of them require Kelbo 2.25 or later (Lucide icons from the core); older Kelbo versions keep the previous releases.
 
@@ -53,6 +55,7 @@ The extension contract (manifest, backend and frontend `ctx`, configuration, tra
 ## Adding an extension
 
 1. Create a folder named as the extension `code`, with `setting.json` (`version` and `devdock` are required), the backend and frontend files, `i18n/it.json` and `i18n/en.json`, `CHANGELOG.md` with an `## [Unreleased]` section, and `tests/` (they use `require('kelbo/testkit')`: `startServer(config, { install: [path.join(__dirname, '..')] })` starts Kelbo with the extension installed, `i18nProblems(dir)` checks its translations).
+   A theme extension only needs `setting.json` with `themes` and the stylesheet (see *Themes* in Kelbo's docs/EXTENSIONS.md), plus a test that runs `themeProblems(css)` on it — `theme-light` is the example.
 2. npm packages used by the extension go in its own `package.json` (`dependencies`), and the folder goes in the `workspaces` of the root `package.json` so that `npm install` makes them available to the tests: an installed extension doesn't see Kelbo's packages. They are installed with `--ignore-scripts`, so packages that need to compile native code at install time can't be used.
 3. `npm run catalog` and commit `index.json` (the CI fails when it is out of date).
 

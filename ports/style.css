@@ -15,6 +15,6 @@
 .pw-muted{color:var(--muted);font-size:11px;font-family:var(--font)}
 .pw-list{display:flex;flex-direction:column;gap:4px}
 .pw-row{display:flex;align-items:center;gap:8px;font-size:12px}
-.pw-port{font-family:var(--font);font-weight:600;color:#388bfd;min-width:52px}
+.pw-port{font-family:var(--font);font-weight:600;color:var(--info);min-width:52px}
 .pw-owner{font-family:var(--font);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pw-row button{margin-inline-start:auto}

@@ -5,8 +5,8 @@
   },
   "code": "notes",
   "version": "1.6.0",
-  "kelbo": "^2.25",
-  "devdock": "^2.25",
+  "kelbo": "^2.26",
+  "devdock": "^2.26",
   "description": {
     "it": "To-do e note per progetto: liste di frasi da spuntare e note tipo post-it, cifrate con la master password",
     "en": "To-dos and notes per project: lists of items to check and sticky notes, encrypted with the master password"

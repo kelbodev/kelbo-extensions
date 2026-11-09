@@ -13,7 +13,7 @@
       },
       "icon": "leaf",
       "version": "1.5.0",
-      "kelbo": "^2.25",
+      "kelbo": "^2.26",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "mongo-client"
     },
@@ -29,7 +29,7 @@
       },
       "icon": "notebook-pen",
       "version": "1.6.0",
-      "kelbo": "^2.25",
+      "kelbo": "^2.26",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "notes"
     },
@@ -58,7 +58,7 @@
       },
       "icon": "plug",
       "version": "1.2.0",
-      "kelbo": "^2.25",
+      "kelbo": "^2.26",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "ports"
     },
@@ -74,7 +74,7 @@
       },
       "icon": "scroll-text",
       "version": "1.3.0",
-      "kelbo": "^2.25",
+      "kelbo": "^2.26",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "script"
     },
@@ -90,6 +90,38 @@
       "kelbo": "^2.25",
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
       "path": "swagger"
+    },
+    {
+      "code": "theme-dim",
+      "name": {
+        "it": "Tema scuro attenuato",
+        "en": "Dim theme"
+      },
+      "description": {
+        "it": "Kelbo Dim: un tema scuro più morbido, grigio ardesia invece del quasi nero, con colori meno saturi; si sceglie dal pulsante del tema nell'header",
+        "en": "Kelbo Dim: a softer dark theme, slate grey instead of near-black, with less saturated colors; pick it from the theme button in the header"
+      },
+      "icon": "moon",
+      "version": "1.0.0",
+      "kelbo": "^2.26",
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "theme-dim"
+    },
+    {
+      "code": "theme-light",
+      "name": {
+        "it": "Tema chiaro",
+        "en": "Light theme"
+      },
+      "description": {
+        "it": "Kelbo Light: sfondo chiaro e testo scuro per tutta l'interfaccia, estensioni comprese; si sceglie dal pulsante del tema nell'header",
+        "en": "Kelbo Light: light background and dark text across the whole interface, extensions included; pick it from the theme button in the header"
+      },
+      "icon": "sun",
+      "version": "1.0.0",
+      "kelbo": "^2.26",
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "theme-light"
     }
   ]
 }

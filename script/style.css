@@ -23,7 +23,7 @@
 .scr-unavailable{opacity:.6}
 .scr-name{font-family:var(--font);font-size:12px;color:var(--ext-color, #3fb950);flex:0 0 220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scr-runner{font-family:var(--font);font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
-.scr-kind-node,.scr-kind-ts{color:#3178c6;border-color:color-mix(in srgb,#3178c6 40%,transparent)}
+.scr-kind-node,.scr-kind-ts{color:var(--info);border-color:color-mix(in srgb,var(--info) 40%,transparent)}
 .scr-kind-shell,.scr-kind-shebang{color:var(--warning, #d29922);border-color:color-mix(in srgb,var(--warning, #d29922) 40%,transparent)}
 .scr-args{font-family:var(--font);font-size:11px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .scr-actions{display:flex;gap:6px;flex-shrink:0;align-items:center}
@@ -33,7 +33,7 @@
 .proc-dot.ok{background:var(--muted);box-shadow:none;animation:none}
 .proc-dot.none{background:transparent;box-shadow:none;animation:none}
 .proc-uptime{font-family:var(--font);font-size:10px;color:var(--muted);white-space:nowrap}
-.btn-script{background:var(--ext-color, #3fb950);color:#fff;border-color:var(--ext-color, #3fb950)}
+.btn-script{background:var(--ext-color, #3fb950);color:var(--on-accent);border-color:var(--ext-color, #3fb950)}
 .btn-script:hover:not(:disabled){opacity:.85}
 .scr-pre{font-family:var(--font);font-size:10px;padding:1px 7px;border-radius:10px;border:1px solid color-mix(in srgb,var(--ext-color, #3fb950) 45%,transparent);color:var(--ext-color, #3fb950);white-space:nowrap;cursor:help}
 .scr-pre-project{border-style:dashed;opacity:.8}

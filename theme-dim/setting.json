@@ -1,0 +1,24 @@
+{
+  "name": {
+    "it": "Tema scuro attenuato",
+    "en": "Dim theme"
+  },
+  "code": "theme-dim",
+  "version": "1.0.0",
+  "kelbo": "^2.26",
+  "devdock": "^2.26",
+  "description": {
+    "it": "Kelbo Dim: un tema scuro più morbido, grigio ardesia invece del quasi nero, con colori meno saturi; si sceglie dal pulsante del tema nell'header",
+    "en": "Kelbo Dim: a softer dark theme, slate grey instead of near-black, with less saturated colors; pick it from the theme button in the header"
+  },
+  "color": "#539bf5",
+  "icon": "moon",
+  "themes": [
+    {
+      "id": "dim",
+      "name": "Kelbo Dim",
+      "scheme": "dark",
+      "css": "themes/dim.css"
+    }
+  ]
+}

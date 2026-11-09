@@ -1,0 +1,24 @@
+{
+  "name": {
+    "it": "Tema chiaro",
+    "en": "Light theme"
+  },
+  "code": "theme-light",
+  "version": "1.0.0",
+  "kelbo": "^2.26",
+  "devdock": "^2.26",
+  "description": {
+    "it": "Kelbo Light: sfondo chiaro e testo scuro per tutta l'interfaccia, estensioni comprese; si sceglie dal pulsante del tema nell'header",
+    "en": "Kelbo Light: light background and dark text across the whole interface, extensions included; pick it from the theme button in the header"
+  },
+  "color": "#0969da",
+  "icon": "sun",
+  "themes": [
+    {
+      "id": "light",
+      "name": "Kelbo Light",
+      "scheme": "light",
+      "css": "themes/light.css"
+    }
+  ]
+}

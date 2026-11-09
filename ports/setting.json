@@ -5,8 +5,8 @@
   },
   "code": "ports",
   "version": "1.2.0",
-  "kelbo": "^2.25",
-  "devdock": "^2.25",
+  "kelbo": "^2.26",
+  "devdock": "^2.26",
   "description": {
     "it": "Porte TCP in ascolto con il processo che le usa, collegate a script npm, PM2 e tunnel; arresto del processo che occupa una porta",
     "en": "Listening TCP ports with the process using them, linked to npm scripts, PM2 and tunnels; stop the process that holds a port"
