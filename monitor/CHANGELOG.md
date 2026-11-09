@@ -4,6 +4,8 @@ All notable changes to the `monitor` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-09
+
 ### Added
 - **Saved layouts.** The grid and its panes, each with its script (project, npm script or script with its arguments), saved by name in `config.json` (`monitorLayouts`, validated, Export/Import checkbox *Layout del Monitor*), so they travel with the export. Pick one from the toolbar to bring back its panes; **Start** runs the scripts of the panes that are not running. *Save* updates the chosen layout (a • marks unsaved changes), *save as* creates a new one, the bin deletes it.
 
