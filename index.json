@@ -24,8 +24,8 @@
         "en": "Monitor"
       },
       "description": {
-        "it": "Output di più script npm e dell'estensione Script affiancati, ognuno con riavvio, arresto e nuovo avvio",
-        "en": "Output of several npm scripts and scripts of the Scripts extension side by side, each with restart, stop and run again"
+        "it": "Output di più script npm e dell'estensione Script affiancati (1, 2, 3 colonne o 2×2), con riavvio, arresto e nuovo avvio; layout salvati con i loro script",
+        "en": "Output of several npm scripts and scripts of the Scripts extension side by side (1, 2, 3 columns or 2×2), with restart, stop and run again; saved layouts with their scripts"
       },
       "icon": "columns-3",
       "version": "1.0.0",

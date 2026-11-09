@@ -10,7 +10,7 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | 📜 Scripts | [`script`](script) | Scripts of the projects' `bin`, `scripts`, `tools`… folders (JavaScript, TypeScript, shell, PowerShell, `#!` files) run as tracked processes like npm scripts: live output in the bottom panel, stop, restart, arguments (Kelbo 2.18 or later) |
 | 📝 Notes | [`notes`](notes) | To-do lists and sticky notes per project (plus *General*), encrypted with the master password, placed and resized freely on one board: lists of items to check, reorderable, with the open items on the tab; coloured notes saved automatically |
 | 📄 Swagger | [`swagger`](swagger) | Preview of an OpenAPI `.yaml`/`.json` file loaded from disk (Swagger UI from CDN) |
-| 🖥️ Monitor | [`monitor`](monitor) | Output of several npm scripts and scripts of the Scripts extension side by side, each with restart, stop and run again (Kelbo 2.28.1 or later) |
+| 🖥️ Monitor | [`monitor`](monitor) | Output of several npm scripts and scripts of the Scripts extension side by side (1, 2, 3 columns or 2×2), each with restart, stop and run again; layouts saved with their scripts (Kelbo 2.28.1 or later) |
 | ☀️ Light theme | [`theme-light`](theme-light) | *Kelbo Light*: light background and dark text for the whole interface, extensions included (Kelbo 2.26 or later) |
 | 🌙 Dim theme | [`theme-dim`](theme-dim) | *Kelbo Dim*: a softer dark theme, slate grey instead of near-black, with less saturated colors (Kelbo 2.26 or later) |
 

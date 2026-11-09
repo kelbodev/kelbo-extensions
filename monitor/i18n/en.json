@@ -9,7 +9,6 @@
     "one": "{count} pane",
     "other": "{count} panes"
   },
-  "layout.auto": "Auto",
   "layout.one": "One column",
   "layout.two": "Two columns",
   "layout.three": "Three columns",
@@ -27,5 +26,38 @@
   "stream.lost": "[connection lost]",
   "toast.restarted": "Restarted: {name}",
   "toast.stopped": "Stopped: {name}",
-  "toast.started": "Started: {name}"
+  "toast.started": "Started: {name}",
+  "layout.four": "Two columns and two rows",
+  "layouts.choose": "Saved layouts",
+  "layouts.unsaved": "Unsaved layout",
+  "layouts.save": "Save the changes to the layout",
+  "layouts.saveAs": "Save as a new layout",
+  "layouts.delete": "Delete the layout",
+  "layouts.startStopped": "Start the scripts of the panes that are not running",
+  "layouts.start": "Start",
+  "layouts.saveAsTitle": "New layout",
+  "layouts.name": "Name",
+  "layouts.namePlaceholder": "e.g. Shop: API, worker and web",
+  "layouts.saveAsHint": {
+    "one": "Saves the grid and {count} pane with its script.",
+    "other": "Saves the grid and {count} panes with their scripts."
+  },
+  "layouts.nameRequired": "Enter a name",
+  "layouts.empty": "No panes to save",
+  "layouts.saved": "Layout saved: {name}",
+  "layouts.deleteTitle": "Delete layout",
+  "layouts.deleteConfirm": "Delete the layout “{name}”? The open panes stay.",
+  "layouts.stoppedHint": {
+    "one": "{count} script of the layout is not running: ▶ Start runs it",
+    "other": "{count} scripts of the layout are not running: ▶ Start runs them"
+  },
+  "errors.layouts_invalid": "Invalid layouts (at most 50)",
+  "errors.layout_invalid": "Invalid layout",
+  "errors.layout_id": "Invalid layout id",
+  "errors.layout_name": "Layout name required (at most 80 characters)",
+  "errors.layout_grid": "Invalid grid: 1, 2, 3 columns or 2×2",
+  "errors.layout_panes": "Invalid panes (at most 24)",
+  "errors.layout_pane": "Invalid pane in the layout “{name}”",
+  "errors.layout_duplicate": "Two layouts with the same id",
+  "errors.layout_not_found": "Layout not found"
 }

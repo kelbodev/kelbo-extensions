@@ -1,10 +1,18 @@
 <div class="mon-toolbar">
+  <span class="mon-layouts">
+    <i data-icon="layout-template"></i>
+    <select data-role="layouts" onchange="Ext.monitor.layout(this.value)" data-i18n-title="layouts.choose"></select>
+    <button class="btn btn-ghost btn-sm" data-role="layout-save" onclick="Ext.monitor.saveLayout()" data-i18n-title="layouts.save"><i data-icon="save"></i></button>
+    <button class="btn btn-ghost btn-sm" onclick="Ext.monitor.saveLayoutAs()" data-i18n-title="layouts.saveAs"><i data-icon="copy-plus"></i></button>
+    <button class="btn btn-ghost btn-sm" data-role="layout-delete" onclick="Ext.monitor.deleteLayout()" data-i18n-title="layouts.delete"><i data-icon="trash-2"></i></button>
+    <button class="btn btn-ghost btn-sm" data-role="start-stopped" onclick="Ext.monitor.startStopped()" data-i18n-title="layouts.startStopped"><i data-icon="play"></i> <span data-i18n="layouts.start"></span></button>
+  </span>
   <span class="mon-count" data-role="count"></span>
-  <span class="mon-seg" data-role="cols">
-    <button data-cols="0" onclick="Ext.monitor.cols(0)" data-i18n="layout.auto"></button>
-    <button data-cols="1" onclick="Ext.monitor.cols(1)" data-i18n-title="layout.one"><i data-icon="square"></i></button>
-    <button data-cols="2" onclick="Ext.monitor.cols(2)" data-i18n-title="layout.two"><i data-icon="columns-2"></i></button>
-    <button data-cols="3" onclick="Ext.monitor.cols(3)" data-i18n-title="layout.three"><i data-icon="columns-3"></i></button>
+  <span class="mon-seg">
+    <button data-grid="1" onclick="Ext.monitor.grid(1)" data-i18n-title="layout.one"><i data-icon="square"></i></button>
+    <button data-grid="2" onclick="Ext.monitor.grid(2)" data-i18n-title="layout.two"><i data-icon="columns-2"></i></button>
+    <button data-grid="3" onclick="Ext.monitor.grid(3)" data-i18n-title="layout.three"><i data-icon="columns-3"></i></button>
+    <button data-grid="4" onclick="Ext.monitor.grid(4)" data-i18n-title="layout.four"><i data-icon="layout-grid"></i></button>
   </span>
 </div>
 <div class="empty-state" data-role="empty"><div class="icon"><i data-icon="columns-3"></i></div><p data-role="empty-text"></p></div>

@@ -17,15 +17,29 @@ export default {
 
     let procs = [];                 // { src, id, projectId, projectLabel, script, args, running, exitCode, startedAt, ports }
     const panes = new Map();        // chiave → { el, procId, ended, close, ansi, last }
-    let state = readState();        // { panes: [chiave], cols: 0..3, max: chiave|null }
+    let state = readState();        // { panes: [chiave], grid: 1..4, max: chiave|null, layout: id|null, args: { chiave: [argomenti] } }
+    let projectNames = {};          // id del progetto → nome (per i riquadri senza processo)
+    const projectName = info => info.projectLabel || projectNames[info.projectId] || info.projectId || '';
+    async function loadProjectNames() {
+      try { projectNames = Object.fromEntries((await ctx.projects.load()).projects.map(p => [p.id, p.label])); } catch { /* restano gli id */ }
+    }
+    let layouts = [];               // layout salvati in config.json: { id, name, grid, panes: [{ src, projectId, script, args? }] }
 
-    // ---- stato nel browser ----
+    // ---- stato nel browser (i layout con nome invece sono in config.json) ----
     function readState() {
       try {
         const s = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
-        if (s && Array.isArray(s.panes)) return { panes: s.panes.filter(k => typeof k === 'string').slice(0, 24), cols: [0, 1, 2, 3].includes(s.cols) ? s.cols : 0, max: typeof s.max === 'string' ? s.max : null };
+        if (s && Array.isArray(s.panes)) {
+          return {
+            panes: s.panes.filter(k => typeof k === 'string').slice(0, 24),
+            grid: [1, 2, 3, 4].includes(s.grid) ? s.grid : 2,
+            max: typeof s.max === 'string' ? s.max : null,
+            layout: typeof s.layout === 'string' ? s.layout : null,
+            args: s.args && typeof s.args === 'object' && !Array.isArray(s.args) ? s.args : {},
+          };
+        }
       } catch { /* niente di salvato */ }
-      return { panes: [], cols: 0, max: null };
+      return { panes: [], grid: 2, max: null, layout: null, args: {} };
     }
     function saveState() {
       try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch { /* solo comodità */ }
@@ -61,7 +75,7 @@ export default {
       if (!items.size) { list.innerHTML = `<p class="mon-muted mon-pad">${esc(t('sidebar.none'))}</p>`; return; }
       const byProject = new Map();
       for (const [k, p] of items) {
-        const name = p.projectLabel || p.projectId;
+        const name = projectName(p);
         if (!byProject.has(name)) byProject.set(name, []);
         byProject.get(name).push([k, p]);
       }
@@ -76,21 +90,21 @@ export default {
     }
 
     // ---- riquadri ----
-    function columns() {
-      const n = state.panes.length;
-      if (state.cols) return Math.min(state.cols, Math.max(n, 1));
-      return n <= 3 ? Math.max(n, 1) : n === 4 ? 2 : 3;
-    }
+    // 1, 2, 3 colonne; 4 = due colonne e due righe (oltre il quarto riquadro si scorre)
+    const columns = () => (state.grid === 4 ? 2 : state.grid);
 
     function renderLayout() {
       const n = state.panes.length;
       $('empty').hidden = n > 0;
       $('empty-text').textContent = sources().length ? t('empty') : t('sidebar.noSources');
       $('count').textContent = n ? t('count', { count: n }) : '';
-      for (const b of ctx.root.querySelectorAll('[data-cols]')) b.classList.toggle('active', Number(b.dataset.cols) === state.cols);
+      for (const b of ctx.root.querySelectorAll('[data-grid]')) b.classList.toggle('active', Number(b.dataset.grid) === state.grid);
       const grid = $('grid');
-      grid.style.setProperty('--mon-cols', state.max && state.panes.includes(state.max) ? 1 : columns());
-      grid.classList.toggle('maximized', !!(state.max && state.panes.includes(state.max)));
+      const maximized = !!(state.max && state.panes.includes(state.max));
+      grid.style.setProperty('--mon-cols', maximized ? 1 : columns());
+      grid.classList.toggle('maximized', maximized);
+      grid.classList.toggle('g4', state.grid === 4 && !maximized);
+      renderLayouts();
       // riquadri tolti
       for (const [k, pane] of panes) if (!state.panes.includes(k)) { pane.close?.(); pane.el.remove(); panes.delete(k); }
       // nuovi riquadri e ordine
@@ -117,7 +131,10 @@ export default {
       const pane = panes.get(key);
       if (!pane) return;
       const p = resolve(key);
-      if (p) pane.last = { src: p.src, projectId: p.projectId, projectLabel: p.projectLabel, script: p.script, args: p.args };
+      if (p) {
+        pane.last = { src: p.src, projectId: p.projectId, projectLabel: p.projectLabel, script: p.script, args: p.args };
+        if (p.src === 'script' && Array.isArray(p.args)) state.args[key] = p.args;
+      } else if (pane.last && !pane.last.args && state.args[key]) pane.last.args = state.args[key];
       if (p && (p.id !== pane.procId || (pane.ended && p.running))) connect(pane, p);
       renderHead(key, pane, p);
     }
@@ -131,7 +148,7 @@ export default {
       const canRun = info.src && sources().includes(info.src) && !(info.src === 'npm' && String(info.script).startsWith('update '));
       ctx.ui.patch(pane.el.querySelector('.mon-head'), `
         <span class="mon-src mon-src-${esc(info.src || '')}">${esc(info.src || '')}</span>
-        <span class="mon-title" title="${esc(`${info.projectLabel || info.projectId || ''} · ${label(info)}`)}"><strong>${esc(info.projectLabel || info.projectId || '')}</strong> ${esc(label(info))}</span>
+        <span class="mon-title" title="${esc(`${projectName(info)} · ${label(info)}`)}"><strong>${esc(projectName(info))}</strong> ${esc(label(info))}</span>
         ${status}
         ${(p?.running ? p.ports || [] : []).map(port => `<span class="mon-port">:${esc(port)}</span>`).join('')}
         <span class="mon-actions">
@@ -187,9 +204,93 @@ export default {
       await refresh();
     }
 
+    // ---- layout salvati: griglia e riquadri con i loro script ----
+    async function loadLayouts() {
+      try { layouts = (await ctx.api.get('/layouts')).layouts; } catch { layouts = []; }
+      if (state.layout && !layouts.some(l => l.id === state.layout)) { state.layout = null; saveState(); }
+    }
+    const currentPanes = () => state.panes.map(k => {
+      const info = parseKey(k);
+      return info && { ...info, ...(info.src === 'script' ? { args: state.args[k] || panes.get(k)?.last?.args || [] } : {}) };
+    }).filter(Boolean);
+    const sameAs = l => l && l.grid === state.grid && JSON.stringify(l.panes.map(p => keyOf(p))) === JSON.stringify(state.panes);
+
+    function renderLayouts() {
+      const sel = $('layouts');
+      if (!sel) return;
+      const cur = layouts.find(l => l.id === state.layout);
+      const changed = cur && !sameAs(cur);
+      sel.innerHTML = `<option value="">${esc(t('layouts.unsaved'))}</option>`
+        + layouts.map(l => `<option value="${esc(l.id)}" ${l.id === state.layout ? 'selected' : ''}>${esc(l.name)}${l.id === state.layout && changed ? ' •' : ''}</option>`).join('');
+      $('layout-save').disabled = !cur || !changed;
+      $('layout-delete').disabled = !cur;
+      $('start-stopped').disabled = !state.panes.some(k => !resolve(k)?.running);
+    }
+
+    async function applyLayout(id) {
+      await loadProcs(); // processi aggiornati: niente riquadri collegati a processi già fermati
+      const l = layouts.find(x => x.id === id);
+      if (!l) { state.layout = null; saveState(); renderLayouts(); return; }
+      state.panes = l.panes.map(p => keyOf(p));
+      state.args = Object.fromEntries(l.panes.filter(p => p.src === 'script').map(p => [keyOf(p), p.args || []]));
+      state.grid = l.grid; state.max = null; state.layout = l.id;
+      saveState(); renderSidebar(); renderLayout();
+      const stopped = state.panes.filter(k => !resolve(k)?.running).length;
+      if (stopped) toast(t('layouts.stoppedHint', { count: stopped }), 'info');
+    }
+
+    async function saveLayout() {
+      const cur = layouts.find(l => l.id === state.layout);
+      if (!cur) return layoutDialog();
+      try {
+        await ctx.api.put(`/layouts/${encodeURIComponent(cur.id)}`, { name: cur.name, grid: state.grid, panes: currentPanes() });
+        await loadLayouts(); renderLayouts();
+        toast(t('layouts.saved', { name: cur.name }), 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
+    function layoutDialog() {
+      if (!state.panes.length) { toast(t('layouts.empty'), 'error'); return; }
+      ctx.ui.openModal(t('layouts.saveAsTitle'), `
+        <label class="mon-field"><span>${esc(t('layouts.name'))}</span>
+          <input id="mon_layout_name" type="text" maxlength="80" placeholder="${esc(t('layouts.namePlaceholder'))}" onkeydown="if(event.key==='Enter')Ext.monitor.confirmSaveAs()"></label>
+        <p class="mon-muted">${esc(t('layouts.saveAsHint', { count: state.panes.length }))}</p>`,
+      `<button class="btn btn-ghost" onclick="UI.closeModal()">${esc(t('core.action.cancel'))}</button>
+       <button class="btn btn-primary" onclick="Ext.monitor.confirmSaveAs()">${esc(t('core.action.save'))}</button>`);
+      setTimeout(() => document.getElementById('mon_layout_name')?.focus(), 50);
+    }
+    async function confirmSaveAs() {
+      const name = (document.getElementById('mon_layout_name')?.value || '').trim();
+      if (!name) { toast(t('layouts.nameRequired'), 'error'); return; }
+      try {
+        const l = await ctx.api.put('/layouts/new', { name, grid: state.grid, panes: currentPanes() });
+        state.layout = l.id; saveState();
+        ctx.ui.closeModal();
+        await loadLayouts(); renderLayouts();
+        toast(t('layouts.saved', { name }), 'success');
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
+    function deleteLayout() {
+      const cur = layouts.find(l => l.id === state.layout);
+      if (!cur) return;
+      ctx.ui.openModal(t('layouts.deleteTitle'), `<p>${esc(t('layouts.deleteConfirm', { name: cur.name }))}</p>`,
+        `<button class="btn btn-ghost" onclick="UI.closeModal()">${esc(t('core.action.cancel'))}</button>
+         <button class="btn btn-danger" onclick="Ext.monitor.confirmDelete()">${esc(t('core.action.delete'))}</button>`);
+    }
+    async function confirmDelete() {
+      try {
+        await ctx.api.del(`/layouts/${encodeURIComponent(state.layout)}`);
+        ctx.ui.closeModal();
+        state.layout = null; saveState();
+        await loadLayouts(); renderLayouts();
+      } catch (e) { toast(e.message, 'error'); }
+    }
+
     const actions = {
       toggle(key) {
         if (state.panes.includes(key)) {
+          delete state.args[key];
           state.panes = state.panes.filter(k => k !== key);
           if (state.max === key) state.max = null;
         } else state.panes = [...state.panes, key].slice(-24);
@@ -200,8 +301,19 @@ export default {
         state.panes = [...state.panes, ...running.filter(k => !state.panes.includes(k))].slice(-24);
         saveState(); renderSidebar(); renderLayout();
       },
-      closeAll() { state.panes = []; state.max = null; saveState(); renderSidebar(); renderLayout(); },
-      cols(n) { state.cols = n; saveState(); renderLayout(); },
+      closeAll() { state.panes = []; state.args = {}; state.max = null; saveState(); renderSidebar(); renderLayout(); },
+      grid(n) { state.grid = n; saveState(); renderLayout(); },
+      layout: applyLayout,
+      saveLayout,
+      saveLayoutAs: () => layoutDialog(),
+      confirmSaveAs,
+      deleteLayout,
+      confirmDelete,
+      async startStopped() {
+        const stopped = state.panes.filter(k => !resolve(k)?.running);
+        for (const k of stopped) await actions.run(k, true);
+        await refresh();
+      },
       max(key) { state.max = state.max === key ? null : key; saveState(); renderLayout(); },
       clear(key) { const pane = panes.get(key); if (pane) { pane.el.querySelector('.mon-body').innerHTML = ''; pane.ansi = ansiState(); } },
       restart(key) {
@@ -213,14 +325,15 @@ export default {
         if (p) call(() => ctx.apiFor(p.src).del(`/processes/${encodeURIComponent(p.id)}`), t('toast.stopped', { name: label(p) }));
       },
       // di nuovo: lo stesso processo terminato se c'è ancora (stessi argomenti), altrimenti un avvio nuovo
-      run(key) {
+      run(key, quiet = false) {
         const p = paneProc(key);
         const info = p || panes.get(key)?.last || parseKey(key);
-        if (!info?.src) return;
+        if (!info?.src || !sources().includes(info.src)) return Promise.resolve();
         const api = ctx.apiFor(info.src);
-        call(() => (p ? api.post(`/processes/${encodeURIComponent(p.id)}/restart`)
-          : api.post(`/projects/${encodeURIComponent(info.projectId)}/run`, info.src === 'npm' ? { script: info.script } : { script: info.script, args: info.args || [] })),
-        t('toast.started', { name: label(info) }));
+        const args = info.args || state.args[key] || [];
+        return call(() => (p ? api.post(`/processes/${encodeURIComponent(p.id)}/restart`)
+          : api.post(`/projects/${encodeURIComponent(info.projectId)}/run`, info.src === 'npm' ? { script: info.script } : { script: info.script, args })),
+        quiet ? null : t('toast.started', { name: label(info) }));
       },
     };
     ctx.expose(actions);
@@ -235,9 +348,12 @@ export default {
       setInterval(() => { if (ctx.isActive()) refresh(); }, POLL_MS),
     ];
 
-    this.show = () => refresh();
+    this.show = async () => { await loadLayouts(); await refresh(); };
     this.languageChanged = () => { renderSidebar(); renderLayout(); };
     this.unmount = () => { timers.forEach(clearInterval); for (const pane of panes.values()) pane.close?.(); panes.clear(); };
+    ctx.bus.on('core:projects-changed', async () => { await loadProjectNames(); renderSidebar(); renderLayout(); });
+    await loadProjectNames();
+    await loadLayouts();
     await refresh();
   },
 };

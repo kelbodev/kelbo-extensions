@@ -9,7 +9,6 @@
     "one": "{count} riquadro",
     "other": "{count} riquadri"
   },
-  "layout.auto": "Auto",
   "layout.one": "Una colonna",
   "layout.two": "Due colonne",
   "layout.three": "Tre colonne",
@@ -27,5 +26,38 @@
   "stream.lost": "[connessione persa]",
   "toast.restarted": "Riavviato: {name}",
   "toast.stopped": "Fermato: {name}",
-  "toast.started": "Avviato: {name}"
+  "toast.started": "Avviato: {name}",
+  "layout.four": "Due colonne e due righe",
+  "layouts.choose": "Layout salvati",
+  "layouts.unsaved": "Layout non salvato",
+  "layouts.save": "Salva le modifiche nel layout",
+  "layouts.saveAs": "Salva come nuovo layout",
+  "layouts.delete": "Elimina il layout",
+  "layouts.startStopped": "Avvia gli script dei riquadri non in esecuzione",
+  "layouts.start": "Avvia",
+  "layouts.saveAsTitle": "Nuovo layout",
+  "layouts.name": "Nome",
+  "layouts.namePlaceholder": "es. Shop: API, worker e web",
+  "layouts.saveAsHint": {
+    "one": "Salva la griglia e {count} riquadro con il suo script.",
+    "other": "Salva la griglia e {count} riquadri con i loro script."
+  },
+  "layouts.nameRequired": "Scrivi un nome",
+  "layouts.empty": "Nessun riquadro da salvare",
+  "layouts.saved": "Layout salvato: {name}",
+  "layouts.deleteTitle": "Elimina layout",
+  "layouts.deleteConfirm": "Eliminare il layout «{name}»? I riquadri aperti restano.",
+  "layouts.stoppedHint": {
+    "one": "{count} script del layout non è in esecuzione: ▶ Avvia lo fa partire",
+    "other": "{count} script del layout non sono in esecuzione: ▶ Avvia li fa partire"
+  },
+  "errors.layouts_invalid": "Layout non validi (al massimo 50)",
+  "errors.layout_invalid": "Layout non valido",
+  "errors.layout_id": "Id del layout non valido",
+  "errors.layout_name": "Nome del layout obbligatorio (al massimo 80 caratteri)",
+  "errors.layout_grid": "Griglia non valida: 1, 2, 3 colonne o 2×2",
+  "errors.layout_panes": "Riquadri non validi (al massimo 24)",
+  "errors.layout_pane": "Riquadro non valido nel layout «{name}»",
+  "errors.layout_duplicate": "Due layout con lo stesso id",
+  "errors.layout_not_found": "Layout non trovato"
 }

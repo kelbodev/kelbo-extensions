@@ -8,13 +8,52 @@
   "kelbo": "^2.28.1",
   "devdock": "^2.28.1",
   "description": {
-    "it": "Output di più script npm e dell'estensione Script affiancati, ognuno con riavvio, arresto e nuovo avvio",
-    "en": "Output of several npm scripts and scripts of the Scripts extension side by side, each with restart, stop and run again"
+    "it": "Output di più script npm e dell'estensione Script affiancati (1, 2, 3 colonne o 2×2), con riavvio, arresto e nuovo avvio; layout salvati con i loro script",
+    "en": "Output of several npm scripts and scripts of the Scripts extension side by side (1, 2, 3 columns or 2×2), with restart, stop and run again; saved layouts with their scripts"
   },
   "color": "#56d4dd",
   "icon": "columns-3",
   "position": "tab",
   "order": 22,
+  "config": [
+    "monitorLayouts"
+  ],
+  "export": [
+    {
+      "id": "layouts",
+      "label": {
+        "it": "Layout del Monitor",
+        "en": "Monitor layouts"
+      },
+      "description": {
+        "it": "Griglie salvate con i loro riquadri e script",
+        "en": "Saved grids with their panes and scripts"
+      },
+      "sections": [
+        "monitorLayouts"
+      ]
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/layouts",
+        "handler": "list"
+      },
+      {
+        "method": "PUT",
+        "path": "/layouts/:id",
+        "handler": "save"
+      },
+      {
+        "method": "DELETE",
+        "path": "/layouts/:id",
+        "handler": "remove"
+      }
+    ]
+  },
   "frontend": {
     "html": "view.html",
     "sidebar": "sidebar.html",
