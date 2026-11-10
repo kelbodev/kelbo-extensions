@@ -59,5 +59,7 @@
   "errors.layout_panes": "Invalid panes (at most 24)",
   "errors.layout_pane": "Invalid pane in the layout “{name}”",
   "errors.layout_duplicate": "Two layouts with the same id",
-  "errors.layout_not_found": "Layout not found"
+  "errors.layout_not_found": "Layout not found",
+  "layouts.saveNoChanges": "No changes to save in the layout",
+  "layouts.saveNew": "Save the open panes as a new layout"
 }

@@ -59,5 +59,7 @@
   "errors.layout_panes": "Riquadri non validi (al massimo 24)",
   "errors.layout_pane": "Riquadro non valido nel layout «{name}»",
   "errors.layout_duplicate": "Due layout con lo stesso id",
-  "errors.layout_not_found": "Layout non trovato"
+  "errors.layout_not_found": "Layout non trovato",
+  "layouts.saveNoChanges": "Nessuna modifica da salvare nel layout",
+  "layouts.saveNew": "Salva i riquadri aperti in un nuovo layout"
 }

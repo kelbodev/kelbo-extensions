@@ -4,6 +4,12 @@ All notable changes to the `monitor` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+### Changed
+- **Save** is enabled with open panes and no layout chosen too: it asks for a name and creates the layout. With a layout chosen it saves its changes, and it is disabled only when there is nothing to save (the tooltip says why).
+
+### Fixed
+- **Automatic scroll of the panes.** A pane at the bottom follows the output, also after switching section, maximizing a pane or changing the grid (the panes were moved in the page at every refresh, every 3 seconds, and came back scrolled to the top). Scrolled up, it stays where it was left, also across section switches, and follows again as soon as it is brought back to the bottom.
+
 ## [1.1.0] - 2026-11-09
 
 ### Added

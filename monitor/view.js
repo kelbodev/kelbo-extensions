@@ -106,7 +106,7 @@ export default {
       grid.classList.toggle('g4', state.grid === 4 && !maximized);
       renderLayouts();
       // riquadri tolti
-      for (const [k, pane] of panes) if (!state.panes.includes(k)) { pane.close?.(); pane.el.remove(); panes.delete(k); }
+      for (const [k, pane] of panes) if (!state.panes.includes(k)) { pane.close?.(); pane.resize?.disconnect(); pane.el.remove(); panes.delete(k); }
       // nuovi riquadri e ordine
       for (const k of state.panes) {
         let pane = panes.get(k);
@@ -115,14 +115,27 @@ export default {
           el.className = 'mon-pane';
           el.innerHTML = '<header class="mon-head"></header><div class="mon-body"></div>';
           const body = el.querySelector('.mon-body');
-          pane = { el, procId: null, ended: false, close: null, ansi: ansiState(), stick: true, last: parseKey(k) };
-          body.addEventListener('scroll', () => { pane.stick = body.scrollHeight - body.scrollTop - body.clientHeight < 30; });
+          pane = { el, procId: null, ended: false, close: null, ansi: ansiState(), stick: true, top: 0, last: parseKey(k) };
+          // in fondo → segue l'output; spostato più su → resta lì finché non torna in fondo.
+          // Nascosto (altra sezione, riquadro ingrandito) il browser azzera la posizione: non conta
+          body.addEventListener('scroll', () => {
+            if (!body.clientHeight) return;
+            pane.stick = body.scrollHeight - body.scrollTop - body.clientHeight < 24;
+            pane.top = body.scrollTop;
+          });
+          // di nuovo visibile o ridimensionato (griglia, finestra): in fondo, o dove l'aveva lasciato
+          pane.resize = new ResizeObserver(() => { if (body.clientHeight) placeScroll(pane); });
+          pane.resize.observe(body);
           panes.set(k, pane);
         }
         pane.el.classList.toggle('max', state.max === k);
         pane.el.hidden = !!(state.max && state.max !== k && state.panes.includes(state.max));
-        grid.appendChild(pane.el); // nell'ordine della lista
       }
+      // nell'ordine della lista, spostando solo quelli fuori posto (spostare un elemento ne azzera lo scroll)
+      state.panes.forEach((k, i) => {
+        const pane = panes.get(k);
+        if (grid.children[i] !== pane.el) { grid.insertBefore(pane.el, grid.children[i] || null); requestAnimationFrame(() => placeScroll(pane)); }
+      });
       for (const k of state.panes) syncPane(k);
     }
 
@@ -170,7 +183,12 @@ export default {
       else span.innerHTML = ansiToHtml(text, pane.ansi);
       body.appendChild(span);
       while (body.childNodes.length > MAX_CHUNKS) body.firstChild.remove();
-      if (pane.stick) body.scrollTop = body.scrollHeight;
+      if (pane.stick && body.clientHeight) body.scrollTop = body.scrollHeight;
+    }
+
+    function placeScroll(pane) {
+      const body = pane.el.querySelector('.mon-body');
+      body.scrollTop = pane.stick ? body.scrollHeight : pane.top;
     }
 
     // nuovo processo (o lo stesso riavviato dopo la fine): l'output riparte dallo storico
@@ -222,7 +240,10 @@ export default {
       const changed = cur && !sameAs(cur);
       sel.innerHTML = `<option value="">${esc(t('layouts.unsaved'))}</option>`
         + layouts.map(l => `<option value="${esc(l.id)}" ${l.id === state.layout ? 'selected' : ''}>${esc(l.name)}${l.id === state.layout && changed ? ' •' : ''}</option>`).join('');
-      $('layout-save').disabled = !cur || !changed;
+      // Salva: aggiorna il layout scelto se è cambiato; senza layout scelto ne crea uno (chiede il nome)
+      const save = $('layout-save');
+      save.disabled = cur ? !changed : !state.panes.length;
+      save.title = t(cur ? (changed ? 'layouts.save' : 'layouts.saveNoChanges') : (state.panes.length ? 'layouts.saveNew' : 'layouts.empty'));
       $('layout-delete').disabled = !cur;
       $('start-stopped').disabled = !state.panes.some(k => !resolve(k)?.running);
     }
@@ -350,7 +371,7 @@ export default {
 
     this.show = async () => { await loadLayouts(); await refresh(); };
     this.languageChanged = () => { renderSidebar(); renderLayout(); };
-    this.unmount = () => { timers.forEach(clearInterval); for (const pane of panes.values()) pane.close?.(); panes.clear(); };
+    this.unmount = () => { timers.forEach(clearInterval); for (const pane of panes.values()) { pane.close?.(); pane.resize?.disconnect(); } panes.clear(); };
     ctx.bus.on('core:projects-changed', async () => { await loadProjectNames(); renderSidebar(); renderLayout(); });
     await loadProjectNames();
     await loadLayouts();
