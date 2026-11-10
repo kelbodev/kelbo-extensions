@@ -4,6 +4,8 @@ All notable changes to the `monitor` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-10
+
 ### Changed
 - **Save** is enabled with open panes and no layout chosen too: it asks for a name and creates the layout. With a layout chosen it saves its changes, and it is disabled only when there is nothing to save (the tooltip says why).
 
