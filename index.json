@@ -2,6 +2,25 @@
   "name": "Kelbo official extensions",
   "extensions": [
     {
+      "code": "db-postgres",
+      "name": {
+        "it": "PostgreSQL",
+        "en": "PostgreSQL"
+      },
+      "description": {
+        "it": "Motore PostgreSQL per la sezione Database: schemi, query, dati, designer delle tabelle e migration (driver pg)",
+        "en": "PostgreSQL engine for the Database section: schemas, queries, data, table designer and migrations (pg driver)"
+      },
+      "icon": "database",
+      "version": "1.0.0",
+      "kelbo": "^2.30",
+      "kinds": [
+        "provider"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "db-postgres"
+    },
+    {
       "code": "mongo-client",
       "name": {
         "it": "MongoDB",

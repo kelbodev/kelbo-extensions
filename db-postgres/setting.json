@@ -1,0 +1,33 @@
+{
+  "name": {
+    "it": "PostgreSQL",
+    "en": "PostgreSQL"
+  },
+  "code": "db-postgres",
+  "version": "1.0.0",
+  "kelbo": "^2.30",
+  "devdock": "^2.30",
+  "description": {
+    "it": "Motore PostgreSQL per la sezione Database: schemi, query, dati, designer delle tabelle e migration (driver pg)",
+    "en": "PostgreSQL engine for the Database section: schemas, queries, data, table designer and migrations (pg driver)"
+  },
+  "color": "#4169e1",
+  "icon": "database",
+  "dependencies": [
+    {
+      "code": "db-client",
+      "required": true
+    }
+  ],
+  "provides": [
+    {
+      "capability": "db-engine",
+      "id": "postgres",
+      "title": "PostgreSQL",
+      "handler": "postgres"
+    }
+  ],
+  "backend": {
+    "module": "server.js"
+  }
+}
