@@ -4,7 +4,7 @@
 //   npm run catalog -- --check controlla che index.json sia aggiornato e i manifest validi (CI)
 const fs = require('fs');
 const path = require('path');
-const { validateManifest } = require('kelbo/testkit');
+const { validateManifest, extensionKinds } = require('kelbo/testkit');
 
 const ROOT = path.join(__dirname, '..');
 const REPO = 'https://github.com/kelbodev/kelbo-extensions.git';
@@ -21,7 +21,7 @@ function build() {
     try { m = validateManifest(raw, folder); } catch (e) { throw new Error(`${folder}: ${e.message}`); }
     return {
       code: m.code, name: m.name, description: m.description || '', icon: m.icon || null,
-      version: m.version, kelbo: m.kelbo, repo: REPO, path: folder,
+      version: m.version, kelbo: m.kelbo, kinds: extensionKinds(m), repo: REPO, path: folder,
     };
   });
   return JSON.stringify({ name: 'Kelbo official extensions', extensions }, null, 2) + '\n';
