@@ -1,0 +1,10 @@
+{
+  "name": "kelbo-ext-db-mssql",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kelbo: motore Microsoft SQL Server della sezione Database",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mssql": "^11.0.1"
+  }
+}

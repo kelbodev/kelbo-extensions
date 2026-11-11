@@ -1,0 +1,33 @@
+{
+  "name": {
+    "it": "SQL Server",
+    "en": "SQL Server"
+  },
+  "code": "db-mssql",
+  "version": "1.0.0",
+  "kelbo": "^2.30",
+  "devdock": "^2.30",
+  "description": {
+    "it": "Motore Microsoft SQL Server per la sezione Database: schemi, query, dati, designer delle tabelle e migration (driver mssql, autenticazione SQL)",
+    "en": "Microsoft SQL Server engine for the Database section: schemas, queries, data, table designer and migrations (mssql driver, SQL authentication)"
+  },
+  "color": "#cc2927",
+  "icon": "database",
+  "dependencies": [
+    {
+      "code": "db-client",
+      "required": true
+    }
+  ],
+  "provides": [
+    {
+      "capability": "db-engine",
+      "id": "mssql",
+      "title": "Microsoft SQL Server",
+      "handler": "mssql"
+    }
+  ],
+  "backend": {
+    "module": "server.js"
+  }
+}
