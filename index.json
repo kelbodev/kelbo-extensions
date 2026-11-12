@@ -2,6 +2,25 @@
   "name": "Kelbo official extensions",
   "extensions": [
     {
+      "code": "angular-cli",
+      "name": {
+        "it": "Angular CLI",
+        "en": "Angular CLI"
+      },
+      "description": {
+        "it": "Generatori della Angular CLI dei workspace Angular (component, service, guard… e quelli di Material, NgRx) con un form dalle loro opzioni e l'anteprima dei file prima di scriverli; ng add e ng update",
+        "en": "Angular CLI generators of the Angular workspaces (component, service, guard… and those of Material, NgRx) with a form from their options and a preview of the files before they are written; ng add and ng update"
+      },
+      "icon": "triangle",
+      "version": "1.0.0",
+      "kelbo": "^2.31",
+      "kinds": [
+        "component"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "angular-cli"
+    },
+    {
       "code": "db-mssql",
       "name": {
         "it": "SQL Server",

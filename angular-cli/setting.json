@@ -1,0 +1,190 @@
+{
+  "name": {
+    "it": "Angular CLI",
+    "en": "Angular CLI"
+  },
+  "code": "angular-cli",
+  "version": "1.0.0",
+  "kelbo": "^2.31",
+  "devdock": "^2.31",
+  "description": {
+    "it": "Generatori della Angular CLI dei workspace Angular (component, service, guard… e quelli di Material, NgRx) con un form dalle loro opzioni e l'anteprima dei file prima di scriverli; ng add e ng update",
+    "en": "Angular CLI generators of the Angular workspaces (component, service, guard… and those of Material, NgRx) with a form from their options and a preview of the files before they are written; ng add and ng update"
+  },
+  "color": "#dd0031",
+  "icon": "triangle",
+  "position": "tab",
+  "order": 27,
+  "projectTraits": [
+    {
+      "id": "angular",
+      "label": {
+        "it": "Angular",
+        "en": "Angular"
+      },
+      "files": [
+        "angular.json"
+      ]
+    }
+  ],
+  "projects": {
+    "traits": [
+      "angular"
+    ]
+  },
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/projects/:id/workspace",
+        "handler": "workspace"
+      },
+      {
+        "method": "GET",
+        "path": "/projects/:id/schematic",
+        "handler": "schematic"
+      },
+      {
+        "method": "POST",
+        "path": "/projects/:id/preview",
+        "handler": "preview"
+      },
+      {
+        "method": "POST",
+        "path": "/projects/:id/generate",
+        "handler": "generate",
+        "stream": true
+      },
+      {
+        "method": "DELETE",
+        "path": "/projects/:id/recent",
+        "handler": "clearRecent"
+      },
+      {
+        "method": "GET",
+        "path": "/projects/:id/git-status",
+        "handler": "gitStatus"
+      },
+      {
+        "method": "GET",
+        "path": "/projects/:id/add-options",
+        "handler": "addOptions"
+      },
+      {
+        "method": "POST",
+        "path": "/projects/:id/add",
+        "handler": "add",
+        "stream": true
+      },
+      {
+        "method": "GET",
+        "path": "/projects/:id/updates",
+        "handler": "updates"
+      },
+      {
+        "method": "POST",
+        "path": "/projects/:id/update",
+        "handler": "update",
+        "stream": true
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css"
+  },
+  "widgets": [
+    {
+      "id": "generators",
+      "title": {
+        "it": "Generatori Angular",
+        "en": "Angular generators"
+      },
+      "description": {
+        "it": "Versione della CLI, generatori rapidi e quelli usati di recente nel progetto",
+        "en": "CLI version, quick generators and the ones used recently in the project"
+      },
+      "size": "s",
+      "js": "widget.js"
+    }
+  ],
+  "mcp": {
+    "tools": [
+      {
+        "name": "workspaces",
+        "handler": "workspaces",
+        "readOnly": true,
+        "description": "List the Angular workspaces among Kelbo's projects (those with angular.json): applications and libraries, Angular CLI and @angular/core versions installed in the project, whether node_modules is installed.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "generators",
+        "handler": "generators",
+        "readOnly": true,
+        "description": "List the Angular CLI generators (schematics) available in a workspace — @schematics/angular and the other installed collections such as Angular Material or NgRx — with their options (name, type, choices, default, description). The positional option (usually the name) is given separately.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Kelbo project id (from angular_cli_workspaces)"
+            }
+          },
+          "required": [
+            "project"
+          ]
+        }
+      },
+      {
+        "name": "generate",
+        "handler": "generate",
+        "readOnly": false,
+        "description": "Run an Angular CLI generator (ng generate) in a workspace with the project's own CLI. Without apply it is a dry run: it returns the files that would be created or updated and any conflicts, writing nothing. With apply: true, and only when the dry run is clean, it writes the files and returns them.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Kelbo project id"
+            },
+            "collection": {
+              "type": "string",
+              "description": "Schematic collection, default @schematics/angular"
+            },
+            "schematic": {
+              "type": "string",
+              "description": "Schematic name or alias: component, service, guard, pipe…"
+            },
+            "name": {
+              "type": "string",
+              "description": "Value of the positional option, usually the name with an optional path (features/orders/order-list)"
+            },
+            "workspaceProject": {
+              "type": "string",
+              "description": "Application or library of the workspace (angular.json projects); the default one when omitted"
+            },
+            "options": {
+              "type": "object",
+              "description": "Other options of the schematic, by name (see angular_cli_generators)"
+            },
+            "apply": {
+              "type": "boolean",
+              "default": false,
+              "description": "Write the files; false (default) only previews them"
+            }
+          },
+          "required": [
+            "project",
+            "schematic"
+          ]
+        }
+      }
+    ]
+  }
+}
