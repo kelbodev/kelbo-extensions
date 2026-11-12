@@ -1,0 +1,10 @@
+{
+  "name": "kelbo-ext-db-sqlite",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kelbo: motore SQLite della sezione Database (node:sqlite, Node 22.13 o successivo)",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.13"
+  }
+}

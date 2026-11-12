@@ -40,6 +40,25 @@
       "path": "db-postgres"
     },
     {
+      "code": "db-sqlite",
+      "name": {
+        "it": "SQLite",
+        "en": "SQLite"
+      },
+      "description": {
+        "it": "Motore SQLite per la sezione Database: file .sqlite/.db del progetto, query, dati, designer delle tabelle (con la ricostruzione dove serve) e migration (node:sqlite di Node 22.13+)",
+        "en": "SQLite engine for the Database section: .sqlite/.db files of the project, queries, data, table designer (rebuilding the table where needed) and migrations (node:sqlite of Node 22.13+)"
+      },
+      "icon": "database",
+      "version": "1.0.0",
+      "kelbo": "^2.30",
+      "kinds": [
+        "provider"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "db-sqlite"
+    },
+    {
       "code": "mongo-client",
       "name": {
         "it": "MongoDB",

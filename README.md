@@ -12,6 +12,7 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | 📄 Swagger | [`swagger`](swagger) | Preview of an OpenAPI `.yaml`/`.json` file loaded from disk (Swagger UI from CDN) |
 | 🐘 PostgreSQL | [`db-postgres`](db-postgres) | PostgreSQL engine for the Database section: schemas, queries, data, table designer, migrations (Kelbo 2.30 or later) |
 | 🗄️ SQL Server | [`db-mssql`](db-mssql) | Microsoft SQL Server engine for the Database section: schemas, queries, data, table designer, migrations (Kelbo 2.30 or later) |
+| 🪶 SQLite | [`db-sqlite`](db-sqlite) | SQLite engine for the Database section: `.sqlite`/`.db` files of the projects, queries, data, table designer, migrations (Kelbo 2.30 and Node 22.13 or later) |
 | 🖥️ Monitor | [`monitor`](monitor) | Output of several npm scripts and scripts of the Scripts extension side by side (1, 2, 3 columns or 2×2), each with restart, stop and run again; layouts saved with their scripts (Kelbo 2.28.1 or later) |
 | ☀️ Light theme | [`theme-light`](theme-light) | *Kelbo Light*: light background and dark text for the whole interface, extensions included (Kelbo 2.26 or later) |
 | 🌙 Dim theme | [`theme-dim`](theme-dim) | *Kelbo Dim*: a softer dark theme, slate grey instead of near-black, with less saturated colors (Kelbo 2.26 or later) |

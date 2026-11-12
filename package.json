@@ -6,6 +6,7 @@
   "workspaces": [
     "db-mssql",
     "db-postgres",
+    "db-sqlite",
     "mongo-client"
   ],
   "scripts": {
