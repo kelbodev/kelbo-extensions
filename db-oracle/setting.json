@@ -1,0 +1,33 @@
+{
+  "name": {
+    "it": "Oracle",
+    "en": "Oracle"
+  },
+  "code": "db-oracle",
+  "version": "1.0.0",
+  "kelbo": "^2.30",
+  "devdock": "^2.30",
+  "description": {
+    "it": "Motore Oracle Database per la sezione Database: schemi, query, blocchi PL/SQL, dati, designer delle tabelle e migration (driver oracledb in modalità Thin, senza Instant Client)",
+    "en": "Oracle Database engine for the Database section: schemas, queries, PL/SQL blocks, data, table designer and migrations (oracledb driver in Thin mode, no Instant Client)"
+  },
+  "color": "#c74634",
+  "icon": "database",
+  "dependencies": [
+    {
+      "code": "db-client",
+      "required": true
+    }
+  ],
+  "provides": [
+    {
+      "capability": "db-engine",
+      "id": "oracle",
+      "title": "Oracle Database",
+      "handler": "oracle"
+    }
+  ],
+  "backend": {
+    "module": "server.js"
+  }
+}

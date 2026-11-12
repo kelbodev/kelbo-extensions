@@ -1,0 +1,10 @@
+{
+  "name": "kelbo-ext-db-oracle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kelbo: motore Oracle Database della sezione Database (oracledb in modalità Thin)",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "oracledb": "^6.6.0"
+  }
+}

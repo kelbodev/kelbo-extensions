@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "workspaces": [
     "db-mssql",
+    "db-oracle",
     "db-postgres",
     "db-sqlite",
     "mongo-client"

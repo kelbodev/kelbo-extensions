@@ -21,6 +21,25 @@
       "path": "db-mssql"
     },
     {
+      "code": "db-oracle",
+      "name": {
+        "it": "Oracle",
+        "en": "Oracle"
+      },
+      "description": {
+        "it": "Motore Oracle Database per la sezione Database: schemi, query, blocchi PL/SQL, dati, designer delle tabelle e migration (driver oracledb in modalità Thin, senza Instant Client)",
+        "en": "Oracle Database engine for the Database section: schemas, queries, PL/SQL blocks, data, table designer and migrations (oracledb driver in Thin mode, no Instant Client)"
+      },
+      "icon": "database",
+      "version": "1.0.0",
+      "kelbo": "^2.30",
+      "kinds": [
+        "provider"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "db-oracle"
+    },
+    {
       "code": "db-postgres",
       "name": {
         "it": "PostgreSQL",
