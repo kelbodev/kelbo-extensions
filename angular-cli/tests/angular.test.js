@@ -106,6 +106,14 @@ test("cartella di destinazione: elenco delle cartelle, --path nell'anteprima e n
   await api('DELETE', '/projects/shop/recent');
 });
 
+test('schematic senza opzione project (migrazioni): niente --project', async () => {
+  const d = (await api('GET', '/projects/shop/schematic?collection=my-schematics&name=migrate-things')).json;
+  assert.equal(d.projectOption, null);
+  const r = await api('POST', '/projects/shop/preview', { collection: 'my-schematics', schematic: 'migrate-things', project: 'shop', options: { mode: 'prune-ng-modules' } });
+  assert.equal(r.json.ok, true, r.text);
+  assert.deepEqual(lastArgs(), ['generate', 'my-schematics:migrate-things', '--mode=prune-ng-modules', '--dry-run', '--interactive=false']);
+});
+
 test('generazione in streaming: file scritti, recenti e ultime opzioni', async () => {
   const r = await api('POST', '/projects/shop/generate', { schematic: 'component', name: 'cart', options: { changeDetection: 'OnPush' } });
   assert.equal(r.status, 200, r.text);

@@ -37,11 +37,17 @@ function makeWorkspace(dir, { install = true, git = true } = {}) {
       store: { description: 'A feature store', factory: './store', schema: './store/schema.json', aliases: ['st'] },
       secret: { description: 'Hidden one', factory: './x', hidden: true },
       'ng-add': { description: 'Add my-schematics', factory: './ng-add', schema: './ng-add/schema.json' },
+      // come le migrazioni di @angular/core: niente opzione project
+      'migrate-things': { description: 'Migrate things', factory: './migrate', schema: './migrate/schema.json' },
     } });
     write(dir, 'node_modules/my-schematics/store/schema.json', { type: 'object', properties: {
       name: { type: 'string', $default: { $source: 'argv', index: 0 } }, project: { type: 'string', $default: { $source: 'projectName' } },
       entity: { type: 'boolean', default: false, description: 'With an entity adapter' },
     }, required: ['name'] });
+    write(dir, 'node_modules/my-schematics/migrate/schema.json', { type: 'object', properties: {
+      mode: { type: 'string', enum: ['convert-to-standalone', 'prune-ng-modules'], default: 'convert-to-standalone' },
+      path: { type: 'string', default: './', description: 'Path to migrate' },
+    } });
     write(dir, 'node_modules/my-schematics/ng-add/schema.json', { type: 'object', properties: {
       theme: { type: 'string', enum: ['light', 'dark'], default: 'light', 'x-prompt': 'Theme?' }, animations: { type: 'boolean', default: true },
     } });

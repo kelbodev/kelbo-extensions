@@ -17,6 +17,13 @@ const opt = name => args.find(a => a.startsWith(`--${name}=`))?.split('=').slice
 
 if (cmd === 'generate') {
   const schematic = target.split(':').pop();
+  // come la CLI vera: --project solo per gli schematic che hanno l'opzione
+  if (schematic === 'migrate-things') {
+    if (args.some(a => a.startsWith('--project'))) { console.error('Error: Unknown argument: project'); process.exit(1); }
+    console.log('UPDATE src/app/app.ts (100 bytes)');
+    if (dry) console.log('\nNOTE: The "--dry-run" option means no changes were made.');
+    process.exit(0);
+  }
   const name = rest.find(a => !a.startsWith('-'));
   const style = opt('style');
   if (style && !['css', 'scss', 'sass', 'less', 'none'].includes(style)) {

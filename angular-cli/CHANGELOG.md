@@ -4,6 +4,9 @@ All notable changes to the `angular-cli` extension. The format follows [Keep a C
 
 ## [Unreleased]
 
+### Fixed
+- Generators without a workspace project option, such as the `@angular/core` migrations (`standalone-migration`, `control-flow-migration`, `inject-migration`…), were refused by the CLI with *Unknown argument: project*: `--project` is now passed only to the schematics that declare it (`$default: projectName`), and the dialog shows the project choice only for them.
+
 ## [1.1.0] - 2026-11-13
 
 ### Added

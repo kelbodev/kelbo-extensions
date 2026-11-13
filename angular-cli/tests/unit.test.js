@@ -27,7 +27,7 @@ test('collezioni: @schematics/angular prima, poi le dipendenze con schematic; na
   for (const n of ['component', 'service', 'directive', 'pipe', 'guard', 'interceptor', 'resolver', 'class', 'interface', 'enum', 'module', 'environments', 'config', 'application', 'library']) assert.ok(names.includes(n), n);
   for (const n of ['ng-new', 'workspace', 'private-e2e', 'server', 'ssr']) assert.ok(!names.includes(n), n);
   assert.deepEqual(ng.schematicsOf(dir, '@schematics/angular').find(s => s.name === 'component').aliases, ['c']);
-  assert.deepEqual(ng.schematicsOf(dir, 'my-schematics').map(s => s.name), ['ng-add', 'store']);
+  assert.deepEqual(ng.schematicsOf(dir, 'my-schematics').map(s => s.name), ['migrate-things', 'ng-add', 'store']);
   assert.deepEqual(ng.schematicsOf(dir, '../evil'), []);
 });
 
@@ -102,4 +102,13 @@ test('cartella: predefinita del progetto, cartelle dei sorgenti, --path solo se 
   assert.ok(ng.generateArgs({ ...base, folder: './src/shared/nuova' }).args.includes('--path=src/shared/nuova'));
   for (const bad of ['../fuori', '/etc', 'src/../..', 'C:/x', 'src/a b', '--force']) assert.throws(() => ng.generateArgs({ ...base, folder: bad }), e => e.key === 'folder_invalid', bad);
   assert.throws(() => ng.generateArgs({ ...base, schematic: 'config', schema: schema('config'), name: 'karma', folder: 'src/x' }), e => e.key === 'folder_unsupported');
+});
+
+test('progetto del workspace solo per gli schematic che hanno l\'opzione (migrazioni senza)', () => {
+  assert.equal(schema('component').projectOption, 'project');
+  const migrate = ng.readSchema(ng.schematicsOf(dir, 'my-schematics').find(s => s.name === 'migrate-things').schemaFile);
+  assert.equal(migrate.projectOption, null);
+  assert.deepEqual(migrate.fields.map(f => f.name), ['mode', 'path']);
+  const r = ng.generateArgs({ collection: 'my-schematics', schematic: 'migrate-things', schema: migrate, project: 'shop', projects: ['shop'], options: { mode: 'prune-ng-modules', path: 'src/app' } });
+  assert.deepEqual(r.args, ['generate', 'my-schematics:migrate-things', '--mode=prune-ng-modules', '--path=src/app']);
 });

@@ -282,7 +282,7 @@ export default {
         values: { ...(options || detail.last || {}) }, name: '', seq: 0, timer: null, preview: null, folder: '', folders: null,
       };
       dialog.folder = defaultFolder();
-      const projectSelect = projectsOfWs.length > 1 ? `<div class="form-row"><label for="ngc_project">${esc(t('dialog.project'))}</label>
+      const projectSelect = projectsOfWs.length > 1 && detail.projectOption ? `<div class="form-row"><label for="ngc_project">${esc(t('dialog.project'))}</label>
         <select class="form-input" id="ngc_project">${ws.projects.map(x => `<option value="${esc(x.name)}" ${x.name === dialog.project ? 'selected' : ''}>${esc(x.name)} (${esc(t(`type.${x.type}`))})</option>`).join('')}</select></div>` : '';
       const fields = detail.fields;
       const main = fields.filter(f => f.type !== 'boolean');

@@ -135,8 +135,10 @@ function schematicsOf(dir, name) {
 
 const promptText = p => (typeof p === 'string' ? p : isObject(p) && typeof p.message === 'string' ? p.message : null);
 
-// { positional: campo | null, fields: [campo], pathOption: nome | null }; pathOption è l'opzione
-// della cartella (path, $default workingDirectory) che sceglie dove generare; campo = { name, type: boolean|string|number|
+// { positional: campo | null, fields: [campo], pathOption: nome | null, projectOption: nome | null };
+// pathOption è l'opzione della cartella (path, $default workingDirectory) che sceglie dove generare,
+// projectOption quella del progetto del workspace ($default projectName): le migrazioni di
+// @angular/core, per esempio, non ce l'hanno e rifiutano --project; campo = { name, type: boolean|string|number|
 // integer|enum|list, choices?, default?, label, description, required, format? }
 // Esclusi: project (scelto a parte), path e workingDirectory (dal nome), invisibili e deprecati
 function fieldsOf(schema) {
@@ -144,11 +146,13 @@ function fieldsOf(schema) {
   const required = new Set(Array.isArray(schema?.required) ? schema.required : []);
   let positional = null;
   let pathOption = null;
+  let projectOption = null;
   const fields = [];
   for (const [name, p] of Object.entries(props)) {
     if (!isObject(p) || !OPTION_RE.test(name)) continue;
     const source = p.$default?.$source;
     if (source === 'workingDirectory' && p.type === 'string') pathOption = name;
+    if (source === 'projectName') projectOption = name;
     if (source === 'projectName' || source === 'workingDirectory') continue;
     if (p.visible === false || p.hidden === true || p['x-deprecated']) continue;
     let type = p.type;
@@ -171,12 +175,12 @@ function fieldsOf(schema) {
     if (source === 'argv' && (p.$default.index ?? 0) === 0) positional = { ...field, required: field.required || !!p['x-prompt'] };
     else fields.push(field);
   }
-  return { positional, fields, pathOption };
+  return { positional, fields, pathOption, projectOption };
 }
 
 function readSchema(file) {
   const data = file && readJson(file);
-  return isObject(data) ? fieldsOf(data) : { positional: null, fields: [], pathOption: null };
+  return isObject(data) ? fieldsOf(data) : { positional: null, fields: [], pathOption: null, projectOption: null };
 }
 
 // Cartella in cui la CLI genera per un progetto del workspace (come buildDefaultPath della CLI):
@@ -279,9 +283,10 @@ function generateArgs({ collection, schematic, schema, project, projects, name, 
       return v;
     })());
   }
-  if (project !== undefined && project !== null && project !== '') {
+  // progetto del workspace: solo per gli schematic che hanno l'opzione (le migrazioni no)
+  if (project !== undefined && project !== null && project !== '' && schema.projectOption) {
     if (!PROJECT_RE.test(project) || !projects.includes(project)) fail('project_invalid', { project: String(project) });
-    args.push(`--project=${project}`);
+    args.push(`--${flag(schema.projectOption)}=${project}`);
   }
   // cartella diversa da quella predefinita del progetto: --path (solo se lo schematic ce l'ha)
   if (folder !== null && folder !== undefined && folder !== '') {
