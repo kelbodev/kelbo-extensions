@@ -86,6 +86,26 @@ test('anteprima con --dry-run: solo le opzioni cambiate, file e conflitti, nient
   assert.equal(calls(dir).length, before);
 });
 
+test("cartella di destinazione: elenco delle cartelle, --path nell'anteprima e nella generazione", async () => {
+  fs.mkdirSync(path.join(dir, 'src', 'app', 'features', 'orders'), { recursive: true });
+  let r = await api('GET', '/projects/shop/folders');
+  assert.ok(r.json.folders.includes('src/app/features/orders'));
+  assert.ok(r.json.folders.includes('projects/ui-kit/src') || !fs.existsSync(path.join(dir, 'projects')));
+  r = await api('GET', '/projects/shop/workspace');
+  assert.deepEqual(r.json.projects.map(p => p.defaultPath), ['src/app', 'projects/ui-kit/src/lib']);
+  r = await api('POST', '/projects/shop/preview', { schematic: 'component', name: 'box', folder: 'src/app/features/orders' });
+  assert.equal(r.json.ok, true, r.text);
+  assert.ok(lastArgs().includes('--path=src/app/features/orders'));
+  assert.equal(r.json.files[0].path, 'src/app/features/orders/box/box.ts');
+  r = await api('POST', '/projects/shop/preview', { schematic: 'component', name: 'box', folder: 'src/app' });
+  assert.ok(!lastArgs().some(a => a.startsWith('--path')));
+  assert.equal((await api('POST', '/projects/shop/preview', { schematic: 'component', name: 'box', folder: '../../etc' })).json.code, 'angular-cli.folder_invalid');
+  r = await api('POST', '/projects/shop/generate', { schematic: 'service', name: 'orders-api', folder: 'src/app/features/orders' });
+  assert.equal(r.events.find(e => e.type === 'exit').data, 0);
+  assert.ok(fs.existsSync(path.join(dir, 'src/app/features/orders/orders-api.service.ts')));
+  await api('DELETE', '/projects/shop/recent');
+});
+
 test('generazione in streaming: file scritti, recenti e ultime opzioni', async () => {
   const r = await api('POST', '/projects/shop/generate', { schematic: 'component', name: 'cart', options: { changeDetection: 'OnPush' } });
   assert.equal(r.status, 200, r.text);

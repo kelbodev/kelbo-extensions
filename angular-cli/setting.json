@@ -46,6 +46,11 @@
         "handler": "schematic"
       },
       {
+        "method": "GET",
+        "path": "/projects/:id/folders",
+        "handler": "folders"
+      },
+      {
         "method": "POST",
         "path": "/projects/:id/preview",
         "handler": "preview"
@@ -177,6 +182,10 @@
               "type": "boolean",
               "default": false,
               "description": "Write the files; false (default) only previews them"
+            },
+            "folder": {
+              "type": "string",
+              "description": "Folder where the files go, relative to the workspace root (e.g. src/app/features/orders); the project's default folder (src/app) when omitted. The name can still carry sub-folders."
             }
           },
           "required": [

@@ -54,12 +54,14 @@ module.exports = function createAngularCli(ctx) {
   // Argomenti di "ng generate" dal corpo di una richiesta (validati)
   function generateCommand(p, body) {
     const ws = installedWorkspace(p);
-    const { collection = ng.DEFAULT_COLLECTION, schematic, project, name, options } = body || {};
+    const { collection = ng.DEFAULT_COLLECTION, schematic, project, name, options, folder } = body || {};
     const s = schematicOr404(p, collection, schematic);
     const target = project || ws.defaultProject || undefined;
     const defaults = target ? ng.defaultsFor(ws, target, collection, s.name) : {};
+    const targetProject = ws.projects.find(x => x.name === target);
     const built = fromAngular(() => ng.generateArgs({
       collection, schematic: s.name, schema: s.schema, project: target, projects: ws.projects.map(x => x.name), name, options: options || {}, defaults,
+      folder, baseFolder: targetProject ? ng.defaultPath(targetProject) : null,
     }));
     return { ws, schematic: s, collection, project: target, ...built };
   }
@@ -162,7 +164,7 @@ module.exports = function createAngularCli(ctx) {
   function summary(p) {
     const ws = workspaceOf(p);
     const { ngBin, ...rest } = ws;
-    return { ...rest, projects: ws.projects.map(({ schematics, ...x }) => x) };
+    return { ...rest, projects: ws.projects.map(({ schematics, ...x }) => ({ ...x, defaultPath: ng.defaultPath(x) })) };
   }
   function schematicDetail(p, collection, schematic) {
     const ws = workspaceOf(p);
@@ -198,9 +200,9 @@ module.exports = function createAngularCli(ctx) {
         }));
         return { project: p.id, collections: list };
       },
-      async generate({ project, collection, schematic, name, options, workspaceProject, apply = false }) {
+      async generate({ project, collection, schematic, name, options, workspaceProject, folder, apply = false }) {
         const p = projectOr404(project);
-        const body = { collection: collection || ng.DEFAULT_COLLECTION, schematic, name, options, project: workspaceProject };
+        const body = { collection: collection || ng.DEFAULT_COLLECTION, schematic, name, options, project: workspaceProject, folder };
         const dry = await preview(p, body);
         if (apply !== true || !dry.ok) return { applied: false, ...dry };
         const cmd = generateCommand(p, body);
@@ -219,6 +221,13 @@ module.exports = function createAngularCli(ctx) {
         const p = projectOr404(req.params.id);
         const ws = summary(p);
         res.json({ ...ws, collections: ws.installed ? collections(p) : [], ...recentOf(p.id), busy: busy.has(p.id) });
+      },
+
+      // Cartelle dei sorgenti del workspace, per scegliere dove generare
+      folders(req, res) {
+        const p = projectOr404(req.params.id);
+        const ws = workspaceOf(p);
+        res.json({ folders: ng.folders(p.path, ws) });
       },
 
       schematic(req, res) {

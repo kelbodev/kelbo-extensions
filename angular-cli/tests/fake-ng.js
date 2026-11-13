@@ -23,10 +23,12 @@ if (cmd === 'generate') {
     console.error(`Error: Invalid values:\n  Argument: style, Given: "${style}", Choices: "css", "less", "none", "sass", "scss"`);
     process.exit(1);
   }
-  const base = name.split('/').pop();
-  const dir = `src/app/${name}`;
-  const files = schematic === 'component' ? [`${dir}/${base}.ts`, `${dir}/${base}.html`, ...(args.includes('--skip-tests') ? [] : [`${dir}/${base}.spec.ts`])]
-    : [`src/app/${name}.${schematic}.ts`];
+  const file = name.split('/').pop();
+  const base = opt('path') || 'src/app';
+  if (base.split('/').includes('..')) { console.error(`Path "/${base}" is invalid.`); process.exit(1); }
+  const dir = `${base}/${name}`;
+  const files = schematic === 'component' ? [`${dir}/${file}.ts`, `${dir}/${file}.html`, ...(args.includes('--skip-tests') ? [] : [`${dir}/${file}.spec.ts`])]
+    : [`${base}/${name}.${schematic}.ts`];
   for (const f of files) {
     const full = path.join(process.cwd(), f);
     if (fs.existsSync(full) && fs.readFileSync(full, 'utf8') !== '// generato\n') {

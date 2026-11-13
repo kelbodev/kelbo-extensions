@@ -83,3 +83,23 @@ test('output: file creati e modificati, conflitti, tabella di ng update, pacchet
   for (const ok of ['@angular/material', '@ngrx/store@19', 'lodash@^4.17.0', 'tailwindcss@latest']) assert.equal(ng.checkPackage(ok), ok);
   for (const bad of ['--registry=x', 'a b', '@x', 'pkg@1;rm', '']) assert.throws(() => ng.checkPackage(bad), e => e.key === 'package_invalid', bad);
 });
+
+test('cartella: predefinita del progetto, cartelle dei sorgenti, --path solo se diversa', () => {
+  const ws = ng.workspace(dir);
+  assert.deepEqual(ws.projects.map(ng.defaultPath), ['src/app', 'projects/ui-kit/src/lib']);
+  require('fs').mkdirSync(path.join(dir, 'src', 'app', 'features', 'orders'), { recursive: true });
+  require('fs').mkdirSync(path.join(dir, 'src', 'app', 'node_modules'), { recursive: true });
+  require('fs').mkdirSync(path.join(dir, 'src', '.hidden'), { recursive: true });
+  const list = ng.folders(dir, ws);
+  assert.ok(list.includes('src/app/features/orders'));
+  assert.ok(!list.some(f => f.includes('node_modules') || f.includes('.hidden')));
+  const c = schema('component');
+  assert.equal(c.pathOption, 'path');
+  assert.equal(schema('config').pathOption, null);
+  const base = { collection: '@schematics/angular', schematic: 'component', schema: c, project: 'shop', projects: ['shop'], name: 'box', baseFolder: 'src/app' };
+  assert.ok(ng.generateArgs({ ...base, folder: 'src/app/features/orders' }).args.includes('--path=src/app/features/orders'));
+  assert.ok(!ng.generateArgs({ ...base, folder: 'src/app/' }).args.some(a => a.startsWith('--path')));
+  assert.ok(ng.generateArgs({ ...base, folder: './src/shared/nuova' }).args.includes('--path=src/shared/nuova'));
+  for (const bad of ['../fuori', '/etc', 'src/../..', 'C:/x', 'src/a b', '--force']) assert.throws(() => ng.generateArgs({ ...base, folder: bad }), e => e.key === 'folder_invalid', bad);
+  assert.throws(() => ng.generateArgs({ ...base, schematic: 'config', schema: schema('config'), name: 'karma', folder: 'src/x' }), e => e.key === 'folder_unsupported');
+});

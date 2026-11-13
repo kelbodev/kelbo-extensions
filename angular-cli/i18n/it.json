@@ -13,6 +13,17 @@
   "npmInstall": "npm install",
   "noMatch": "Nessun generatore corrisponde al filtro",
   "noSchematics": "Nessun generatore installato nel progetto",
+  "featured.component": "Component",
+  "featured.componentHint": "Componente con template, stile e test",
+  "featured.service": "Service",
+  "featured.serviceHint": "Servizio iniettabile, providedIn root",
+  "featured.module": "Module",
+  "featured.moduleHint": "NgModule, anche con routing",
+  "folder.label": "Cartella",
+  "folder.browse": "Scegli fra le cartelle del progetto",
+  "folder.reset": "Torna alla cartella predefinita del progetto",
+  "folder.hint": "I file andranno in {path}",
+  "folder.none": "Nessuna cartella trovata nei sorgenti",
   "recent.title": "Usati di recente",
   "recent.clear": "Svuota la lista dei recenti",
   "recent.repeat": "Di nuovo, con le stesse opzioni",
@@ -20,7 +31,7 @@
   "dialog.project": "Progetto del workspace",
   "dialog.default": "predefinito ({value})",
   "dialog.namePlaceholder": "features/ordini/lista-ordini",
-  "dialog.nameHint": "Nome, con un percorso facoltativo sotto la cartella dei sorgenti del progetto",
+  "dialog.nameHint": "Nome, anche con sottocartelle (features/ordini/lista-ordini), dentro la cartella qui sotto",
   "dialog.generate": "Genera",
   "preview.title": "Anteprima (--dry-run)",
   "preview.needName": "Scrivi {name} per vedere i file",
@@ -87,5 +98,7 @@
   "errors.git_dirty": {
     "one": "C'è {count} file non committato",
     "other": "Ci sono {count} file non committati"
-  }
+  },
+  "errors.folder_invalid": "Cartella non valida: \"{folder}\". Un percorso relativo al workspace, senza .. e senza / iniziale",
+  "errors.folder_unsupported": "Questo generatore non permette di scegliere la cartella"
 }

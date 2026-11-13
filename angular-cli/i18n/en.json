@@ -13,6 +13,17 @@
   "npmInstall": "npm install",
   "noMatch": "No generator matches the filter",
   "noSchematics": "No generator installed in the project",
+  "featured.component": "Component",
+  "featured.componentHint": "Component with template, style and test",
+  "featured.service": "Service",
+  "featured.serviceHint": "Injectable service, providedIn root",
+  "featured.module": "Module",
+  "featured.moduleHint": "NgModule, routing included if you want",
+  "folder.label": "Folder",
+  "folder.browse": "Pick among the project's folders",
+  "folder.reset": "Back to the project's default folder",
+  "folder.hint": "The files will go in {path}",
+  "folder.none": "No folder found in the sources",
   "recent.title": "Used recently",
   "recent.clear": "Clear the recent list",
   "recent.repeat": "Again, with the same options",
@@ -20,7 +31,7 @@
   "dialog.project": "Workspace project",
   "dialog.default": "default ({value})",
   "dialog.namePlaceholder": "features/orders/order-list",
-  "dialog.nameHint": "Name, with an optional path under the project's source folder",
+  "dialog.nameHint": "Name, sub-folders included (features/orders/order-list), inside the folder below",
   "dialog.generate": "Generate",
   "preview.title": "Preview (--dry-run)",
   "preview.needName": "Type {name} to see the files",
@@ -87,5 +98,7 @@
   "errors.git_dirty": {
     "one": "{count} file is not committed",
     "other": "{count} files are not committed"
-  }
+  },
+  "errors.folder_invalid": "Invalid folder: \"{folder}\". A path relative to the workspace, without .. and without a leading /",
+  "errors.folder_unsupported": "This generator doesn't let you choose the folder"
 }

@@ -4,10 +4,12 @@
 // in diretta nel pannello in basso.
 
 const PREVIEW_DELAY_MS = 500;
+// generatori in evidenza in cima alla pagina (quelli di tutti i giorni)
+const FEATURED = ['component', 'service', 'module'];
 // icona per i generatori più comuni (gli altri: wand-sparkles)
 const ICONS = {
   component: 'component', service: 'box', directive: 'sparkles', pipe: 'filter', guard: 'shield', interceptor: 'arrow-left-right',
-  resolver: 'git-merge', class: 'braces', interface: 'file-type', enum: 'list', module: 'package', application: 'app-window',
+  resolver: 'git-merge', class: 'braces', interface: 'file-type', enum: 'list', module: 'boxes', application: 'app-window',
   library: 'library', environments: 'leaf', config: 'settings', 'web-worker': 'cpu', 'service-worker': 'wifi', 'app-shell': 'layout-template',
 };
 
@@ -73,6 +75,7 @@ export default {
       ctx.ui.patch(el, [
         projectsRow(),
         ws.installed ? '' : installNotice(),
+        ws.installed ? featuredBlock() : '',
         ws.installed ? recentBlock() : '',
         ws.installed ? collectionsBlock() : '',
         updatesBlock(),
@@ -102,6 +105,19 @@ export default {
             ${r.project && ws.projects.length > 1 ? `<span class="ngc-recent-coll">${esc(r.project)}</span>` : ''}
             <span class="ngc-recent-opts">${esc(optionsText(r.options) || t('recent.defaults'))}</span>
           </button>`).join('')}</div></div>`;
+    }
+
+    function featuredBlock() {
+      const base = ws.collections.find(c => c.name === '@schematics/angular');
+      const list = FEATURED.map(n => base?.schematics.find(s => s.name === n)).filter(Boolean);
+      if (!list.length || filter.trim()) return '';
+      return `<div class="ngc-featured">${list.map(s => `
+        <button class="ngc-feature" onclick="Ext['angular-cli'].generate('@schematics/angular', ${js(s.name)})">
+          <span class="ngc-feature-icon">${ctx.ui.icon(ICONS[s.name] || 'wand-sparkles')}</span>
+          <span class="ngc-feature-text"><span class="ngc-feature-name">${esc(t(`featured.${s.name}`))}</span>
+            <code class="ngc-feature-cmd">ng g ${esc(s.aliases[0] || s.name)}</code></span>
+          <span class="ngc-feature-desc">${esc(t(`featured.${s.name}Hint`))}</span>
+        </button>`).join('')}</div>`;
     }
 
     function collectionsBlock() {
@@ -195,7 +211,10 @@ export default {
       }
       dialog.values = options;
       dialog.name = name;
-      return { collection: dialog.collection, schematic: dialog.schematic, project: dialog.project || undefined, name: name || undefined, options };
+      const folderEl = document.getElementById('ngc_folder');
+      if (folderEl) dialog.folder = folderEl.value.trim().replace(/\/+$/, '');
+      return { collection: dialog.collection, schematic: dialog.schematic, project: dialog.project || undefined, name: name || undefined, options,
+        ...(dialog.detail.pathOption && dialog.folder ? { folder: dialog.folder } : {}) };
     }
 
     function positionalHtml() {
@@ -211,13 +230,58 @@ export default {
         <div class="ngc-hint">${esc(f.name === 'name' ? t('dialog.nameHint') : f.label || f.description)}</div></div>`;
     }
 
+    // ---- cartella di destinazione (opzione path dello schematic) ----
+    const defaultFolder = () => ws.projects.find(x => x.name === dialog.project)?.defaultPath || '';
+    function folderHtml() {
+      if (!dialog.detail.pathOption) return '';
+      return `<div class="form-row ngc-folder-row"><label for="ngc_folder">${esc(t('folder.label'))}</label>
+        <div class="ngc-folder-input">
+          <input class="form-input" id="ngc_folder" list="ngc_folders" value="${esc(dialog.folder)}" spellcheck="false" autocomplete="off">
+          <button class="btn btn-ghost btn-sm" type="button" id="ngc_folder_browse" title="${esc(t('folder.browse'))}">${ctx.ui.icon('folder-tree')}</button>
+          <button class="btn btn-ghost btn-sm" type="button" id="ngc_folder_reset" title="${esc(t('folder.reset'))}">${ctx.ui.icon('rotate-ccw')}</button>
+        </div>
+        <datalist id="ngc_folders"></datalist>
+        <div class="ngc-tree" data-role="folder-tree" hidden></div>
+        <div class="ngc-hint" data-role="folder-hint"></div></div>`;
+    }
+    function folderHint() {
+      const el = document.querySelector('#modalBody [data-role="folder-hint"]');
+      if (!el) return;
+      const name = document.getElementById('ngc_name')?.value.trim() || '…';
+      el.textContent = t('folder.hint', { path: `${dialog.folder || defaultFolder()}/${name}` });
+    }
+    function renderFolderTree() {
+      const el = document.querySelector('#modalBody [data-role="folder-tree"]');
+      if (!el || !dialog.folders) return;
+      const depth = f => f.split('/').length - 1;
+      el.innerHTML = dialog.folders.length ? dialog.folders.map(f => `
+        <button type="button" class="ngc-tree-item ${f === dialog.folder ? 'active' : ''}" data-folder="${esc(f)}" style="padding-inline-start:${8 + depth(f) * 14}px">
+          ${ctx.ui.icon(f === defaultFolder() ? 'folder-check' : 'folder')} ${esc(f.split('/').pop())}</button>`).join('')
+        : `<p class="ngc-muted">${esc(t('folder.none'))}</p>`;
+      document.getElementById('ngc_folders').innerHTML = dialog.folders.map(f => `<option value="${esc(f)}"></option>`).join('');
+    }
+    async function loadFolders() {
+      try { dialog.folders = (await ctx.api.get(api('/folders'))).folders; } catch { dialog.folders = []; }
+      renderFolderTree();
+    }
+    function chooseFolder(f) {
+      const input = document.getElementById('ngc_folder');
+      if (!input) return;
+      input.value = f;
+      dialog.folder = f;
+      renderFolderTree();
+      folderHint();
+      schedulePreview(0);
+    }
+
     function openGenerator(detail, { options = null, project: target = null } = {}) {
       const projectsOfWs = ws.projects.map(x => x.name);
       dialog = {
         collection: detail.collection, schematic: detail.name, detail,
         project: target && projectsOfWs.includes(target) ? target : ws.defaultProject || projectsOfWs[0] || '',
-        values: { ...(options || detail.last || {}) }, name: '', seq: 0, timer: null, preview: null,
+        values: { ...(options || detail.last || {}) }, name: '', seq: 0, timer: null, preview: null, folder: '', folders: null,
       };
+      dialog.folder = defaultFolder();
       const projectSelect = projectsOfWs.length > 1 ? `<div class="form-row"><label for="ngc_project">${esc(t('dialog.project'))}</label>
         <select class="form-input" id="ngc_project">${ws.projects.map(x => `<option value="${esc(x.name)}" ${x.name === dialog.project ? 'selected' : ''}>${esc(x.name)} (${esc(t(`type.${x.type}`))})</option>`).join('')}</select></div>` : '';
       const fields = detail.fields;
@@ -227,7 +291,7 @@ export default {
         <div class="ngc-dialog">
           <div class="ngc-form">
             ${detail.description ? `<p class="ngc-muted ngc-desc">${esc(detail.description)}</p>` : ''}
-            ${projectSelect}${positionalHtml()}
+            ${projectSelect}${positionalHtml()}${folderHtml()}
             <div class="ngc-fields" data-role="fields">${main.map(fieldHtml).join('')}</div>
             ${flags.length ? `<div class="ngc-flags">${flags.map(fieldHtml).join('')}</div>` : ''}
           </div>
@@ -243,6 +307,7 @@ export default {
         const fl = body.querySelector('.ngc-flags');
         if (fl) fl.innerHTML = flags.map(fieldHtml).join('');
       };
+      if (detail.pathOption) { loadFolders(); folderHint(); }
       document.getElementById('ngc_name')?.focus();
       schedulePreview(0);
     }
@@ -439,7 +504,15 @@ export default {
     const modalBody = document.getElementById('modalBody');
     const onModal = e => {
       if (!dialog?.generator) return;
-      if (e.type === 'change' && e.target.id === 'ngc_project') { readDialog(); dialog.redraw(); }
+      if (e.type === 'change' && e.target.id === 'ngc_project') {
+        // la cartella segue il progetto finché è quella predefinita
+        const before = defaultFolder();
+        const folderEl = document.getElementById('ngc_folder');
+        readDialog();
+        if (folderEl && dialog.folder === before) { folderEl.value = defaultFolder(); dialog.folder = defaultFolder(); renderFolderTree(); }
+        dialog.redraw();
+      }
+      if (e.type === 'input' && (e.target.id === 'ngc_name' || e.target.id === 'ngc_folder')) { if (e.target.id === 'ngc_folder') dialog.folder = e.target.value.trim(); folderHint(); }
       if (e.type === 'keydown') {
         if (e.key === 'Enter' && e.target.matches('input:not([type=checkbox])')) { e.preventDefault(); actions.runGenerate(); }
         return;
@@ -447,6 +520,18 @@ export default {
       schedulePreview();
     };
     for (const type of ['input', 'change', 'keydown']) modalBody.addEventListener(type, onModal);
+    const onModalClick = e => {
+      if (!dialog?.generator) return;
+      const item = e.target.closest('[data-folder]');
+      if (item) { chooseFolder(item.dataset.folder); return; }
+      if (e.target.closest('#ngc_folder_browse')) {
+        const tree = modalBody.querySelector('[data-role="folder-tree"]');
+        tree.hidden = !tree.hidden;
+        if (!tree.hidden) tree.querySelector('.active')?.scrollIntoView({ block: 'nearest' });
+      }
+      if (e.target.closest('#ngc_folder_reset')) chooseFolder(defaultFolder());
+    };
+    modalBody.addEventListener('click', onModalClick);
     // il dialog chiuso (✕, Annulla, Esc) ferma le anteprime
     const onModalClose = e => { if (!e.detail.open && dialog) { clearTimeout(dialog.timer); dialog = null; } };
     document.addEventListener('ui:modal', onModalClose);
@@ -473,6 +558,7 @@ export default {
     this.languageChanged = () => { renderProjects(); renderContent(); };
     this.unmount = () => {
       for (const type of ['input', 'change', 'keydown']) modalBody.removeEventListener(type, onModal);
+      modalBody.removeEventListener('click', onModalClick);
       document.removeEventListener('ui:modal', onModalClose);
     };
   },

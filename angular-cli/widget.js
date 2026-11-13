@@ -1,6 +1,6 @@
 // Widget della dashboard: versione della CLI, generatori rapidi e quelli usati di recente; un clic
 // apre la sezione Angular CLI con il dialog del generatore
-const QUICK = [['component', 'component'], ['service', 'box'], ['directive', 'sparkles'], ['pipe', 'filter'], ['guard', 'shield']];
+const QUICK = [['component', 'component'], ['service', 'box'], ['module', 'boxes'], ['directive', 'sparkles'], ['pipe', 'filter'], ['guard', 'shield']];
 
 export default {
   async mount(ctx, el, params) {
@@ -28,7 +28,7 @@ export default {
     }
     const available = new Set((ws.collections.find(c => c.name === '@schematics/angular')?.schematics || []).map(s => s.name));
     ctx.ui.patch(el, `<div class="ngc-w">
-      <div class="ngc-w-quick">${QUICK.filter(([n]) => available.has(n)).map(([n, i]) => `<button class="ngc-w-btn" data-generate="${esc(n)}" title="ng generate ${esc(n)}">${icon(i)} ${esc(n)}</button>`).join('')}</div>
+      <div class="ngc-w-quick">${QUICK.filter(([n]) => available.has(n)).map(([n, i]) => `<button class="ngc-w-btn ${['component', 'service', 'module'].includes(n) ? 'ngc-w-main' : ''}" data-generate="${esc(n)}" title="ng generate ${esc(n)}">${icon(i)} ${esc(n)}</button>`).join('')}</div>
       ${ws.recent.length ? `<div class="ngc-w-title">${icon('history')} ${esc(t('recent.title'))}</div>
         ${ws.recent.slice(0, 4).map((r, i) => `<button class="ngc-w-recent" data-recent="${i}" title="${esc(t('recent.repeat'))}">
           <strong>${esc(r.schematic)}</strong> <span class="ngc-muted">${esc(Object.keys(r.options || {}).join(', ') || t('recent.defaults'))}</span></button>`).join('')}` : ''}

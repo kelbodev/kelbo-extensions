@@ -135,17 +135,20 @@ function schematicsOf(dir, name) {
 
 const promptText = p => (typeof p === 'string' ? p : isObject(p) && typeof p.message === 'string' ? p.message : null);
 
-// { positional: campo | null, fields: [campo] }; campo = { name, type: boolean|string|number|
+// { positional: campo | null, fields: [campo], pathOption: nome | null }; pathOption è l'opzione
+// della cartella (path, $default workingDirectory) che sceglie dove generare; campo = { name, type: boolean|string|number|
 // integer|enum|list, choices?, default?, label, description, required, format? }
 // Esclusi: project (scelto a parte), path e workingDirectory (dal nome), invisibili e deprecati
 function fieldsOf(schema) {
   const props = isObject(schema?.properties) ? schema.properties : {};
   const required = new Set(Array.isArray(schema?.required) ? schema.required : []);
   let positional = null;
+  let pathOption = null;
   const fields = [];
   for (const [name, p] of Object.entries(props)) {
     if (!isObject(p) || !OPTION_RE.test(name)) continue;
     const source = p.$default?.$source;
+    if (source === 'workingDirectory' && p.type === 'string') pathOption = name;
     if (source === 'projectName' || source === 'workingDirectory') continue;
     if (p.visible === false || p.hidden === true || p['x-deprecated']) continue;
     let type = p.type;
@@ -168,12 +171,49 @@ function fieldsOf(schema) {
     if (source === 'argv' && (p.$default.index ?? 0) === 0) positional = { ...field, required: field.required || !!p['x-prompt'] };
     else fields.push(field);
   }
-  return { positional, fields };
+  return { positional, fields, pathOption };
 }
 
 function readSchema(file) {
   const data = file && readJson(file);
-  return isObject(data) ? fieldsOf(data) : { positional: null, fields: [] };
+  return isObject(data) ? fieldsOf(data) : { positional: null, fields: [], pathOption: null };
+}
+
+// Cartella in cui la CLI genera per un progetto del workspace (come buildDefaultPath della CLI):
+// <root>/<sourceRoot>/app per le applicazioni, …/lib per le librerie
+function defaultPath(project) {
+  const root = (project.root || '').replace(/\\/g, '/').replace(/\/+$/, '');
+  const source = (project.sourceRoot || `${root ? `${root}/` : ''}src`).replace(/\\/g, '/').replace(/\/+$/, '');
+  return `${source}/${project.type === 'library' ? 'lib' : 'app'}`;
+}
+
+// Cartella scelta (relativa al workspace, anche nuova): segmenti come i nomi, niente ".." né assoluti
+function checkFolder(value) {
+  if (typeof value !== 'string') fail('folder_invalid', { folder: String(value ?? '') });
+  const v = value.trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/, '');
+  const parts = v.split('/');
+  if (!v || v.length > 300 || v.startsWith('/') || /^[A-Za-z]:/.test(v) || parts.some(x => !NAME_SEGMENT.test(x) || x === '..' || x === '.')) fail('folder_invalid', { folder: value });
+  return v;
+}
+
+// Cartelle del workspace sotto le radici dei sorgenti dei progetti (src, projects/x/src…) per la
+// scelta della cartella: [percorsi relativi], senza nascoste, node_modules e cartelle di build
+const SKIP_DIRS = new Set(['node_modules', 'dist', 'out-tsc', 'coverage', 'tmp', 'e2e']);
+function folders(dir, ws, { max = 1000, depth = 8 } = {}) {
+  const out = [];
+  const roots = [...new Set(ws.projects.map(p => (p.sourceRoot || `${p.root ? `${p.root.replace(/\/+$/, '')}/` : ''}src`).replace(/\\/g, '/').replace(/\/+$/, '')))];
+  const walk = (rel, level) => {
+    if (out.length >= max || level > depth) return;
+    let entries;
+    try { entries = fs.readdirSync(path.join(dir, ...rel.split('/')), { withFileTypes: true }); } catch { return; }
+    out.push(rel);
+    for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!e.isDirectory() || e.name.startsWith('.') || SKIP_DIRS.has(e.name) || !NAME_SEGMENT.test(e.name)) continue;
+      walk(`${rel}/${e.name}`, level + 1);
+    }
+  };
+  for (const r of roots) if (r && !r.split('/').includes('..')) walk(r, 0);
+  return out;
 }
 
 // ---- validazione e argomenti ----
@@ -224,7 +264,7 @@ function optionArgs(field, value) {
 
 // Argomenti di "ng generate": solo le opzioni diverse dal predefinito (schema + angular.json),
 // che la CLI applica già da sola → { args, options } (options: i valori validati da ricordare)
-function generateArgs({ collection, schematic, schema, project, projects, name, options = {}, defaults = {} }) {
+function generateArgs({ collection, schematic, schema, project, projects, name, options = {}, defaults = {}, folder = null, baseFolder = null }) {
   if (!COLLECTION_RE.test(collection || '')) fail('collection_invalid');
   if (!SCHEMATIC_RE.test(schematic || '')) fail('schematic_invalid');
   if (!isObject(options)) fail('options_invalid');
@@ -242,6 +282,12 @@ function generateArgs({ collection, schematic, schema, project, projects, name, 
   if (project !== undefined && project !== null && project !== '') {
     if (!PROJECT_RE.test(project) || !projects.includes(project)) fail('project_invalid', { project: String(project) });
     args.push(`--project=${project}`);
+  }
+  // cartella diversa da quella predefinita del progetto: --path (solo se lo schematic ce l'ha)
+  if (folder !== null && folder !== undefined && folder !== '') {
+    const f = checkFolder(folder);
+    if (!schema.pathOption) fail('folder_unsupported');
+    if (f !== baseFolder) args.push(`--${schema.pathOption}=${f}`);
   }
   const chosen = {};
   for (const [key, raw] of Object.entries(options)) {
@@ -299,5 +345,5 @@ function checkPackage(value) {
 module.exports = {
   AngularError, DEFAULT_COLLECTION, PACKAGE_RE, COLLECTION_RE, SCHEMATIC_RE,
   readJsonc, workspace, defaultsFor, collectionNames, collectionFile, schematicsOf, fieldsOf, readSchema,
-  checkName, checkValue, optionArgs, generateArgs, stripAnsi, parseChanges, parseUpdates, checkPackage,
+  checkName, checkFolder, defaultPath, folders, checkValue, optionArgs, generateArgs, stripAnsi, parseChanges, parseUpdates, checkPackage,
 };
