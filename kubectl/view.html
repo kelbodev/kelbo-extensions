@@ -1,0 +1,17 @@
+<div class="empty-state" data-role="empty"><div class="icon"><i data-icon="ship-wheel"></i></div><p data-i18n="empty"></p></div>
+<div class="k8s-area" data-role="area" hidden>
+  <div class="k8s-header">
+    <div class="k8s-head-text">
+      <h3 data-role="title"></h3>
+      <span class="k8s-protected" data-role="protected" hidden><i data-icon="lock"></i> <span data-i18n="protected.badge"></span></span>
+    </div>
+    <label class="k8s-ns"><span data-i18n="namespace"></span><select class="form-input" data-role="namespace"></select></label>
+    <div class="k8s-tabs">
+      <button class="k8s-tab" data-tab="pods"><i data-icon="container"></i> <span data-i18n="tab.pods"></span></button>
+      <button class="k8s-tab" data-tab="workloads"><i data-icon="boxes"></i> <span data-i18n="tab.workloads"></span></button>
+    </div>
+    <input class="form-input k8s-filter" type="search" data-role="filter" data-i18n-placeholder="filter">
+    <label class="k8s-live" data-i18n-title="live.title"><input type="checkbox" data-role="live"> <span data-i18n="live.label"></span></label>
+  </div>
+  <div class="k8s-content" data-role="content"></div>
+</div>

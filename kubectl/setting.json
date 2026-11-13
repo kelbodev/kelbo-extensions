@@ -1,0 +1,215 @@
+{
+  "name": {
+    "it": "Kubernetes",
+    "en": "Kubernetes"
+  },
+  "code": "kubectl",
+  "version": "1.0.0",
+  "kelbo": "^2.34",
+  "devdock": "^2.34",
+  "description": {
+    "it": "Pod dei cluster Kubernetes con kubectl: stato in diretta, describe, log, riavvii e scale con conferma, context protetti, e il port-forward come tunnel della sezione Tunnel",
+    "en": "Pods of Kubernetes clusters with kubectl: live status, describe, logs, restarts and scale with confirmation, protected contexts, and port-forward as a tunnel of the Tunnels section"
+  },
+  "color": "#326ce5",
+  "icon": "ship-wheel",
+  "position": "tab",
+  "order": 15,
+  "config": [
+    "kubectl"
+  ],
+  "export": [
+    {
+      "id": "kubectl",
+      "label": {
+        "it": "Kubernetes: context protetti",
+        "en": "Kubernetes: protected contexts"
+      },
+      "description": {
+        "it": "Quali context chiedono il nome per confermare le modifiche (il kubeconfig non viene esportato)",
+        "en": "Which contexts ask for their name to confirm changes (the kubeconfig is not exported)"
+      },
+      "sections": [
+        "kubectl"
+      ]
+    }
+  ],
+  "provides": [
+    {
+      "capability": "tunnel-transport",
+      "id": "kubernetes",
+      "title": {
+        "it": "Kubernetes port-forward",
+        "en": "Kubernetes port-forward"
+      },
+      "handler": "portForward"
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/contexts",
+        "handler": "contexts"
+      },
+      {
+        "method": "PUT",
+        "path": "/contexts/:context/protected",
+        "handler": "setProtected"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces",
+        "handler": "namespaces"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/pods",
+        "handler": "pods"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/pods/watch",
+        "handler": "watch",
+        "stream": true
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/pods/:name/logs",
+        "handler": "logs",
+        "stream": true
+      },
+      {
+        "method": "POST",
+        "path": "/contexts/:context/namespaces/:namespace/pods/:name/delete",
+        "handler": "deletePod"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/workloads",
+        "handler": "workloads"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/services",
+        "handler": "services"
+      },
+      {
+        "method": "GET",
+        "path": "/contexts/:context/namespaces/:namespace/describe/:kind/:name",
+        "handler": "describe"
+      },
+      {
+        "method": "POST",
+        "path": "/contexts/:context/namespaces/:namespace/workloads/:kind/:name/restart",
+        "handler": "restart"
+      },
+      {
+        "method": "POST",
+        "path": "/contexts/:context/namespaces/:namespace/workloads/:kind/:name/scale",
+        "handler": "scale"
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css"
+  },
+  "mcp": {
+    "tools": [
+      {
+        "name": "contexts",
+        "handler": "contexts",
+        "readOnly": true,
+        "description": "List the Kubernetes contexts of the user's kubeconfig (names only, which one is current, which are marked protected in Kelbo). Credentials are never returned.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "namespaces",
+        "handler": "namespaces",
+        "readOnly": true,
+        "description": "List the namespaces of a Kubernetes context.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "context": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "context"
+          ]
+        }
+      },
+      {
+        "name": "pods",
+        "handler": "pods",
+        "readOnly": true,
+        "description": "List the pods of a namespace with status (as kubectl get pods shows it: Running, CrashLoopBackOff, Completed…), ready containers, restarts, age, node, owner deployment and container images. Environment values and secrets are never returned.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "context": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "selector": {
+              "type": "string",
+              "description": "Label selector, e.g. app=api"
+            }
+          },
+          "required": [
+            "context",
+            "namespace"
+          ]
+        }
+      },
+      {
+        "name": "logs",
+        "handler": "logs",
+        "readOnly": true,
+        "description": "Last lines of the logs of a pod (one container), optionally of the previous run after a restart.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "context": {
+              "type": "string"
+            },
+            "namespace": {
+              "type": "string"
+            },
+            "pod": {
+              "type": "string"
+            },
+            "container": {
+              "type": "string"
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            },
+            "previous": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          "required": [
+            "context",
+            "namespace",
+            "pod"
+          ]
+        }
+      }
+    ]
+  }
+}

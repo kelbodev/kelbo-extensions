@@ -116,6 +116,26 @@
       "path": "db-sqlite"
     },
     {
+      "code": "kubectl",
+      "name": {
+        "it": "Kubernetes",
+        "en": "Kubernetes"
+      },
+      "description": {
+        "it": "Pod dei cluster Kubernetes con kubectl: stato in diretta, describe, log, riavvii e scale con conferma, context protetti, e il port-forward come tunnel della sezione Tunnel",
+        "en": "Pods of Kubernetes clusters with kubectl: live status, describe, logs, restarts and scale with confirmation, protected contexts, and port-forward as a tunnel of the Tunnels section"
+      },
+      "icon": "ship-wheel",
+      "version": "1.0.0",
+      "kelbo": "^2.34",
+      "kinds": [
+        "component",
+        "provider"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "kubectl"
+    },
+    {
       "code": "mongo-client",
       "name": {
         "it": "MongoDB",
