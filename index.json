@@ -12,7 +12,7 @@
         "en": "Angular CLI generators of the Angular workspaces (component, service, guard… and those of Material, NgRx) with a form from their options and a preview of the files before they are written; ng add and ng update"
       },
       "icon": "triangle",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "kelbo": "^2.31",
       "kinds": [
         "component"

@@ -4,7 +4,7 @@
     "en": "Angular CLI"
   },
   "code": "angular-cli",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "kelbo": "^2.31",
   "devdock": "^2.31",
   "description": {
