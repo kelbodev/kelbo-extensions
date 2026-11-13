@@ -1,0 +1,129 @@
+{
+  "name": {
+    "it": "Color picker",
+    "en": "Color picker"
+  },
+  "code": "color-picker",
+  "version": "1.0.0",
+  "kelbo": "^2.31",
+  "devdock": "^2.31",
+  "description": {
+    "it": "Selettore di colori con contagocce, formati HEX/RGB/HSL/OKLCH da copiare, contrasto WCAG, sfumature 50–950 e armonie, palette salvate e i colori usati nei file di un progetto",
+    "en": "Color picker with an eyedropper, HEX/RGB/HSL/OKLCH formats to copy, WCAG contrast, 50–950 shades and harmonies, saved palettes and the colors used in a project's files"
+  },
+  "color": "#e879f9",
+  "icon": "pipette",
+  "position": "sidebar",
+  "order": 80,
+  "config": [
+    "colorPalettes"
+  ],
+  "export": [
+    {
+      "id": "palettes",
+      "label": {
+        "it": "Palette di colori",
+        "en": "Color palettes"
+      },
+      "description": {
+        "it": "Palette salvate nel color picker, generali e dei progetti",
+        "en": "Palettes saved in the color picker, general and per project"
+      },
+      "sections": [
+        "colorPalettes"
+      ]
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/palettes",
+        "handler": "listPalettes"
+      },
+      {
+        "method": "POST",
+        "path": "/palettes",
+        "handler": "createPalette"
+      },
+      {
+        "method": "PUT",
+        "path": "/palettes/:id",
+        "handler": "updatePalette"
+      },
+      {
+        "method": "DELETE",
+        "path": "/palettes/:id",
+        "handler": "deletePalette"
+      },
+      {
+        "method": "GET",
+        "path": "/projects/:id/colors",
+        "handler": "projectColors"
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "js": "view.js",
+    "css": "style.css"
+  },
+  "widgets": [
+    {
+      "id": "colors",
+      "title": {
+        "it": "Colori del progetto",
+        "en": "Project colors"
+      },
+      "description": {
+        "it": "I colori più usati nei file del progetto e le sue palette; un clic copia il colore",
+        "en": "The colors used most in the project's files and its palettes; a click copies the color"
+      },
+      "size": "s",
+      "js": "widget.js"
+    }
+  ],
+  "mcp": {
+    "tools": [
+      {
+        "name": "palettes",
+        "handler": "palettes",
+        "readOnly": true,
+        "description": "List the color palettes saved in Kelbo's color picker: name, colors (hex, optional name) and the project they belong to (null for general ones).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Kelbo project id: its palettes plus the general ones"
+            }
+          }
+        }
+      },
+      {
+        "name": "project_colors",
+        "handler": "projectColors",
+        "readOnly": true,
+        "description": "Colors used in the files of a Kelbo project (CSS, SCSS, Less, templates, components), as hex, sorted by how often they appear, with the CSS/SCSS variable names that define them and the files where they are used.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300,
+              "default": 100
+            }
+          },
+          "required": [
+            "project"
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -15,6 +15,7 @@ Official extensions for [Kelbo](https://github.com/kelbodev/kelbo), the local de
 | 🪶 SQLite | [`db-sqlite`](db-sqlite) | SQLite engine for the Database section: `.sqlite`/`.db` files of the projects, queries, data, table designer, migrations (Kelbo 2.30 and Node 22.13 or later) |
 | 🏛️ Oracle | [`db-oracle`](db-oracle) | Oracle Database engine for the Database section: schemas, queries and PL/SQL blocks, data, table designer, migrations (Thin mode, no Instant Client; Kelbo 2.30 or later) |
 | 🅰️ Angular CLI | [`angular-cli`](angular-cli) | Angular CLI generators of the Angular workspaces with a form from their options and a preview of the files before writing them; `ng add`, `ng update`, dashboard widget, MCP tools (Kelbo 2.31 or later) |
+| 🎨 Color picker | [`color-picker`](color-picker) | Color picker with eyedropper, HEX/RGB/HSL/OKLCH to copy, WCAG contrast, 50–950 shades and harmonies, saved palettes, the colors used in a project's files; in the right bar (Kelbo 2.31 or later) |
 | 🖥️ Monitor | [`monitor`](monitor) | Output of several npm scripts and scripts of the Scripts extension side by side (1, 2, 3 columns or 2×2), each with restart, stop and run again; layouts saved with their scripts (Kelbo 2.28.1 or later) |
 | ☀️ Light theme | [`theme-light`](theme-light) | *Kelbo Light*: light background and dark text for the whole interface, extensions included (Kelbo 2.26 or later) |
 | 🌙 Dim theme | [`theme-dim`](theme-dim) | *Kelbo Dim*: a softer dark theme, slate grey instead of near-black, with less saturated colors (Kelbo 2.26 or later) |

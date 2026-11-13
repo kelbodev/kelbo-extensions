@@ -21,6 +21,25 @@
       "path": "angular-cli"
     },
     {
+      "code": "color-picker",
+      "name": {
+        "it": "Color picker",
+        "en": "Color picker"
+      },
+      "description": {
+        "it": "Selettore di colori con contagocce, formati HEX/RGB/HSL/OKLCH da copiare, contrasto WCAG, sfumature 50–950 e armonie, palette salvate e i colori usati nei file di un progetto",
+        "en": "Color picker with an eyedropper, HEX/RGB/HSL/OKLCH formats to copy, WCAG contrast, 50–950 shades and harmonies, saved palettes and the colors used in a project's files"
+      },
+      "icon": "pipette",
+      "version": "1.0.0",
+      "kelbo": "^2.31",
+      "kinds": [
+        "component"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "color-picker"
+    },
+    {
       "code": "db-mssql",
       "name": {
         "it": "SQL Server",
