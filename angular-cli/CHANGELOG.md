@@ -4,6 +4,8 @@ All notable changes to the `angular-cli` extension. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-13
+
 ### Added
 - **component, service and module highlighted** at the top of the section, as large cards with their short command (`ng g c`, `ng g s`, `ng g m`); also first and highlighted in the dashboard widget.
 - **Folder of the generated files**: in the dialog, the folder where the generator writes (the `path` option of the schematic), by default the project's own (`src/app`, `projects/<lib>/src/lib`). Typed with suggestions, or picked from the tree of the source folders; ↺ goes back to the default, it follows the workspace project while it is the default, and a new folder is created by the CLI. Shown under the field as the final path. Validated like the name (relative to the workspace, no `..`), passed as `--path` only when it differs from the default; also in the MCP tool `angular_cli_generate` (`folder`).
