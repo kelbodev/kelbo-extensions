@@ -1,0 +1,48 @@
+<div class="dk" data-role="root">
+  <div class="dk-notice" data-role="notice" hidden></div>
+  <!-- container e progetti in esecuzione -->
+  <section class="dk-area" data-role="containers-area">
+    <div class="dk-header">
+      <h3 class="dk-title"><i data-icon="container"></i> <span data-i18n="containers.title"></span></h3>
+      <input class="form-input dk-filter" type="search" data-role="filter" data-i18n-placeholder="containers.filter">
+      <label class="dk-check"><input type="checkbox" data-role="show-stopped" checked> <span data-i18n="containers.showStopped"></span></label>
+      <label class="dk-check" data-i18n-title="containers.statsTitle"><input type="checkbox" data-role="show-stats"> <span data-i18n="containers.stats"></span></label>
+      <label class="dk-check" data-i18n-title="containers.liveTitle"><input type="checkbox" data-role="live" checked> <span data-i18n="containers.live"></span></label>
+    </div>
+    <div class="dk-content" data-role="containers"></div>
+  </section>
+  <!-- un file compose: grafo, servizi, YAML, problemi -->
+  <section class="dk-area" data-role="compose-area" hidden>
+    <div class="dk-header dk-compose-head">
+      <div class="dk-file-title">
+        <h3 data-role="file-title"></h3>
+        <span class="dk-muted" data-role="file-sub"></span>
+      </div>
+      <div class="dk-run" data-role="run"></div>
+      <div class="dk-save">
+        <span class="dk-dirty" data-role="dirty" hidden data-i18n="compose.unsaved"></span>
+        <button class="btn btn-ghost btn-sm" data-action="validate" data-i18n-title="compose.validateTitle"><i data-icon="badge-check"></i> <span data-i18n="compose.validate"></span></button>
+        <button class="btn btn-ghost btn-sm" data-action="revert" data-i18n-title="compose.revertTitle"><i data-icon="undo-2"></i></button>
+        <button class="btn btn-primary btn-sm" data-action="save"><i data-icon="save"></i> <span data-i18n="core.action.save"></span></button>
+      </div>
+    </div>
+    <div class="dk-tabs" data-role="tabs">
+      <button class="dk-tab" data-tab="graph"><i data-icon="workflow"></i> <span data-i18n="tab.graph"></span></button>
+      <button class="dk-tab" data-tab="yaml"><i data-icon="file-code"></i> <span data-i18n="tab.yaml"></span></button>
+      <button class="dk-tab" data-tab="issues"><i data-icon="stethoscope"></i> <span data-i18n="tab.issues"></span> <span class="dk-count" data-role="issues-count"></span></button>
+    </div>
+    <div class="dk-compose-body">
+      <div class="dk-pane" data-pane="graph">
+        <div class="dk-graph-wrap" data-role="graph"></div>
+        <aside class="dk-side" data-role="side"></aside>
+      </div>
+      <div class="dk-pane" data-pane="yaml" hidden>
+        <div class="dk-yaml-wrap">
+          <textarea class="form-input dk-yaml" data-role="yaml" spellcheck="false" wrap="off"></textarea>
+          <div class="dk-yaml-status" data-role="yaml-status"></div>
+        </div>
+      </div>
+      <div class="dk-pane dk-issues-pane" data-pane="issues" hidden data-role="issues"></div>
+    </div>
+  </section>
+</div>

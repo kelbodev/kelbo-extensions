@@ -1,0 +1,10 @@
+{
+  "name": "kelbo-ext-docker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kelbo: container Docker e progetti Compose, analisi e costruzione visuale dei file compose",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "yaml": "^2.8.1"
+  }
+}

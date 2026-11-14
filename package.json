@@ -8,6 +8,7 @@
     "db-oracle",
     "db-postgres",
     "db-sqlite",
+    "docker",
     "mongo-client"
   ],
   "scripts": {

@@ -116,6 +116,26 @@
       "path": "db-sqlite"
     },
     {
+      "code": "docker",
+      "name": {
+        "it": "Docker",
+        "en": "Docker"
+      },
+      "description": {
+        "it": "Container e progetti Docker Compose in diretta, con comandi, log e statistiche; analisi dei file compose (porte occupate, dipendenze, volumi, variabili) con correzioni, grafo dei servizi e costruzione visuale; tunnel verso le porte dei container e connessioni ai database nei container",
+        "en": "Docker containers and Compose projects live, with commands, logs and stats; analysis of compose files (ports in use, dependencies, volumes, variables) with fixes, a graph of the services and visual building; tunnels to container ports and connections to the databases in containers"
+      },
+      "icon": "container",
+      "version": "1.0.0",
+      "kelbo": "^2.36",
+      "kinds": [
+        "component",
+        "provider"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "docker"
+    },
+    {
       "code": "kubectl",
       "name": {
         "it": "Kubernetes",

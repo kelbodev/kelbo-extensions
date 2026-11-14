@@ -1,0 +1,233 @@
+{
+  "name": {
+    "it": "Docker",
+    "en": "Docker"
+  },
+  "code": "docker",
+  "version": "1.0.0",
+  "kelbo": "^2.36",
+  "devdock": "^2.36",
+  "description": {
+    "it": "Container e progetti Docker Compose in diretta, con comandi, log e statistiche; analisi dei file compose (porte occupate, dipendenze, volumi, variabili) con correzioni, grafo dei servizi e costruzione visuale; tunnel verso le porte dei container e connessioni ai database nei container",
+    "en": "Docker containers and Compose projects live, with commands, logs and stats; analysis of compose files (ports in use, dependencies, volumes, variables) with fixes, a graph of the services and visual building; tunnels to container ports and connections to the databases in containers"
+  },
+  "color": "#2496ed",
+  "icon": "container",
+  "position": "tab",
+  "order": 16,
+  "projectTraits": [
+    {
+      "id": "docker",
+      "label": "Docker",
+      "files": [
+        "compose.yaml",
+        "compose.yml",
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        "Dockerfile"
+      ]
+    }
+  ],
+  "provides": [
+    {
+      "capability": "tunnel-transport",
+      "id": "docker",
+      "title": {
+        "it": "Container Docker",
+        "en": "Docker container"
+      },
+      "handler": "container"
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/status",
+        "handler": "status"
+      },
+      {
+        "method": "GET",
+        "path": "/overview",
+        "handler": "overview"
+      },
+      {
+        "method": "GET",
+        "path": "/events",
+        "handler": "events",
+        "stream": true
+      },
+      {
+        "method": "GET",
+        "path": "/stats",
+        "handler": "stats"
+      },
+      {
+        "method": "GET",
+        "path": "/containers/:id/logs",
+        "handler": "logs",
+        "stream": true
+      },
+      {
+        "method": "GET",
+        "path": "/containers/:id/inspect",
+        "handler": "inspect"
+      },
+      {
+        "method": "GET",
+        "path": "/containers/:id/db",
+        "handler": "dbConnection"
+      },
+      {
+        "method": "POST",
+        "path": "/containers/:id/:action",
+        "handler": "containerAction"
+      },
+      {
+        "method": "GET",
+        "path": "/files",
+        "handler": "files"
+      },
+      {
+        "method": "GET",
+        "path": "/templates",
+        "handler": "templates"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/load",
+        "handler": "load"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/analyze",
+        "handler": "analyze"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/edit",
+        "handler": "edit"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/save",
+        "handler": "save"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/validate",
+        "handler": "validate"
+      },
+      {
+        "method": "POST",
+        "path": "/compose/run",
+        "handler": "run"
+      },
+      {
+        "method": "GET",
+        "path": "/compose/logs",
+        "handler": "composeLogs",
+        "stream": true
+      },
+      {
+        "method": "GET",
+        "path": "/jobs",
+        "handler": "jobs"
+      },
+      {
+        "method": "GET",
+        "path": "/jobs/:id/stream",
+        "handler": "jobStream",
+        "stream": true
+      },
+      {
+        "method": "POST",
+        "path": "/jobs/:id/stop",
+        "handler": "stopJob"
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css"
+  },
+  "mcp": {
+    "tools": [
+      {
+        "name": "containers",
+        "handler": "containers",
+        "readOnly": true,
+        "description": "List the Docker containers of the machine with state, health, image, published ports, networks and the Compose project/service they belong to. Environment values are never returned.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "all": {
+              "type": "boolean",
+              "default": true,
+              "description": "Include stopped containers"
+            }
+          }
+        }
+      },
+      {
+        "name": "compose_projects",
+        "handler": "compose_projects",
+        "readOnly": true,
+        "description": "List the Docker Compose projects known to Docker (running or stopped) and the compose files found in the Kelbo projects.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "analyze",
+        "handler": "analyze",
+        "readOnly": true,
+        "description": "Analyze a compose file of a Kelbo project: services with image, ports, dependencies, healthcheck and running containers, and the problems found (ports already in use on the machine, duplicated ports, unknown dependencies and cycles, undeclared volumes and networks, missing variables, files and build contexts, images without a tag, secrets written in the file, depends_on without waiting for a database).",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "project": {
+              "type": "string",
+              "description": "Kelbo project id"
+            },
+            "file": {
+              "type": "string",
+              "description": "Compose file relative to the project folder, e.g. compose.yaml"
+            }
+          },
+          "required": [
+            "project",
+            "file"
+          ]
+        }
+      },
+      {
+        "name": "logs",
+        "handler": "logs",
+        "readOnly": true,
+        "description": "Last lines of the logs of a Docker container.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "container": {
+              "type": "string"
+            },
+            "lines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000,
+              "default": 100
+            }
+          },
+          "required": [
+            "container"
+          ]
+        }
+      }
+    ]
+  }
+}
