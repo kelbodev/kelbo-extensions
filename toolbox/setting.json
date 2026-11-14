@@ -1,0 +1,44 @@
+{
+  "name": {
+    "it": "Coltellino",
+    "en": "Toolbox"
+  },
+  "code": "toolbox",
+  "version": "1.0.0",
+  "kelbo": "^2.35",
+  "devdock": "^2.35",
+  "description": {
+    "it": "JWT (decodifica, verifica della firma, creazione), anche dai token delle utenze dell'HTTP client; codifica e decodifica Base64, URL, HTML, hex, Unicode, JSON; hash MD5, SHA, HMAC; UUID, stringhe casuali, timestamp",
+    "en": "JWT (decode, signature check, create), also from the tokens of the HTTP client's user types; Base64, URL, HTML, hex, Unicode, JSON encode and decode; MD5, SHA, HMAC hashes; UUIDs, random strings, timestamps"
+  },
+  "color": "#f0b429",
+  "icon": "wrench",
+  "position": "sidebar",
+  "order": 81,
+  "dependencies": [
+    {
+      "code": "http-client",
+      "required": false
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/http-tokens",
+        "handler": "httpTokens"
+      },
+      {
+        "method": "GET",
+        "path": "/http-tokens/:section/:user",
+        "handler": "httpToken"
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "js": "view.js",
+    "css": "style.css"
+  }
+}
