@@ -1,0 +1,40 @@
+{
+  "tabTitle": "ER {database}",
+  "menu.diagram": "Diagramma ER",
+  "menu.showInDiagram": "Mostra nel diagramma ER",
+  "menu.openData": "Apri i dati",
+  "menu.focus": "Solo questa tabella e le collegate",
+  "menu.copyName": "Copia il nome",
+  "filter": "Filtra le tabelle",
+  "focusOn": "{table} e collegate",
+  "focusClear": "Mostra tutte le tabelle",
+  "mode.all": "Tutte le colonne",
+  "mode.keys": "Solo le chiavi",
+  "mode.none": "Solo i nomi",
+  "zoomIn": "Ingrandisci (Ctrl + rotella)",
+  "zoomOut": "Riduci (Ctrl + rotella)",
+  "fit": "Adatta alla finestra",
+  "relayout": "Riordina",
+  "relayoutTitle": "Layout automatico delle tabelle mostrate",
+  "relayoutConfirm": "Le tabelle mostrate tornano nel layout automatico (le posizioni scelte a mano si perdono). Continuare?",
+  "reload": "Rileggi lo schema",
+  "loading": "Lettura dello schema…",
+  "empty": "Nessuna tabella in questo database.",
+  "tables": {
+    "one": "{count} tabella di {total}",
+    "other": "{count} tabelle di {total}"
+  },
+  "export.pdfTitle": "PDF vettoriale delle tabelle mostrate",
+  "export.svgTitle": "Immagine vettoriale SVG",
+  "export.pngTitle": "Immagine PNG ad alta risoluzione",
+  "export.title": "Diagramma ER · {database}",
+  "export.subtitle": {
+    "one": "{connection} · {date} · {count} tabella",
+    "other": "{connection} · {date} · {count} tabelle"
+  },
+  "export.done": "{format} scaricato",
+  "export.failed": "Export non riuscito: {error}",
+  "errors.connection_invalid": "Connessione non valida",
+  "errors.database_invalid": "Nome del database non valido",
+  "errors.layouts_invalid": "Posizioni del diagramma non valide"
+}

@@ -1,0 +1,62 @@
+{
+  "name": {
+    "it": "Diagramma ER",
+    "en": "ER diagram"
+  },
+  "code": "db-diagram",
+  "version": "1.0.0",
+  "kelbo": "^2.38",
+  "devdock": "^2.38",
+  "description": {
+    "it": "Add-on della sezione Database: diagramma entità-relazione di un database (tabelle, chiavi, relazioni) con layout automatico, tabelle trascinabili e export in PDF, SVG e PNG",
+    "en": "Add-on of the Database section: entity-relationship diagram of a database (tables, keys, relations) with automatic layout, draggable tables and export to PDF, SVG and PNG"
+  },
+  "color": "#8b5cf6",
+  "icon": "network",
+  "addon": {
+    "host": "db-client",
+    "version": ">=1.1",
+    "js": "addon.js",
+    "css": "addon.css",
+    "points": [
+      "database-menu",
+      "table-menu",
+      "workspace-tab"
+    ]
+  },
+  "config": [
+    "dbDiagrams"
+  ],
+  "export": [
+    {
+      "id": "db-diagrams",
+      "label": {
+        "it": "Diagrammi ER: posizioni delle tabelle",
+        "en": "ER diagrams: table positions"
+      },
+      "sections": [
+        "dbDiagrams"
+      ]
+    }
+  ],
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/layout",
+        "handler": "layout"
+      },
+      {
+        "method": "PUT",
+        "path": "/layout",
+        "handler": "saveLayout"
+      },
+      {
+        "method": "POST",
+        "path": "/layout/reset",
+        "handler": "resetLayout"
+      }
+    ]
+  }
+}

@@ -40,6 +40,29 @@
       "path": "color-picker"
     },
     {
+      "code": "db-diagram",
+      "name": {
+        "it": "Diagramma ER",
+        "en": "ER diagram"
+      },
+      "description": {
+        "it": "Add-on della sezione Database: diagramma entità-relazione di un database (tabelle, chiavi, relazioni) con layout automatico, tabelle trascinabili e export in PDF, SVG e PNG",
+        "en": "Add-on of the Database section: entity-relationship diagram of a database (tables, keys, relations) with automatic layout, draggable tables and export to PDF, SVG and PNG"
+      },
+      "icon": "network",
+      "version": "1.0.0",
+      "kelbo": "^2.38",
+      "kinds": [
+        "addon"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "db-diagram",
+      "addon": {
+        "host": "db-client",
+        "version": ">=1.1"
+      }
+    },
+    {
       "code": "db-mssql",
       "name": {
         "it": "SQL Server",

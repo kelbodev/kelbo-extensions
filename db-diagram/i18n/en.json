@@ -1,0 +1,40 @@
+{
+  "tabTitle": "ER {database}",
+  "menu.diagram": "ER diagram",
+  "menu.showInDiagram": "Show in the ER diagram",
+  "menu.openData": "Open the data",
+  "menu.focus": "Only this table and the related ones",
+  "menu.copyName": "Copy the name",
+  "filter": "Filter the tables",
+  "focusOn": "{table} and related",
+  "focusClear": "Show all tables",
+  "mode.all": "All columns",
+  "mode.keys": "Keys only",
+  "mode.none": "Names only",
+  "zoomIn": "Zoom in (Ctrl + wheel)",
+  "zoomOut": "Zoom out (Ctrl + wheel)",
+  "fit": "Fit to the window",
+  "relayout": "Rearrange",
+  "relayoutTitle": "Automatic layout of the tables shown",
+  "relayoutConfirm": "The tables shown go back to the automatic layout (positions chosen by hand are lost). Continue?",
+  "reload": "Read the schema again",
+  "loading": "Reading the schema…",
+  "empty": "No tables in this database.",
+  "tables": {
+    "one": "{count} table of {total}",
+    "other": "{count} tables of {total}"
+  },
+  "export.pdfTitle": "Vector PDF of the tables shown",
+  "export.svgTitle": "SVG vector image",
+  "export.pngTitle": "High-resolution PNG image",
+  "export.title": "ER diagram · {database}",
+  "export.subtitle": {
+    "one": "{connection} · {date} · {count} table",
+    "other": "{connection} · {date} · {count} tables"
+  },
+  "export.done": "{format} downloaded",
+  "export.failed": "Export failed: {error}",
+  "errors.connection_invalid": "Invalid connection",
+  "errors.database_invalid": "Invalid database name",
+  "errors.layouts_invalid": "Invalid diagram positions"
+}

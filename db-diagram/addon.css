@@ -1,0 +1,19 @@
+.erd{flex:1;display:flex;flex-direction:column;min-height:0;--ext-color:var(--ext-db-diagram,#8b5cf6)}
+.erd-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.erd-title{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ext-color);font-family:var(--font)}
+.erd-title b{color:var(--text)}
+.erd-muted{color:var(--muted);font-size:11px}
+.erd-pad{padding:16px}
+.erd-filter{width:200px}
+.erd-mode{width:auto}
+.erd-group{display:inline-flex;align-items:center;gap:2px}
+.erd-zoom{min-width:36px;text-align:center}
+.erd-export{margin-inline-start:auto}
+.erd-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;border:1px solid var(--ext-color);color:var(--ext-color);border-radius:10px;padding:1px 4px 1px 8px}
+.erd-chip button{background:none;border:none;color:inherit;cursor:pointer;display:inline-flex;padding:0}
+.erd-canvas{flex:1;overflow:auto;position:relative;background:radial-gradient(circle,color-mix(in srgb,var(--border) 70%,transparent) 1px,transparent 1px) 0 0/20px 20px;user-select:none}
+.erd-stage{position:relative}
+.erd-stage svg{display:block}
+.erd-table{cursor:grab}
+.erd-table:active{cursor:grabbing}
+.erd-error{display:flex;gap:8px;align-items:center;color:var(--danger);padding:16px;font-size:12px}
