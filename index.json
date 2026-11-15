@@ -317,12 +317,18 @@
       },
       "icon": "square-terminal",
       "version": "1.0.1",
-      "kelbo": "^2.34",
+      "kelbo": "^2.39",
       "kinds": [
-        "component"
+        "component",
+        "addon"
       ],
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
-      "path": "terminal"
+      "path": "terminal",
+      "addon": {
+        "host": "npm",
+        "version": ">=1.1",
+        "optional": true
+      }
     },
     {
       "code": "theme-dim",

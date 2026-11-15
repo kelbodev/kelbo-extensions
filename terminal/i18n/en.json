@@ -26,5 +26,7 @@
   "errors.input_invalid": "Invalid input",
   "errors.size_invalid": "Invalid size",
   "errors.title_invalid": "Invalid name",
-  "errors.file_not_found": "File not found"
+  "errors.file_not_found": "File not found",
+  "addon.runInShell": "Run in shell",
+  "addon.runInShellTitle": "Opens a terminal in the project folder and runs {command}"
 }

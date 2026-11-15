@@ -113,3 +113,20 @@ test('comando eseguito all\'apertura, shell e progetti non validi, sessioni atti
   assert.equal((await api('POST', '/sessions', { command: 'a\nb' })).json.code, 'terminal.command_invalid');
   await api('POST', `/sessions/${id}/close`, {});
 });
+
+test('add-on facoltativo di NPM: "Esegui nella shell" sulla riga degli script, terminale anche senza NPM', async () => {
+  const list = async () => (await srv.request('GET', '/api/core/extensions')).json;
+  let t = (await list()).find(e => e.code === 'terminal');
+  assert.deepEqual([t.state, t.kinds, t.addon.host, t.addon.optional, t.addonActive], ['ok', ['component', 'addon'], 'npm', true, true]);
+  assert.ok(!t.dependencies.some(d => d.code === 'npm'), 'NPM non è una dipendenza');
+  const js = await srv.request('GET', '/ext/terminal/addon.js');
+  assert.equal(js.status, 200);
+  assert.match(js.text, /addScriptAction/);
+  // NPM spento: il terminale resta acceso, solo la parte add-on si ferma
+  assert.equal((await srv.request('POST', '/api/core/extensions-admin/npm/enabled', { body: { enabled: false } })).status, 200);
+  t = (await list()).find(e => e.code === 'terminal');
+  assert.deepEqual([t.state, t.addonActive, t.addonProblem?.code], ['ok', false, 'core.ext_addon_host_off']);
+  assert.equal((await api('GET', '/info')).status, 200);
+  await srv.request('POST', '/api/core/extensions-admin/npm/enabled', { body: { enabled: true } });
+  assert.equal((await list()).find(e => e.code === 'terminal').addonActive, true);
+});

@@ -4,6 +4,9 @@ All notable changes to the `terminal` extension. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+### Added
+- **Run in shell** on every script of the NPM section (`npm install` too): opens a terminal in the project folder and runs `npm run <script>` there, where you can answer prompts, stop it with Ctrl+C and run it again with ↑. The Terminal is an *optional add-on* of NPM (Kelbo ≥ 2.39, NPM ≥ 1.1): without the NPM section it works as before, only the button is missing.
+
 ## [1.0.1] - 2026-11-15
 
 ### Fixed

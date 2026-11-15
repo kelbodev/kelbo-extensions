@@ -5,8 +5,8 @@
   },
   "code": "terminal",
   "version": "1.0.1",
-  "kelbo": "^2.34",
-  "devdock": "^2.34",
+  "kelbo": "^2.39",
+  "devdock": "^2.39",
   "description": {
     "it": "Terminale integrato: shell vere (zsh, bash, fish, PowerShell) nella cartella di un progetto, più sessioni in tab che restano aperte ricaricando la pagina, colori del tema",
     "en": "Integrated terminal: real shells (zsh, bash, fish, PowerShell) in the folder of a project, several sessions in tabs that stay open when the page is reloaded, theme colours"
@@ -71,5 +71,14 @@
     "sidebar": "sidebar.html",
     "js": "view.js",
     "css": "style.css"
+  },
+  "addon": {
+    "host": "npm",
+    "version": ">=1.1",
+    "js": "addon.js",
+    "points": [
+      "script-actions"
+    ],
+    "optional": true
   }
 }

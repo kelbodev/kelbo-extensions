@@ -22,7 +22,7 @@ function build() {
     return {
       code: m.code, name: m.name, description: m.description || '', icon: m.icon || null,
       version: m.version, kelbo: m.kelbo, kinds: extensionKinds(m), repo: REPO, path: folder,
-      ...(m.addon ? { addon: { host: m.addon.host, version: m.addon.version } } : {}),
+      ...(m.addon ? { addon: { host: m.addon.host, version: m.addon.version, ...(m.addon.optional ? { optional: true } : {}) } } : {}),
     };
   });
   return JSON.stringify({ name: 'Kelbo official extensions', extensions }, null, 2) + '\n';
