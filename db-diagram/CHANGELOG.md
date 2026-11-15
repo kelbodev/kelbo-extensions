@@ -4,6 +4,8 @@ All notable changes to the `db-diagram` extension. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-15
+
 ### Changed
 - **Automatic layout by relations**: tables are grouped by their relations (each group is a set of connected tables) with the table having most relations at the centre of its group and the others around it by distance; tables without relations go on the outer edges of the diagram, spread over the four sides.
 - **Fewer crossings**: the order of the tables around the centre is chosen to keep relations from crossing (barycentre sweeps, then swaps and rotations kept only when they help), then refined with forces (relations pull, tables push each other away, tables with more relations pulled towards the centre) and swaps of positions; the score weighs crossings first, then relations passing over a table, then the total length. Tables never overlap.
