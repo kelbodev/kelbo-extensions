@@ -4,6 +4,8 @@ All notable changes to the `terminal` extension. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-15
+
 ### Fixed
 - "Home folder" in the sidebar answered "Unknown project" instead of opening a terminal in the home folder.
 

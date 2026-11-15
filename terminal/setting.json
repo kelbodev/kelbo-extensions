@@ -4,7 +4,7 @@
     "en": "Terminal"
   },
   "code": "terminal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "kelbo": "^2.34",
   "devdock": "^2.34",
   "description": {

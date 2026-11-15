@@ -316,7 +316,7 @@
         "en": "Integrated terminal: real shells (zsh, bash, fish, PowerShell) in the folder of a project, several sessions in tabs that stay open when the page is reloaded, theme colours"
       },
       "icon": "square-terminal",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "kelbo": "^2.34",
       "kinds": [
         "component"
