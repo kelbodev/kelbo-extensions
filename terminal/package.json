@@ -1,0 +1,12 @@
+{
+  "name": "kelbo-ext-terminal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Kelbo: terminale integrato con shell vere (pseudo-terminale) e xterm.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@lydell/node-pty": "1.1.0",
+    "@xterm/addon-fit": "0.11.0",
+    "@xterm/xterm": "6.0.0"
+  }
+}

@@ -9,7 +9,8 @@
     "db-postgres",
     "db-sqlite",
     "docker",
-    "mongo-client"
+    "mongo-client",
+    "terminal"
   ],
   "scripts": {
     "test": "node --test",

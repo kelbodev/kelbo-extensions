@@ -1,0 +1,16 @@
+.term{flex:1;display:flex;flex-direction:column;min-height:0;position:relative}
+.term-notice{display:flex;gap:8px;align-items:center;padding:8px 16px;color:var(--warning);font-size:12px;border-bottom:1px solid var(--border)}
+.term-bar{display:flex;align-items:center;gap:4px;padding:6px 10px;border-bottom:1px solid var(--border)}
+.term-tabs{display:flex;gap:4px;overflow-x:auto;min-width:0}
+.term-tab{display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;cursor:pointer;white-space:nowrap;color:var(--muted);background:none}
+.term-tab.active{color:var(--text);border-color:var(--ext-color);background:color-mix(in srgb,var(--ext-color) 10%,transparent)}
+.term-tab.exited .term-tab-title{text-decoration:line-through;opacity:.7}
+.term-tab-close{background:none;border:none;color:inherit;cursor:pointer;display:inline-flex;padding:1px;border-radius:3px}
+.term-tab-close:hover{background:var(--hover);color:var(--danger)}
+.term-spacer{flex:1}
+.term-area{flex:1;min-height:0;position:relative;background:var(--terminal-bg)}
+.term-pane{position:absolute;inset:0;padding:6px 0 0 8px}
+.term-pane[hidden]{display:none}
+.term .empty-state{position:absolute;inset:44px 0 0 0}
+.term-proj-path{display:block;font-size:10px;color:var(--muted);font-family:var(--font);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.term-sb-count{font-size:10px;color:var(--ext-color);font-family:var(--font)}

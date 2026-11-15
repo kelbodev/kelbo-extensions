@@ -306,6 +306,25 @@
       "path": "swagger"
     },
     {
+      "code": "terminal",
+      "name": {
+        "it": "Terminale",
+        "en": "Terminal"
+      },
+      "description": {
+        "it": "Terminale integrato: shell vere (zsh, bash, fish, PowerShell) nella cartella di un progetto, più sessioni in tab che restano aperte ricaricando la pagina, colori del tema",
+        "en": "Integrated terminal: real shells (zsh, bash, fish, PowerShell) in the folder of a project, several sessions in tabs that stay open when the page is reloaded, theme colours"
+      },
+      "icon": "square-terminal",
+      "version": "1.0.0",
+      "kelbo": "^2.34",
+      "kinds": [
+        "component"
+      ],
+      "repo": "https://github.com/kelbodev/kelbo-extensions.git",
+      "path": "terminal"
+    },
+    {
       "code": "theme-dim",
       "name": {
         "it": "Tema scuro attenuato",

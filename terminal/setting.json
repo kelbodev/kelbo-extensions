@@ -1,0 +1,75 @@
+{
+  "name": {
+    "it": "Terminale",
+    "en": "Terminal"
+  },
+  "code": "terminal",
+  "version": "1.0.0",
+  "kelbo": "^2.34",
+  "devdock": "^2.34",
+  "description": {
+    "it": "Terminale integrato: shell vere (zsh, bash, fish, PowerShell) nella cartella di un progetto, più sessioni in tab che restano aperte ricaricando la pagina, colori del tema",
+    "en": "Integrated terminal: real shells (zsh, bash, fish, PowerShell) in the folder of a project, several sessions in tabs that stay open when the page is reloaded, theme colours"
+  },
+  "color": "#4ade80",
+  "icon": "square-terminal",
+  "position": "tab",
+  "order": 24,
+  "backend": {
+    "module": "server.js",
+    "routes": [
+      {
+        "method": "GET",
+        "path": "/info",
+        "handler": "info"
+      },
+      {
+        "method": "GET",
+        "path": "/sessions",
+        "handler": "list"
+      },
+      {
+        "method": "POST",
+        "path": "/sessions",
+        "handler": "create"
+      },
+      {
+        "method": "GET",
+        "path": "/sessions/:id/stream",
+        "handler": "stream",
+        "stream": true
+      },
+      {
+        "method": "POST",
+        "path": "/sessions/:id/input",
+        "handler": "input"
+      },
+      {
+        "method": "POST",
+        "path": "/sessions/:id/resize",
+        "handler": "resize"
+      },
+      {
+        "method": "POST",
+        "path": "/sessions/:id/rename",
+        "handler": "rename"
+      },
+      {
+        "method": "POST",
+        "path": "/sessions/:id/close",
+        "handler": "close"
+      },
+      {
+        "method": "GET",
+        "path": "/vendor/:file",
+        "handler": "vendor"
+      }
+    ]
+  },
+  "frontend": {
+    "html": "view.html",
+    "sidebar": "sidebar.html",
+    "js": "view.js",
+    "css": "style.css"
+  }
+}
