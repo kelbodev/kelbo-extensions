@@ -4,6 +4,8 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-15
+
 ### Added
 - **JSON** tab: format (indent 2, 4 or tab), minify, sorted keys, to and from a JSON string (escape and unescape), as text or as a collapsible **tree** with types in colour; validated as you type, an error shows the line and column with the point marked in the text; *Use* puts the result back as the input.
 - **Compare** tab: two texts side by side or in a unified view, differences line by line (Myers' algorithm, as `git diff`) with the changed words highlighted inside the lines, unchanged stretches folded around 3 lines of context, ignore spaces or case, swap. In **JSON** mode the values are compared and not the formatting (key order and spaces don't count), with the list of the changed paths (`$.deps.express`: changed, added, removed).

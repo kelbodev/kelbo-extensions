@@ -4,7 +4,7 @@
     "en": "Toolbox"
   },
   "code": "toolbox",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "kelbo": "^2.35",
   "devdock": "^2.35",
   "description": {
