@@ -67,6 +67,40 @@ test('JWT: decodifica, scadenza, firma e verifica HS256, RS256, ES256', async ()
   await assert.rejects(c.signJwt({ alg: 'RS256' }, {}, 'k'), /jwt_sign_alg/);
 });
 
+test('JSON: formattazione, compressione, chiavi in ordine, errori con riga e colonna', async () => {
+  const m = await load();
+  const r = m.jsonFormat('{"b":1,"a":{"d":[1,2],"c":null}}', { sort: true, indent: 4 });
+  assert.equal(r.text, '{\n    "a": {\n        "c": null,\n        "d": [\n            1,\n            2\n        ]\n    },\n    "b": 1\n}');
+  assert.equal(m.jsonFormat('{ "a" : [ 1 , 2 ] }', { minify: true }).text, '{"a":[1,2]}');
+  assert.equal(m.jsonFormat('[1]', { indent: 'tab' }).text, '[\n\t1\n]');
+  for (const [text, line, col] of [['{\n  "a": 1,\n  "b": [1, 2,]\n}', 3, 14], ['{"a" 1}', 1, 6], ['[1, 2', 1, 6], ['{"a":1} x', 1, 9], ['"\\x"', 1, 3], ['', 1, 1]]) {
+    const e = m.jsonFormat(text).error;
+    assert.deepEqual([e.line, e.col], [line, col], JSON.stringify(text));
+    assert.ok(!/is not valid JSON/.test(e.message), e.message);
+  }
+  assert.equal(m.jsonErrorAt('{"a": [true, false, null, -1.5e3, "\\u00e8"]}'), -1);
+});
+
+test('confronto: righe con Myers, parti cambiate nella riga, opzioni, JSON per percorso', async () => {
+  const m = await load();
+  const d = m.diffText('a\nb\nc\nd', 'a\nB x\nc\ne\nf');
+  assert.deepEqual(d.rows.map(r => r.type), ['eq', 'mod', 'eq', 'mod', 'ins']);
+  assert.deepEqual([d.added, d.removed, d.same], [3, 2, false]);
+  assert.deepEqual(d.rows[1].chars.right, [{ op: '+', text: 'B x' }]);
+  assert.deepEqual(m.diffChars('const x = 1;', 'const y = 1;').left, [{ op: '=', text: 'const ' }, { op: '-', text: 'x' }, { op: '=', text: ' = 1;' }]);
+  assert.equal(m.diffText('A  b', 'a b', { ignoreWhitespace: true, ignoreCase: true }).same, true);
+  assert.equal(m.diffText('A  b', 'a b').same, false);
+  assert.equal(m.diffText('', '').same, true);
+  // Myers: lo script minimo (lunghezza dell'LCS) su un esempio noto
+  const ops = m.myers('ABCABBA'.split(''), 'CBABAC'.split(''));
+  assert.equal(ops.filter(o => o.op === '=').length, 4);
+  assert.deepEqual(m.diffJson({ a: 1, b: { c: [1, 2] }, d: 'x', 'k-1': 0 }, { a: 1, b: { c: [1, 3, 4] }, e: true, 'k-1': 0 }), [
+    { path: '$.b.c[1]', kind: 'changed', before: 2, after: 3 }, { path: '$.b.c[2]', kind: 'added', after: 4 },
+    { path: '$.d', kind: 'removed', before: 'x' }, { path: '$.e', kind: 'added', after: true },
+  ]);
+  assert.deepEqual(m.diffJson({ 'a b': 1 }, { 'a b': 2 })[0].path, '$["a b"]');
+});
+
 test('generatori: UUID v4 e v7, stringhe casuali, timestamp', async () => {
   const c = await load();
   assert.match(c.uuid4(), /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);

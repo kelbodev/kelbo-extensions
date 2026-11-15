@@ -192,13 +192,167 @@ function parseTime(text) {
   return Number.isFinite(ms) ? ms : null;
 }
 
+// ---- JSON: formattazione, compressione, chiavi ordinate, errori con riga e colonna ----
+// Errore di JSON.parse con la posizione (V8: "at position N" o "(line L column C)")
+// Posizione del primo errore di sintassi (scansione JSON completa): indice nel testo, o -1
+function jsonErrorAt(text) {
+  let i = 0;
+  const ws = () => { while (i < text.length && ' \t\n\r'.includes(text[i])) i++; };
+  const fail = () => { throw i; };
+  const lit = w => { if (text.startsWith(w, i)) i += w.length; else fail(); };
+  const str = () => {
+    i++;
+    while (i < text.length) {
+      const c = text[i];
+      if (c === '"') { i++; return; }
+      if (c === '\\') { const n = text[i + 1]; if ('"\\/bfnrt'.includes(n)) i += 2; else if (n === 'u' && /^[0-9a-fA-F]{4}$/.test(text.slice(i + 2, i + 6))) i += 6; else { i++; fail(); } continue; }
+      if (c < ' ') fail();
+      i++;
+    }
+    fail();
+  };
+  const num = () => { const m = /^-?(0|[1-9]\d*)(\.\d+)?([eE][+-]?\d+)?/.exec(text.slice(i)); if (!m || !m[0] || m[0] === '-') fail(); i += m[0].length; };
+  const value = () => {
+    ws();
+    const c = text[i];
+    if (c === '{') {
+      i++; ws();
+      if (text[i] === '}') { i++; return; }
+      for (;;) { ws(); if (text[i] !== '"') fail(); str(); ws(); if (text[i] !== ':') fail(); i++; value(); ws(); if (text[i] === ',') { i++; continue; } if (text[i] === '}') { i++; return; } fail(); }
+    }
+    if (c === '[') {
+      i++; ws();
+      if (text[i] === ']') { i++; return; }
+      for (;;) { value(); ws(); if (text[i] === ',') { i++; continue; } if (text[i] === ']') { i++; return; } fail(); }
+    }
+    if (c === '"') return str();
+    if (c === 't') return lit('true');
+    if (c === 'f') return lit('false');
+    if (c === 'n') return lit('null');
+    return num();
+  };
+  try { value(); ws(); if (i < text.length) fail(); return -1; } catch (pos) { return typeof pos === 'number' ? pos : -1; }
+}
+function jsonError(e, text) {
+  const msg = String(e.message || e);
+  const at = jsonErrorAt(text);
+  let line = null, col = null;
+  if (at >= 0) { const before = text.slice(0, at).split('\n'); line = before.length; col = before.at(-1).length + 1; }
+  // il messaggio del motore, senza ripetere tutto il testo
+  return { message: msg.replace(/^JSON\.parse: /, '').replace(/, (\.\.\.)?".*" is not valid JSON$/s, '').replace(/ in JSON at position \d+.*$/s, '').replace(/ at position \d+.*$/s, '').replace(/ \(line \d+ column \d+\)$/, ''), line, col, at };
+}
+function sortKeys(v) {
+  if (Array.isArray(v)) return v.map(sortKeys);
+  if (v && typeof v === 'object') return Object.fromEntries(Object.keys(v).sort().map(k => [k, sortKeys(v[k])]));
+  return v;
+}
+// → { ok: true, value, text } | { ok: false, error: { message, line, col } }
+function jsonFormat(text, { indent = 2, sort = false, minify = false } = {}) {
+  let value;
+  try { value = JSON.parse(text); } catch (e) { return { ok: false, error: jsonError(e, text) }; }
+  if (sort) value = sortKeys(value);
+  const ind = indent === 'tab' ? '\t' : Number(indent) || 2;
+  return { ok: true, value, text: minify ? JSON.stringify(value) : JSON.stringify(value, null, ind) };
+}
+
+// ---- diff: Myers (righe e caratteri), JSON per percorsi ----
+// Sequenze a e b (con chiave di confronto) → [{ op: '=' | '-' | '+', a?, b? }] (indici)
+function myers(a, b, key = x => x) {
+  const ka = a.map(key), kb = b.map(key);
+  const n = ka.length, m = kb.length, max = n + m;
+  const v = new Map([[1, 0]]);
+  const trace = [];
+  outer: for (let d = 0; d <= max; d++) {
+    trace.push(new Map(v));
+    for (let k = -d; k <= d; k += 2) {
+      let x = k === -d || (k !== d && (v.get(k - 1) ?? -1) < (v.get(k + 1) ?? -1)) ? (v.get(k + 1) ?? 0) : (v.get(k - 1) ?? 0) + 1;
+      let y = x - k;
+      while (x < n && y < m && ka[x] === kb[y]) { x++; y++; }
+      v.set(k, x);
+      if (x >= n && y >= m) break outer;
+    }
+  }
+  // percorso all'indietro
+  const ops = [];
+  let x = n, y = m;
+  for (let d = trace.length - 1; d >= 0 && (x > 0 || y > 0); d--) {
+    const vv = trace[d], k = x - y;
+    const prevK = k === -d || (k !== d && (vv.get(k - 1) ?? -1) < (vv.get(k + 1) ?? -1)) ? k + 1 : k - 1;
+    const prevX = vv.get(prevK) ?? 0, prevY = prevX - prevK;
+    while (x > prevX && y > prevY) { x--; y--; ops.push({ op: '=', a: x, b: y }); }
+    if (d > 0) { if (x === prevX) { y--; ops.push({ op: '+', b: y }); } else { x--; ops.push({ op: '-', a: x }); } }
+  }
+  return ops.reverse();
+}
+// Differenze tra due testi per riga: { rows: [{ type: 'eq'|'rem'|'ins'|'mod', left, right, ln, rn, chars? }], added, removed }
+// mod: una riga tolta e una aggiunta nello stesso punto, con le parti cambiate dentro la riga
+const MAX_DIFF_LINES = 20000;
+function diffText(left, right, { ignoreWhitespace = false, ignoreCase = false } = {}) {
+  const la = String(left).split(/\r?\n/), lb = String(right).split(/\r?\n/);
+  if (la.length + lb.length > MAX_DIFF_LINES * 2) throw new Error('diff_too_large');
+  const key = l => { let s = l; if (ignoreWhitespace) s = s.replace(/\s+/g, ' ').trim(); if (ignoreCase) s = s.toLowerCase(); return s; };
+  const ops = myers(la, lb, key);
+  const rows = [];
+  let added = 0, removed = 0;
+  for (let i = 0; i < ops.length;) {
+    if (ops[i].op === '=') { rows.push({ type: 'eq', left: la[ops[i].a], right: lb[ops[i].b], ln: ops[i].a + 1, rn: ops[i].b + 1 }); i++; continue; }
+    // blocco di cambiamenti: tolte e aggiunte accoppiate riga per riga
+    const dels = [], ins = [];
+    while (i < ops.length && ops[i].op !== '=') { (ops[i].op === '-' ? dels : ins).push(ops[i]); i++; }
+    removed += dels.length; added += ins.length;
+    for (let j = 0; j < Math.max(dels.length, ins.length); j++) {
+      const dl = dels[j], il = ins[j];
+      if (dl && il) rows.push({ type: 'mod', left: la[dl.a], right: lb[il.b], ln: dl.a + 1, rn: il.b + 1, chars: diffChars(la[dl.a], lb[il.b]) });
+      else if (dl) rows.push({ type: 'rem', left: la[dl.a], ln: dl.a + 1 });
+      else rows.push({ type: 'ins', right: lb[il.b], rn: il.b + 1 });
+    }
+  }
+  return { rows, added, removed, same: !added && !removed };
+}
+// Parti cambiate dentro una riga: [{ op, text }] per i due lati
+function diffChars(a, b) {
+  if (a.length + b.length > 4000) return { left: [{ op: '-', text: a }], right: [{ op: '+', text: b }] };
+  // per parole e spazi: più leggibile dei singoli caratteri
+  const tok = s => s.match(/\w+|\s+|[^\w\s]/g) || [];
+  const ta = tok(a), tb = tok(b);
+  const ops = myers(ta, tb);
+  const left = [], right = [];
+  const push = (arr, op, text) => { const last = arr.at(-1); if (last && last.op === op) last.text += text; else arr.push({ op, text }); };
+  for (const o of ops) {
+    if (o.op === '=') { push(left, '=', ta[o.a]); push(right, '=', tb[o.b]); }
+    else if (o.op === '-') push(left, '-', ta[o.a]);
+    else push(right, '+', tb[o.b]);
+  }
+  return { left, right };
+}
+// Differenze tra due valori JSON per percorso ($.a.b[2]): [{ path, kind: 'added'|'removed'|'changed', before, after }]
+function diffJson(a, b, path = '$', out = []) {
+  const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
+  const key = k => (/^[A-Za-z_$][\w$]*$/.test(k) ? `.${k}` : `[${JSON.stringify(k)}]`);
+  if (Array.isArray(a) && Array.isArray(b)) {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+      if (i >= a.length) out.push({ path: `${path}[${i}]`, kind: 'added', after: b[i] });
+      else if (i >= b.length) out.push({ path: `${path}[${i}]`, kind: 'removed', before: a[i] });
+      else diffJson(a[i], b[i], `${path}[${i}]`, out);
+    }
+  } else if (isObj(a) && isObj(b)) {
+    for (const k of [...new Set([...Object.keys(a), ...Object.keys(b)])].sort()) {
+      if (!(k in b)) out.push({ path: path + key(k), kind: 'removed', before: a[k] });
+      else if (!(k in a)) out.push({ path: path + key(k), kind: 'added', after: b[k] });
+      else diffJson(a[k], b[k], path + key(k), out);
+    }
+  } else if (JSON.stringify(a) !== JSON.stringify(b)) out.push({ path, kind: 'changed', before: a, after: b });
+  return out;
+}
+
 export {
   toBytes, fromBytes, bytesToBase64, base64ToBytes, b64urlEncodeBytes, b64urlDecodeBytes, toHex, fromHex, CODECS,
   md5, digest, decodeJwt, verifyJwt, signJwt, jwtAlgorithm, uuid4, uuid7, randomString, parseTime,
+  jsonFormat, jsonError, jsonErrorAt, sortKeys, myers, diffText, diffChars, diffJson,
 };
 
 // ---- pannello ----
-const TABS = ['jwt', 'codec', 'hash', 'generate'];
+const TABS = ['jwt', 'json', 'diff', 'codec', 'hash', 'generate'];
 const HASHES = ['md5', 'sha1', 'sha256', 'sha384', 'sha512'];
 const TAB_KEY = 'kelbo.toolbox.tab';
 
@@ -216,6 +370,8 @@ export default {
       codec: 'base64', direction: 'encode', codecIn: '',
       hashIn: '', hashKey: '', hashFormat: 'hex', hashFile: null, hashes: {},
       uuidVersion: '4', uuidCount: 5, uuids: [], randLength: 32, randCharset: 'alnum', rand: '', timeIn: '',
+      jsonIn: '', jsonIndent: '2', jsonSort: false, jsonAction: 'format', jsonView: 'text',
+      diffLeft: '', diffRight: '', diffMode: 'text', diffView: 'split', diffWs: false, diffCase: false, diffAll: false,
     };
 
     async function copy(text) {
@@ -225,7 +381,7 @@ export default {
     const copyBtn = value => `<button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.copy(${js(value)})" title="${esc(t('copy'))}">${ctx.ui.icon('copy')}</button>`;
 
     function renderTabs() {
-      ctx.ui.patch($('tabs'), TABS.map(x => `<button class="tb-tab ${x === tab ? 'active' : ''}" onclick="Ext.toolbox.tab(${js(x)})">${ctx.ui.icon({ jwt: 'key-round', codec: 'arrow-left-right', hash: 'hash', generate: 'sparkles' }[x])} ${esc(t(`tab.${x}`))}</button>`).join(''));
+      ctx.ui.patch($('tabs'), TABS.map(x => `<button class="tb-tab ${x === tab ? 'active' : ''}" onclick="Ext.toolbox.tab(${js(x)})">${ctx.ui.icon({ jwt: 'key-round', json: 'braces', diff: 'git-compare', codec: 'arrow-left-right', hash: 'hash', generate: 'sparkles' }[x])} ${esc(t(`tab.${x}`))}</button>`).join(''));
     }
 
     // ---- JWT ----
@@ -270,6 +426,137 @@ export default {
             <div class="tb-row-head"><label>${esc(t('jwt.payload'))}</label>${copyBtn(JSON.stringify(d.payload, null, 2))}</div>
             <pre class="tb-pre">${json(d.payload)}</pre>` : `<p class="tb-muted">${esc(t('jwt.hint'))}</p>`}
         </div></div>`;
+    }
+
+    // ---- JSON ----
+    // risultato dell'azione scelta: formattato, compresso, come stringa JSON, da stringa JSON
+    function jsonResult() {
+      const text = state.jsonIn;
+      if (!text.trim()) return { empty: true };
+      if (state.jsonAction === 'escape') return { ok: true, text: JSON.stringify(text) };
+      const r = jsonFormat(text, { indent: state.jsonIndent, sort: state.jsonSort, minify: state.jsonAction === 'minify' });
+      if (!r.ok) return r;
+      if (state.jsonAction === 'unescape') {
+        if (typeof r.value !== 'string') return { ok: false, error: { message: t('json.notString'), line: null, col: null } };
+        return { ok: true, text: r.value };
+      }
+      return r;
+    }
+    const typeOf = v => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
+    function treeHtml(v, key, depth, budget) {
+      if (budget.n-- <= 0) return '';
+      const k = key != null ? `<span class="tb-tk">${esc(key)}</span>: ` : '';
+      if (v && typeof v === 'object') {
+        const entries = Array.isArray(v) ? v.map((x, i) => [i, x]) : Object.entries(v);
+        const label = Array.isArray(v) ? `[${fmt.number(entries.length)}]` : `{${fmt.number(entries.length)}}`;
+        return `<details ${depth < 2 ? 'open' : ''}><summary>${k}<span class="tb-tm">${label}</span></summary>
+          <div class="tb-tree-in">${entries.map(([kk, x]) => treeHtml(x, kk, depth + 1, budget)).join('')}${budget.n <= 0 ? '<div class="tb-muted">…</div>' : ''}</div></details>`;
+      }
+      return `<div class="tb-leaf">${k}<span class="tb-tv tb-t-${typeOf(v)}">${esc(JSON.stringify(v))}</span></div>`;
+    }
+    function jsonResultHtml() {
+      const r = jsonResult();
+      if (r.empty) return `<p class="tb-muted">${esc(t('json.hint'))}</p>`;
+      if (!r.ok) {
+        const e = r.error;
+        let snippet = '';
+        if (e.line) {
+          const line = state.jsonIn.split('\n')[e.line - 1] || '';
+          const from = Math.max(0, e.col - 60);
+          snippet = `<pre class="tb-pre tb-err-pre">${esc(line.slice(from, e.col + 40))}\n${' '.repeat(Math.max(0, e.col - 1 - from))}^</pre>`;
+        }
+        return `<p class="tb-error">${ctx.ui.icon('circle-x')} ${esc(e.line ? t('json.errorAt', { line: e.line, col: e.col, message: e.message }) : t('json.error', { message: e.message }))}</p>${snippet}`;
+      }
+      const stats = r.value !== undefined ? t('json.valid', { type: t(`json.type.${typeOf(r.value)}`), size: fmt.number(r.text.length) }) : t('json.chars', { size: fmt.number(r.text.length) });
+      const head = `<div class="tb-row-head"><span class="tb-ok">${ctx.ui.icon('check')} ${esc(stats)}</span>
+        <span>${copyBtn(r.text)}<button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.jsonUse()" title="${esc(t('json.useTitle'))}">${ctx.ui.icon('arrow-left')} ${esc(t('json.use'))}</button></span></div>`;
+      if (state.jsonView === 'tree' && r.value !== undefined && state.jsonAction !== 'escape' && state.jsonAction !== 'unescape') {
+        return `${head}<div class="tb-tree tb-mono">${treeHtml(r.value, null, 0, { n: 3000 })}</div>`;
+      }
+      return `${head}<textarea class="form-input tb-area tb-mono tb-out" rows="18" readonly spellcheck="false">${esc(r.text)}</textarea>`;
+    }
+    function jsonHtml() {
+      const seg = (field, list) => `<div class="tb-seg">${list.map(([v, label]) => `<button class="${state[field] === v ? 'active' : ''}" onclick="Ext.toolbox.set(${js(field)}, ${js(v)})">${esc(label)}</button>`).join('')}</div>`;
+      return `<div class="tb-toolbar">
+          ${seg('jsonAction', [['format', t('json.format')], ['minify', t('json.minify')], ['escape', t('json.escape')], ['unescape', t('json.unescape')]])}
+          <label class="tb-check">${esc(t('json.indent'))} <select class="form-input" data-field="jsonIndent">${[['2', '2'], ['4', '4'], ['tab', 'Tab']].map(([v, l]) => `<option value="${v}" ${state.jsonIndent === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
+          <label class="tb-check"><input type="checkbox" data-field="jsonSort" ${state.jsonSort ? 'checked' : ''}> ${esc(t('json.sort'))}</label>
+          ${seg('jsonView', [['text', t('json.viewText')], ['tree', t('json.viewTree')]])}
+        </div>
+        <div class="tb-grid">
+          <div class="tb-col"><label>${esc(t('json.input'))}</label><textarea class="form-input tb-area tb-mono tb-tall" data-field="jsonIn" rows="20" spellcheck="false" placeholder='{"a": 1}'>${esc(state.jsonIn)}</textarea></div>
+          <div class="tb-col" data-role="result">${jsonResultHtml()}</div>
+        </div>`;
+    }
+
+    // ---- diff ----
+    const marks = parts => parts.map(p => (p.op === '=' ? esc(p.text) : `<mark class="${p.op === '-' ? 'tb-mdel' : 'tb-mins'}">${esc(p.text)}</mark>`)).join('');
+    function diffResultHtml() {
+      if (!state.diffLeft && !state.diffRight) return `<p class="tb-muted">${esc(t('diff.hint'))}</p>`;
+      let left = state.diffLeft, right = state.diffRight, changes = null;
+      if (state.diffMode === 'json') {
+        const a = jsonFormat(left || 'null', { sort: true }), b = jsonFormat(right || 'null', { sort: true });
+        if (!a.ok || !b.ok) {
+          const side = !a.ok ? t('diff.left') : t('diff.right'), e = (!a.ok ? a : b).error;
+          return `<p class="tb-error">${ctx.ui.icon('circle-x')} ${esc(t('diff.jsonInvalid', { side, message: e.line ? t('json.errorAt', { line: e.line, col: e.col, message: e.message }) : e.message }))}</p>`;
+        }
+        left = a.text; right = b.text;
+        changes = diffJson(a.value, b.value);
+      }
+      let d;
+      try { d = diffText(left, right, { ignoreWhitespace: state.diffWs, ignoreCase: state.diffCase }); }
+      catch { return `<p class="tb-error">${esc(t('diff.tooLarge'))}</p>`; }
+      const summary = d.same ? `<span class="tb-ok">${ctx.ui.icon('check')} ${esc(t('diff.same'))}</span>`
+        : `<span class="tb-add">+${fmt.number(d.added)}</span> <span class="tb-rem">−${fmt.number(d.removed)}</span> <span class="tb-muted">${esc(t('diff.lines'))}</span>`;
+      // righe uguali lontane dai cambiamenti piegate (3 di contesto)
+      const show = d.rows.map(() => state.diffAll);
+      if (!state.diffAll) d.rows.forEach((r, i) => { if (r.type !== 'eq') for (let j = Math.max(0, i - 3); j <= Math.min(d.rows.length - 1, i + 3); j++) show[j] = true; });
+      const out = [];
+      let hidden = 0;
+      const flush = () => { if (hidden) { out.push({ fold: hidden }); hidden = 0; } };
+      // tratti piegati solo da 4 righe in su (meno righe si mostrano)
+      for (let i = 0; i < show.length;) {
+        if (show[i]) { i++; continue; }
+        let j = i; while (j < show.length && !show[j]) j++;
+        if (j - i < 4) for (let k = i; k < j; k++) show[k] = true;
+        i = j;
+      }
+      d.rows.forEach((r, i) => { if (show[i] || d.same) { flush(); out.push(r); } else hidden++; });
+      flush();
+      const fold = n => `<tr class="tb-fold"><td colspan="${state.diffView === 'split' ? 4 : 3}"><button class="tb-link" onclick="Ext.toolbox.set('diffAll', true)">${esc(t('diff.folded', { count: n }))}</button></td></tr>`;
+      const ln = n => `<td class="tb-ln">${n ?? ''}</td>`;
+      let body;
+      if (state.diffView === 'split') {
+        body = out.map(r => (r.fold ? fold(r.fold) : `<tr class="tb-d-${r.type}">${ln(r.ln)}<td class="tb-dl">${r.type === 'ins' ? '' : r.type === 'mod' ? marks(r.chars.left) : esc(r.left)}</td>${ln(r.rn)}<td class="tb-dr">${r.type === 'rem' ? '' : r.type === 'mod' ? marks(r.chars.right) : esc(r.right)}</td></tr>`)).join('');
+      } else {
+        const line = (cls, sign, l, rr, html) => `<tr class="tb-d-${cls}">${ln(l)}${ln(rr)}<td class="tb-du"><span class="tb-sign">${sign}</span>${html}</td></tr>`;
+        body = out.map(r => (r.fold ? fold(r.fold)
+          : r.type === 'eq' ? line('eq', ' ', r.ln, r.rn, esc(r.left))
+          : r.type === 'rem' ? line('rem', '−', r.ln, null, esc(r.left))
+          : r.type === 'ins' ? line('ins', '+', null, r.rn, esc(r.right))
+          : line('rem', '−', r.ln, null, marks(r.chars.left)) + line('ins', '+', null, r.rn, marks(r.chars.right)))).join('');
+      }
+      const val = v => (v === undefined ? '' : esc(JSON.stringify(v)));
+      return `<div class="tb-row-head"><span>${summary}</span>${state.diffAll && !d.same ? `<button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.set('diffAll', false)">${esc(t('diff.foldAgain'))}</button>` : ''}</div>
+        ${changes && changes.length ? `<table class="data-table tb-paths"><tbody>${changes.slice(0, 500).map(c => `<tr class="tb-p-${c.kind}">
+          <td><span class="tb-badge">${esc(t(`diff.kind.${c.kind}`))}</span></td><td class="tb-mono">${esc(c.path)}</td>
+          <td class="tb-mono tb-pv">${c.kind === 'added' ? '' : `<span class="tb-rem">${val(c.before)}</span>`}${c.kind === 'changed' ? ' → ' : ''}${c.kind === 'removed' ? '' : `<span class="tb-add">${val(c.after)}</span>`}</td></tr>`).join('')}</tbody></table>` : ''}
+        <div class="tb-diff-wrap"><table class="tb-diff tb-mono ${state.diffView === 'split' ? 'tb-split' : 'tb-unified'}"><tbody>${body}</tbody></table></div>`;
+    }
+    function diffHtml() {
+      const seg = (field, list) => `<div class="tb-seg">${list.map(([v, label]) => `<button class="${state[field] === v ? 'active' : ''}" onclick="Ext.toolbox.set(${js(field)}, ${js(v)})">${esc(label)}</button>`).join('')}</div>`;
+      return `<div class="tb-toolbar">
+          ${seg('diffMode', [['text', t('diff.modeText')], ['json', t('diff.modeJson')]])}
+          ${seg('diffView', [['split', t('diff.split')], ['unified', t('diff.unified')]])}
+          <label class="tb-check"><input type="checkbox" data-field="diffWs" ${state.diffWs ? 'checked' : ''}> ${esc(t('diff.ignoreWs'))}</label>
+          <label class="tb-check"><input type="checkbox" data-field="diffCase" ${state.diffCase ? 'checked' : ''}> ${esc(t('diff.ignoreCase'))}</label>
+          <button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.diffSwap()">${ctx.ui.icon('arrow-left-right')} ${esc(t('diff.swap'))}</button>
+        </div>
+        <div class="tb-grid">
+          <div class="tb-col"><label>${esc(t('diff.left'))}</label><textarea class="form-input tb-area tb-mono" data-field="diffLeft" rows="9" spellcheck="false">${esc(state.diffLeft)}</textarea></div>
+          <div class="tb-col"><label>${esc(t('diff.right'))}</label><textarea class="form-input tb-area tb-mono" data-field="diffRight" rows="9" spellcheck="false">${esc(state.diffRight)}</textarea></div>
+        </div>
+        <div data-role="result">${diffResultHtml()}</div>`;
     }
 
     // ---- codifiche ----
@@ -350,11 +637,17 @@ export default {
       const el = $('body');
       const active = document.activeElement;
       const keep = active && el.contains(active) && active.dataset.field ? { field: active.dataset.field, start: active.selectionStart, end: active.selectionEnd } : null;
-      el.innerHTML = tab === 'jwt' ? jwtHtml() : tab === 'codec' ? codecHtml() : tab === 'hash' ? hashHtml() : generateHtml();
+      el.innerHTML = tab === 'jwt' ? jwtHtml() : tab === 'json' ? jsonHtml() : tab === 'diff' ? diffHtml() : tab === 'codec' ? codecHtml() : tab === 'hash' ? hashHtml() : generateHtml();
       // il campo in cui si stava scrivendo resta attivo, con il cursore dov'era
       if (keep) { const f = el.querySelector(`[data-field="${keep.field}"]`); if (f) { f.focus(); try { f.setSelectionRange(keep.start, keep.end); } catch { /* non è un campo di testo */ } } }
     }
     function render() { renderTabs(); renderBody(); }
+    // solo il risultato (JSON, diff): i campi di testo restano come sono, con cursore e scorrimento
+    let resultTimer = null;
+    function renderResult(delay = 0) {
+      clearTimeout(resultTimer);
+      resultTimer = setTimeout(() => { const el = $('body').querySelector('[data-role="result"]'); if (el) el.innerHTML = tab === 'json' ? jsonResultHtml() : diffResultHtml(); }, delay);
+    }
 
     // ---- eventi dei campi ----
     $('body').addEventListener('input', e => {
@@ -365,11 +658,15 @@ export default {
       if (f === 'jwt') { state.jwtVerify = null; state.jwtSource = null; }
       if (f === 'jwtKey') state.jwtVerify = null;
       if (f === 'hashIn' || f === 'hashKey') { computeHashes(); return; }
+      if (f === 'jsonIn') { renderResult(120); return; }
+      if (f === 'diffLeft' || f === 'diffRight') { state.diffAll = false; renderResult(200); return; }
       if (['jwt', 'codecIn', 'timeIn'].includes(f)) renderBody();
     });
     $('body').addEventListener('change', async e => {
       const f = e.target.dataset.field;
       if (f === 'codec' || f === 'randCharset') { state[f] = e.target.value; renderBody(); }
+      if (f === 'jsonIndent') { state.jsonIndent = e.target.value; renderResult(); }
+      if (['jsonSort', 'diffWs', 'diffCase'].includes(f)) { state[f] = e.target.checked; renderResult(); }
       if (f === 'hashFile' && e.target.files?.[0]) {
         const file = e.target.files[0];
         state.hashFile = { name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) };
@@ -381,6 +678,14 @@ export default {
       copy,
       tab(x) { tab = x; store.set(TAB_KEY, x); render(); if (x === 'hash') computeHashes(); if (x === 'jwt') loadHttpTokens(); },
       direction(d) { state.direction = d; renderBody(); },
+      // scelte a pulsanti delle schede JSON e diff
+      set(field, value) {
+        if (!['jsonAction', 'jsonView', 'diffMode', 'diffView', 'diffAll'].includes(field)) return;
+        state[field] = value;
+        renderBody();
+      },
+      jsonUse() { const r = jsonResult(); if (r.ok) { state.jsonIn = r.text; state.jsonAction = 'format'; renderBody(); } },
+      diffSwap() { [state.diffLeft, state.diffRight] = [state.diffRight, state.diffLeft]; renderBody(); },
       swap() {
         try { state.codecIn = CODECS[state.codec][state.direction](state.codecIn); state.direction = state.direction === 'encode' ? 'decode' : 'encode'; renderBody(); } catch { /* niente da scambiare */ }
       },
