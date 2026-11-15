@@ -99,6 +99,10 @@ test('comando eseguito all\'apertura, shell e progetti non validi, sessioni atti
   assert.equal(r.status, 200, r.text);
   const id = r.json.session.id;
   assert.equal(r.json.session.projectId, null);
+  // cartella home: anche con un id vuoto (la riga "Cartella home" della sidebar)
+  const home = (await api('POST', '/sessions', { projectId: '', shell: '/bin/sh' })).json.session;
+  assert.deepEqual([home.projectId, home.cwd], [null, require('os').homedir()]);
+  await api('POST', `/sessions/${home.id}/close`, {});
   const out = await readStream(id, 'pronto-2');
   assert.match(out.text, /pronto-2/);
   // per il dialogo di aggiornamento: cosa si ferma al riavvio

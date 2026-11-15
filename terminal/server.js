@@ -46,7 +46,7 @@ module.exports = function createTerminal(ctx) {
     if (!pty) throw ctx.error(503, 'pty_missing', { error: ptyError || '' });
     if (sessions.size >= MAX_SESSIONS) throw ctx.error(429, 'too_many', { max: MAX_SESSIONS });
     let cwd = os.homedir(), project = null;
-    if (projectId != null) {
+    if (projectId != null && projectId !== '') {
       project = ctx.projects.get(String(projectId));
       if (!project) throw ctx.error(404, 'project_not_found', { project: String(projectId) });
       if (!fs.existsSync(project.path)) throw ctx.error(404, 'folder_missing', { path: project.path });

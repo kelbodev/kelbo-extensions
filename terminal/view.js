@@ -156,7 +156,7 @@ export default {
     const actions = {
       select,
       close: closeSession,
-      openIn: projectId => open({ projectId }),
+      openIn: projectId => open({ projectId: projectId || null }),
       async rename(id) {
         const s = sessions.get(id);
         const title = s && prompt(t('renamePrompt'), s.info.title);
