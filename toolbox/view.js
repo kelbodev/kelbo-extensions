@@ -529,7 +529,7 @@ export default {
       if (state.diffView === 'split') {
         body = out.map(r => (r.fold ? fold(r.fold) : `<tr class="tb-d-${r.type}">${ln(r.ln)}<td class="tb-dl">${r.type === 'ins' ? '' : r.type === 'mod' ? marks(r.chars.left) : esc(r.left)}</td>${ln(r.rn)}<td class="tb-dr">${r.type === 'rem' ? '' : r.type === 'mod' ? marks(r.chars.right) : esc(r.right)}</td></tr>`)).join('');
       } else {
-        const line = (cls, sign, l, rr, html) => `<tr class="tb-d-${cls}">${ln(l)}${ln(rr)}<td class="tb-du"><span class="tb-sign">${sign}</span>${html}</td></tr>`;
+        const line = (cls, sign, l, rr, html) => `<tr class="tb-d-${cls}">${ln(l)}${ln(rr)}<td class="tb-du"><span class="tb-dsign">${sign}</span>${html}</td></tr>`;
         body = out.map(r => (r.fold ? fold(r.fold)
           : r.type === 'eq' ? line('eq', ' ', r.ln, r.rn, esc(r.left))
           : r.type === 'rem' ? line('rem', '−', r.ln, null, esc(r.left))

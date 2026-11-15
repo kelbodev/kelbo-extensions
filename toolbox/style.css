@@ -71,7 +71,7 @@
 .tb-d-mod .tb-dr{background:color-mix(in srgb,var(--success) 9%,transparent)}
 .tb-mdel{background:color-mix(in srgb,var(--danger) 35%,transparent);color:inherit;border-radius:2px}
 .tb-mins{background:color-mix(in srgb,var(--success) 35%,transparent);color:inherit;border-radius:2px}
-.tb-sign{display:inline-block;width:14px;color:var(--muted);user-select:none}
+.tb-dsign{display:inline-block;width:14px;color:var(--muted);user-select:none}
 .tb-fold td{background:color-mix(in srgb,var(--accent) 6%,transparent);text-align:center}
 .tb-paths{margin-top:6px}
 .tb-paths td{font-size:12px;vertical-align:top}

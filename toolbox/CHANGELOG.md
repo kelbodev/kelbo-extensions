@@ -4,6 +4,9 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+### Fixed
+- JWT: the "Create a signed token" section was squeezed into a 14px column, one word per line (a style of the Compare tab used the same class name).
+
 ## [1.1.0] - 2026-11-15
 
 ### Added
