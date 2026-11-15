@@ -4,6 +4,8 @@ All notable changes to the `db-diagram` extension. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-15
+
 ### Added
 - **PDF and PNG in several pages**: *PDF* and *PNG* open the export options — **single page** (as large as the diagram), **one group per page** (each group of related tables on its own page and the tables without relations on another, tables never cut; a group too large for the sheet even at 60% is split into parts) or **fixed-size parts** (the diagram cut into a grid of the chosen sheet, with an overlap and coordinates A1, B2… to put it back together). Sheet A4, A3, A2 or Letter, automatic, landscape or portrait orientation, scale 50–125%, and the number of pages shown before exporting; the choices are remembered.
 - With more than one page the first is an **overview**: the whole diagram with the legend and the parts or groups outlined with their page number. Every page has the title, what it shows (group, part) and *Page n of N*.

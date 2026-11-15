@@ -50,7 +50,7 @@
         "en": "Add-on of the Database section: entity-relationship diagram of a database (tables, keys, relations) with automatic layout, draggable tables and export to PDF, SVG and PNG"
       },
       "icon": "network",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "kelbo": "^2.38",
       "kinds": [
         "addon"
