@@ -46,5 +46,41 @@
   "legend.one": "\"One\" side: the referenced table",
   "legend.pk": "Primary key",
   "legend.fk": "Foreign key",
-  "legend.view": "View"
+  "legend.view": "View",
+  "export.dialogTitle": "Export {format}",
+  "export.go": "Export",
+  "export.split.single": "Single page",
+  "export.splitHint.single": "The whole diagram on one page as large as it is (for the screen, or to print scaled to the sheet)",
+  "export.split.groups": "One group per page",
+  "export.splitHint.groups": "Each group of related tables on its own page, the tables without relations on another; tables are never cut (a group too large is split into parts)",
+  "export.split.tiles": "Fixed-size parts",
+  "export.splitHint.tiles": "The diagram cut into a grid on the chosen sheet, with an overlap and coordinates (A1, B2…) to put it back together",
+  "export.paper": "Sheet",
+  "export.papers.a4": "A4",
+  "export.papers.a3": "A3",
+  "export.papers.a2": "A2",
+  "export.papers.letter": "Letter",
+  "export.orientation": "Orientation",
+  "export.orient.auto": "Automatic",
+  "export.orient.landscape": "Landscape",
+  "export.orient.portrait": "Portrait",
+  "export.scale": "Scale",
+  "export.pages": {
+    "one": "{count} page",
+    "other": "{count} pages, the first is the overview with the legend"
+  },
+  "export.pagesZip": {
+    "one": "{count} image",
+    "other": "{count} images in a ZIP file, the first is the overview"
+  },
+  "export.overview": "Overview",
+  "export.isolated": "Tables without relations",
+  "export.group": "Group {n}: {tables}",
+  "export.tile": "Part {code}",
+  "export.page": "Page {page} of {pages}",
+  "export.pageShort": "p. {page}",
+  "export.donePages": {
+    "one": "{format} downloaded",
+    "other": "{format} downloaded: {count} pages"
+  }
 }

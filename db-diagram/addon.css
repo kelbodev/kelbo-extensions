@@ -22,3 +22,10 @@
 .erd-legend[hidden]{display:none}
 .erd-legend svg{display:block}
 .erd-legend-btn.active{color:var(--ext-color)}
+.erd-export-form{display:flex;flex-direction:column;gap:8px}
+.erd-radio{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--border);border-radius:6px;padding:8px 10px;cursor:pointer}
+.erd-radio:has(input:checked){border-color:var(--ext-db-diagram,#8b5cf6)}
+.erd-radio span{display:flex;flex-direction:column;gap:2px;font-size:12px}
+.erd-radio small{color:var(--muted);font-size:11px}
+.erd-paper{grid-template-columns:repeat(3,1fr)}
+.erd-paper[hidden]{display:none}

@@ -140,6 +140,48 @@ test('PDF: oggetti, xref con gli offset giusti, testi WinAnsi', () => {
   assert.match(pdf, /\/BaseFont \/Helvetica-Bold/);
 });
 
+test('export in più pagine: pagina unica, un gruppo per pagina, porzioni; PDF multipagina e ZIP', () => {
+  const sizes = Object.fromEntries(TREE.tables.map(t => [t.name, m.tableSize(t, 'all')]));
+  const positions = m.autoLayout(TREE.tables, sizes);
+  const labels = { title: 'ER', subtitle: 'shop', overview: 'Panoramica', isolated: 'Isolate', group: (i, n) => `Gruppo ${i} (${n.length})`, tile: c => `Porzione ${c}`, page: (i, n) => `${i}/${n}`, pageShort: i => `p. ${i}` };
+  const legend = { title: 'Legenda', required: 'r', optional: 'o', many: 'm', one: 'u', pk: 'pk', fk: 'fk', view: 'v' };
+  const single = m.planExport(TREE, { positions, legend, labels, split: 'single' });
+  assert.equal(single.length, 1);
+  const groups = m.planExport(TREE, { positions, legend, labels, split: 'groups', paper: 'a3' });
+  assert.deepEqual(groups.map(p => p.subtitle.split(' · ')[0]), ['Panoramica', 'Gruppo 1 (10)', 'Isolate']);
+  assert.deepEqual(groups.map(p => p.footer), ['1/3', '2/3', '3/3']);
+  assert.ok(groups[0].extra.some(i => i.k === 'text' && i.text === 'p. 2'), 'la panoramica indica la pagina del gruppo');
+  // ogni pagina di gruppo contiene tutte le tabelle del gruppo, intere
+  const g1 = groups[1];
+  assert.ok(Object.values(g1.drawing.boxes).every(b => b.x >= g1.view.x && b.x + b.w <= g1.view.x + g1.view.w && b.y + b.h <= g1.view.y + g1.view.h));
+  assert.deepEqual(Object.keys(groups[2].drawing.boxes).sort(), ['audit', 'log', 'settings']);
+  // porzioni piccole (scala 125% su A4 verticale): griglia con codici, panoramica per prima
+  const tiles = m.planExport(TREE, { positions, legend, labels, split: 'tiles', paper: 'a4', orientation: 'portrait', zoom: 1.25 });
+  assert.ok(tiles.length > 3, `${tiles.length} pagine`);
+  assert.equal(tiles[0].subtitle.split(' · ')[0], 'Panoramica');
+  assert.match(tiles[1].subtitle, /^Porzione A1/);
+  assert.ok(tiles.every(p => Math.round(p.W) === 595 && Math.round(p.H) === 842));
+  // PDF multipagina valido
+  const pdf = m.pagesToPdf(tiles, { title: 'ER' });
+  assert.match(pdf, new RegExp(`/Count ${tiles.length} >>`));
+  assert.equal((pdf.match(/\/Type \/Page /g) || []).length, tiles.length);
+  const startxref = Number(/startxref\n(\d+)\n/.exec(pdf)[1]);
+  const offsets = [...pdf.slice(startxref).matchAll(/^(\d{10}) 00000 n $/gm)].map(x => Number(x[1]));
+  offsets.forEach((o, i) => assert.equal(pdf.slice(o, o + `${i + 1} 0 obj`.length), `${i + 1} 0 obj`));
+  assert.ok(/^[\x0a\x20-\x7e]*$/.test(pdf));
+  assert.match(m.pageSvg(tiles[1]), /<svg x="[\d.]+" y="[\d.]+" width="[\d.]+" height="[\d.]+" viewBox=/);
+  // ZIP: CRC32 e struttura che unzip accetta
+  assert.equal(m.crc32(new TextEncoder().encode('123456789')).toString(16), 'cbf43926');
+  const zip = m.makeZip([{ name: 'a.png', data: new Uint8Array([1, 2, 3]) }, { name: 'b.png', data: new TextEncoder().encode('ciao') }]);
+  const file = path.join(dir, 'parts.zip');
+  fs.writeFileSync(file, zip);
+  const { execFileSync } = require('child_process');
+  let listing = null;
+  try { listing = execFileSync('unzip', ['-l', file]).toString(); } catch (e) { if (e.code !== 'ENOENT') throw e; }
+  if (listing) assert.match(listing, /a\.png[\s\S]*b\.png/);
+  assert.equal(Buffer.from(zip.slice(0, 4)).toString('hex'), '504b0304');
+});
+
 test('add-on del db-client: stato, file serviti, schema di SQLite', async () => {
   const exts = (await api('GET', '/api/core/extensions')).json;
   const e = exts.find(x => x.code === 'db-diagram');

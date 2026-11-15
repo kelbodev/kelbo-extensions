@@ -46,5 +46,41 @@
   "legend.one": "Lato \"uno\": la tabella referenziata",
   "legend.pk": "Chiave primaria",
   "legend.fk": "Chiave esterna",
-  "legend.view": "Vista"
+  "legend.view": "Vista",
+  "export.dialogTitle": "Export {format}",
+  "export.go": "Esporta",
+  "export.split.single": "Pagina unica",
+  "export.splitHint.single": "Tutto il diagramma in una pagina grande quanto lui (per lo schermo o per stampare adattando al foglio)",
+  "export.split.groups": "Un gruppo per pagina",
+  "export.splitHint.groups": "Ogni gruppo di tabelle collegate nella sua pagina, le tabelle senza relazioni in un'altra; le tabelle non vengono tagliate (un gruppo troppo grande si divide in porzioni)",
+  "export.split.tiles": "Porzioni di formato fisso",
+  "export.splitHint.tiles": "Il diagramma tagliato a griglia sul foglio scelto, con un margine di sovrapposizione e le coordinate (A1, B2…) per riaccostarlo",
+  "export.paper": "Foglio",
+  "export.papers.a4": "A4",
+  "export.papers.a3": "A3",
+  "export.papers.a2": "A2",
+  "export.papers.letter": "Letter",
+  "export.orientation": "Orientamento",
+  "export.orient.auto": "Automatico",
+  "export.orient.landscape": "Orizzontale",
+  "export.orient.portrait": "Verticale",
+  "export.scale": "Scala",
+  "export.pages": {
+    "one": "{count} pagina",
+    "other": "{count} pagine, la prima è la panoramica con la legenda"
+  },
+  "export.pagesZip": {
+    "one": "{count} immagine",
+    "other": "{count} immagini in un file ZIP, la prima è la panoramica"
+  },
+  "export.overview": "Panoramica",
+  "export.isolated": "Tabelle senza relazioni",
+  "export.group": "Gruppo {n}: {tables}",
+  "export.tile": "Porzione {code}",
+  "export.page": "Pagina {page} di {pages}",
+  "export.pageShort": "p. {page}",
+  "export.donePages": {
+    "one": "{format} scaricato",
+    "other": "{format} scaricato: {count} pagine"
+  }
 }
