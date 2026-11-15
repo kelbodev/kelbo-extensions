@@ -49,8 +49,50 @@ test('metriche, accorciamento, layout: le tabelle referenziate a sinistra', () =
   assert.equal(m.tableSize(SCHEMA.tables[0], 'keys').h, m.G.head + 2 * m.G.row + 6, 'solo id e country');
   assert.equal(m.tableSize(SCHEMA.tables[0], 'none').h, m.G.head);
   const pos = m.autoLayout(SCHEMA.tables, sizes);
-  assert.ok(pos.countries.x < pos.customers.x && pos.customers.x < pos.orders.x, JSON.stringify(pos));
   assert.deepEqual([...m.neighbours(SCHEMA, 'customers')].sort(), ['countries', 'customers', 'orders']);
+  // la vista senza relazioni sta fuori dal riquadro delle tabelle collegate
+  const linked = ['customers', 'countries', 'orders'];
+  const box = { x1: Math.min(...linked.map(n => pos[n].x)), y1: Math.min(...linked.map(n => pos[n].y)), x2: Math.max(...linked.map(n => pos[n].x + sizes[n].w)), y2: Math.max(...linked.map(n => pos[n].y + sizes[n].h)) };
+  const v = pos.v_totals, vs = sizes.v_totals;
+  assert.ok(v.x + vs.w <= box.x1 || v.x >= box.x2 || v.y + vs.h <= box.y1 || v.y >= box.y2, JSON.stringify({ v, box }));
+});
+
+// tabelle con relazioni ad albero (un gruppo) più alcune isolate
+const T = (name, refs = [], cols = 3) => ({ name, view: false, columns: Array.from({ length: cols }, (_, i) => ({ name: i ? `c${i}` : 'id', type: 'INTEGER', nullable: false })), primaryKey: ['id'], indexes: [], foreignKeys: refs.map(r => ({ name: `fk_${name}_${r}`, columns: ['c1'], refTable: r, refColumns: ['id'] })) });
+const TREE = { tables: [T('orders', ['customers']), T('customers', ['countries']), T('countries'), T('order_items', ['orders', 'products'], 5), T('products', ['categories'], 6), T('categories'),
+  T('payments', ['orders']), T('shipments', ['orders']), T('addresses', ['customers']), T('reviews', ['products']), T('audit'), T('settings'), T('log', [], 8)] };
+
+test('layout: gruppi senza sovrapposizioni, nessun incrocio su uno schema ad albero, isolate sui bordi', () => {
+  const sizes = Object.fromEntries(TREE.tables.map(t => [t.name, m.tableSize(t, 'all')]));
+  const pos = m.autoLayout(TREE.tables, sizes);
+  const names = TREE.tables.map(t => t.name);
+  for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
+    const a = names[i], b = names[j];
+    const sep = pos[a].x + sizes[a].w <= pos[b].x || pos[b].x + sizes[b].w <= pos[a].x || pos[a].y + sizes[a].h <= pos[b].y || pos[b].y + sizes[b].h <= pos[a].y;
+    assert.ok(sep, `${a} e ${b} si sovrappongono`);
+  }
+  const c = n => ({ x: pos[n].x + sizes[n].w / 2, y: pos[n].y + sizes[n].h / 2 });
+  const edges = TREE.tables.flatMap(t => t.foreignKeys.map(f => [t.name, f.refTable]));
+  let crossings = 0;
+  for (let i = 0; i < edges.length; i++) for (let j = i + 1; j < edges.length; j++) {
+    const [a, b] = edges[i], [e, f] = edges[j];
+    if (new Set([a, b, e, f]).size === 4 && m.segmentsCross(c(a), c(b), c(e), c(f))) crossings++;
+  }
+  assert.equal(crossings, 0);
+  // la tabella con più relazioni (orders) più vicina al centro del gruppo delle altre
+  const group = names.filter(n => !['audit', 'settings', 'log'].includes(n));
+  const mid = { x: group.reduce((a, n) => a + c(n).x, 0) / group.length, y: group.reduce((a, n) => a + c(n).y, 0) / group.length };
+  const dist = n => Math.hypot(c(n).x - mid.x, c(n).y - mid.y);
+  assert.ok(dist('orders') <= Math.min(...group.filter(n => n !== 'orders').map(dist)) + 1e-6 || dist('orders') < 200, `orders a ${dist('orders')}`);
+  const box = { x1: Math.min(...group.map(n => pos[n].x)), y1: Math.min(...group.map(n => pos[n].y)), x2: Math.max(...group.map(n => pos[n].x + sizes[n].w)), y2: Math.max(...group.map(n => pos[n].y + sizes[n].h)) };
+  for (const n of ['audit', 'settings', 'log']) {
+    const p = pos[n], sz = sizes[n];
+    assert.ok(p.x + sz.w <= box.x1 || p.x >= box.x2 || p.y + sz.h <= box.y1 || p.y >= box.y2, `${n} dentro il gruppo`);
+  }
+  assert.ok(m.segmentsCross({ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 10, y: 0 }));
+  assert.ok(!m.segmentsCross({ x: 0, y: 0 }, { x: 10, y: 0 }, { x: 0, y: 5 }, { x: 10, y: 5 }));
+  assert.ok(m.segmentHitsBox({ x: 0, y: 5 }, { x: 20, y: 5 }, 8, 0, 12, 10));
+  assert.ok(!m.segmentHitsBox({ x: 0, y: 20 }, { x: 20, y: 20 }, 8, 0, 12, 10));
 });
 
 test('disegno: tabelle, chiavi, relazioni (anche sulla stessa tabella), visibili, SVG', () => {
@@ -64,6 +106,13 @@ test('disegno: tabelle, chiavi, relazioni (anche sulla stessa tabella), visibili
   for (const s of ['customers', 'PK', 'FK', 'VIEW', 'customer_id', 'INTEGER']) assert.ok(texts.includes(s), s);
   const part = m.buildDrawing(SCHEMA, { positions, visible: new Set(['customers', 'orders']) });
   assert.equal(part.items.filter(i => i.k === 'curve').length, 2, 'solo le relazioni tra tabelle mostrate');
+  // legenda nell'export: sotto le tabelle, con linea continua e tratteggiata
+  const labels = { title: 'Legenda', required: 'obbligatoria', optional: 'facoltativa', many: 'molti', one: 'uno', pk: 'primaria', fk: 'esterna', view: 'vista' };
+  const withLegend = m.buildDrawing(SCHEMA, { positions, legend: labels });
+  assert.ok(withLegend.height > d.height);
+  const legendTexts = withLegend.items.filter(i => i.k === 'text').map(i => i.text);
+  for (const v of Object.values(labels)) assert.ok(legendTexts.includes(v), v);
+  assert.equal(withLegend.items.filter(i => i.k === 'line' && i.dash).length, 1, 'il campione tratteggiato');
   const svg = m.toSvg(d, { background: '#fff' });
   assert.match(svg, /^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" width="[\d.]+" height="[\d.]+"/);
   assert.match(m.toSvg(d, { interactive: true }), /<g class="erd-table" data-table="orders">/);

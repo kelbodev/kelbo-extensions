@@ -36,5 +36,15 @@
   "export.failed": "Export non riuscito: {error}",
   "errors.connection_invalid": "Connessione non valida",
   "errors.database_invalid": "Nome del database non valido",
-  "errors.layouts_invalid": "Posizioni del diagramma non valide"
+  "errors.layouts_invalid": "Posizioni del diagramma non valide",
+  "legend.button": "Legenda",
+  "legend.toggle": "Mostra o nascondi la legenda",
+  "legend.title": "Legenda",
+  "legend.required": "Relazione obbligatoria: la chiave esterna non può essere NULL",
+  "legend.optional": "Relazione facoltativa: la chiave esterna può essere NULL",
+  "legend.many": "Lato \"molti\": la tabella con la chiave esterna",
+  "legend.one": "Lato \"uno\": la tabella referenziata",
+  "legend.pk": "Chiave primaria",
+  "legend.fk": "Chiave esterna",
+  "legend.view": "Vista"
 }

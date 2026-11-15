@@ -36,50 +36,345 @@ export function tableSize(t, mode) {
   return { w: Math.ceil(w), h: G.head + cols.length * G.row + (cols.length ? 6 : 0) };
 }
 
-// Tabelle referenziate a sinistra: livello = 1 + livello massimo delle tabelle a cui puntano; le
-// colonne troppo alte si dividono. Restituisce { nome: { x, y } }
-export function autoLayout(tables, sizes) {
+// Layout automatico: tabelle raggruppate per relazioni (componenti connesse). In ogni gruppo la
+// tabella con più relazioni sta al centro e le altre su anelli concentrici per distanza da lei,
+// ognuna vicino alla tabella che la lega all'anello prima; gli anelli si allargano finché nessuna
+// tabella si sovrappone. Gruppi affiancati dal più grande; le tabelle senza relazioni sui bordi
+// esterni, distribuite sui quattro lati. Restituisce { nome: { x, y } }
+export function relations(tables) {
   const names = new Set(tables.map(t => t.name));
-  const refs = new Map(tables.map(t => [t.name, [...new Set(t.foreignKeys.map(f => f.refTable).filter(r => names.has(r) && r !== t.name))]]));
-  const level = new Map();
-  const lv = (n, seen = new Set()) => {
-    if (level.has(n)) return level.get(n);
-    if (seen.has(n)) return 0;
-    seen.add(n);
-    const r = refs.get(n) || [];
-    const l = r.length ? Math.max(...r.map(x => lv(x, seen))) + 1 : 0;
-    level.set(n, l);
-    return l;
-  };
-  tables.forEach(t => lv(t.name));
-  const degree = n => (refs.get(n) || []).length + tables.filter(t => (refs.get(t.name) || []).includes(n)).length;
-  const area = tables.reduce((a, t) => a + (sizes[t.name].w + G.gapX) * (sizes[t.name].h + G.gapY), 0);
-  const maxH = Math.max(700, Math.sqrt(area) * 1.1);
-  const byLevel = [];
-  for (const t of tables) (byLevel[level.get(t.name)] ||= []).push(t.name);
-  const pos = {};
-  let x = 0;
-  for (const list of byLevel) {
-    if (!list) continue;
-    list.sort((a, b) => degree(b) - degree(a) || a.localeCompare(b));
-    let y = 0, colW = 0;
-    for (const n of list) {
-      const s = sizes[n];
-      if (y > 0 && y + s.h > maxH) { x += colW + G.gapX; y = 0; colW = 0; }
-      pos[n] = { x, y };
-      y += s.h + G.gapY;
-      colW = Math.max(colW, s.w);
+  const adj = new Map(tables.map(t => [t.name, new Set()]));
+  for (const t of tables) {
+    for (const f of t.foreignKeys) {
+      if (!names.has(f.refTable) || f.refTable === t.name) continue; // riferimenti a sé: non legano
+      adj.get(t.name).add(f.refTable);
+      adj.get(f.refTable).add(t.name);
     }
-    x += colW + G.gapX;
   }
+  return adj;
+}
+
+export function autoLayout(tables, sizes) {
+  const adj = relations(tables);
+  const deg = n => adj.get(n).size;
+  const byDeg = (a, b) => deg(b) - deg(a) || a.localeCompare(b);
+  // gruppi (dalla tabella con più relazioni) e tabelle isolate
+  const seen = new Set(), groups = [], isolated = [];
+  for (const n of [...adj.keys()].sort(byDeg)) {
+    if (seen.has(n)) continue;
+    seen.add(n);
+    if (!deg(n)) { isolated.push(n); continue; }
+    const g = [n];
+    for (let i = 0; i < g.length; i++) for (const m of [...adj.get(g[i])].sort(byDeg)) if (!seen.has(m)) { seen.add(m); g.push(m); }
+    groups.push(g);
+  }
+  groups.sort((a, b) => b.length - a.length || byDeg(a[0], b[0]));
+
+  const pos = {};
+  // gruppi uno accanto all'altro, a righe (larghezza massima dalla superficie totale)
+  const placed = groups.map(g => radial(g, adj, sizes));
+  const area = placed.reduce((a, p) => a + (p.w + G.gapX * 2) * (p.h + G.gapY * 3), 0);
+  const maxRow = Math.max(placed[0]?.w || 0, Math.sqrt(area) * 1.4);
+  let x = 0, y = 0, rowH = 0;
+  for (const p of placed) {
+    if (x > 0 && x + p.w > maxRow) { x = 0; y += rowH + G.gapY * 3; rowH = 0; }
+    for (const [n, q] of Object.entries(p.pos)) pos[n] = { x: Math.round(x + q.x), y: Math.round(y + q.y) };
+    x += p.w + G.gapX * 2;
+    rowH = Math.max(rowH, p.h);
+  }
+  placeOnBorder(isolated, sizes, pos);
   return pos;
+}
+
+// Un gruppo: centro alla tabella con più relazioni, anelli per distanza (BFS). L'ordine negli
+// anelli e la rotazione di ognuno si scelgono per ridurre gli intrecci: prima il baricentro
+// (ogni tabella all'angolo medio delle collegate, più passate), poi una ricerca locale (scambi e
+// rotazioni) che tiene una modifica solo se migliora il punteggio: incroci tra relazioni, relazioni
+// che passano sopra una tabella, lunghezza delle linee. Gli incroci non cambiano allargando tutti
+// gli anelli insieme: l'allargamento contro le sovrapposizioni viene dopo.
+function radial(group, adj, sizes, budgetMs = 250) {
+  const deg = n => adj.get(n).size;
+  const hub = group[0];
+  const ringOf = new Map([[hub, 0]]), parent = new Map([[hub, null]]);
+  const rings = [[hub]];
+  for (let k = 0; rings[k]?.length; k++) {
+    const next = [];
+    for (const n of rings[k]) {
+      for (const m of [...adj.get(n)].sort((a, b) => deg(b) - deg(a) || a.localeCompare(b))) {
+        if (ringOf.has(m)) continue;
+        ringOf.set(m, k + 1); parent.set(m, n); next.push(m);
+      }
+    }
+    if (next.length) rings.push(next);
+  }
+  const extent = n => Math.hypot(sizes[n].w, sizes[n].h);
+  const arc = n => (sizes[n].w + sizes[n].h) / 2 + G.gapX * 0.6;
+  // raggi: dipendono dal contenuto degli anelli, non dall'ordine
+  const radius = [0];
+  for (let k = 1; k < rings.length; k++) {
+    const total = rings[k].reduce((a, n) => a + arc(n), 0);
+    const prevExt = Math.max(...rings[k - 1].map(extent)), maxExt = Math.max(...rings[k].map(extent));
+    radius[k] = Math.max(radius[k - 1] + (prevExt + maxExt) / 2 * 0.5 + G.gapX * 0.25, total / (2 * Math.PI));
+  }
+  const edges = [];
+  for (const n of group) for (const m of adj.get(n)) if (n < m) edges.push([n, m]);
+
+  // centri dall'ordine e dalla rotazione di ogni anello
+  const centersOf = (order, rot, factor = 1) => {
+    const c = new Map([[hub, { x: 0, y: 0, a: 0 }]]);
+    for (let k = 1; k < order.length; k++) {
+      const list = order[k];
+      const total = list.reduce((s, n) => s + arc(n), 0);
+      let a = rot[k];
+      for (const n of list) {
+        const span = (arc(n) / total) * 2 * Math.PI;
+        const mid = a + span / 2;
+        c.set(n, { x: radius[k] * factor * Math.cos(mid), y: radius[k] * factor * Math.sin(mid), a: mid });
+        a += span;
+      }
+    }
+    return c;
+  };
+  const score = c => {
+    let crossings = 0, through = 0, length = 0;
+    for (let i = 0; i < edges.length; i++) {
+      const [a, b] = edges[i];
+      const p1 = c.get(a), p2 = c.get(b);
+      length += Math.hypot(p1.x - p2.x, p1.y - p2.y);
+      for (let j = i + 1; j < edges.length; j++) {
+        const [e, f] = edges[j];
+        if (e === a || e === b || f === a || f === b) continue;
+        if (segmentsCross(p1, p2, c.get(e), c.get(f))) crossings++;
+      }
+      for (const n of group) {
+        if (n === a || n === b) continue;
+        const q = c.get(n), w = sizes[n].w / 2, h = sizes[n].h / 2;
+        if (segmentHitsBox(p1, p2, q.x - w, q.y - h, q.x + w, q.y + h)) through++;
+      }
+    }
+    return crossings * 1000 + through * 400 + length / 50;
+  };
+
+  // ordine iniziale: figli vicino all'angolo del genitore
+  const order = rings.map(r => r.slice());
+  const rot = rings.map(() => -Math.PI / 2);
+  let c = centersOf(order, rot);
+  for (let k = 1; k < order.length; k++) {
+    order[k].sort((x, y) => c.get(parent.get(x)).a - c.get(parent.get(y)).a || deg(y) - deg(x));
+    c = centersOf(order, rot);
+  }
+  // baricentro: angolo medio delle tabelle collegate negli altri anelli
+  const meanAngle = (n, cc) => {
+    let sx = 0, sy = 0;
+    for (const m of adj.get(n)) { const q = cc.get(m); const l = Math.hypot(q.x, q.y) || 1; sx += q.x / l; sy += q.y / l; }
+    return Math.atan2(sy, sx);
+  };
+  const norm = a => { while (a < 0) a += 2 * Math.PI; while (a >= 2 * Math.PI) a -= 2 * Math.PI; return a; };
+  let best = { order: order.map(r => r.slice()), rot: rot.slice(), score: score(c) };
+  for (let sweep = 0; sweep < 6; sweep++) {
+    const ks = sweep % 2 ? [...order.keys()].slice(1).reverse() : [...order.keys()].slice(1);
+    for (const k of ks) {
+      const target = new Map(order[k].map(n => [n, meanAngle(n, c)]));
+      const ref = rot[k];
+      order[k].sort((x, y) => norm(target.get(x) - ref) - norm(target.get(y) - ref));
+      // rotazione: la prima tabella sull'angolo voluto
+      rot[k] = target.get(order[k][0]) - (arc(order[k][0]) / order[k].reduce((s, n) => s + arc(n), 0)) * Math.PI;
+      c = centersOf(order, rot);
+    }
+    const sc = score(c);
+    if (sc < best.score) best = { order: order.map(r => r.slice()), rot: rot.slice(), score: sc };
+  }
+  // ricerca locale: scambi di due tabelle dello stesso anello e rotazioni degli anelli
+  const cur = { order: best.order.map(r => r.slice()), rot: best.rot.slice(), score: best.score };
+  const t0 = Date.now();
+  let improved = true;
+  while (improved && Date.now() - t0 < budgetMs) {
+    improved = false;
+    for (let k = 1; k < cur.order.length && Date.now() - t0 < budgetMs; k++) {
+      const list = cur.order[k];
+      for (let i = 0; i < list.length; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          [list[i], list[j]] = [list[j], list[i]];
+          const sc = score(centersOf(cur.order, cur.rot));
+          if (sc < cur.score - 1e-6) { cur.score = sc; improved = true; } else [list[i], list[j]] = [list[j], list[i]];
+        }
+      }
+      for (const step of [Math.PI / 12, -Math.PI / 12, Math.PI / 4, -Math.PI / 4]) {
+        cur.rot[k] += step;
+        const sc = score(centersOf(cur.order, cur.rot));
+        if (sc < cur.score - 1e-6) { cur.score = sc; improved = true; } else cur.rot[k] -= step;
+      }
+    }
+  }
+  // rifinitura a forze, partendo dagli anelli: le relazioni avvicinano, le tabelle si
+  // respingono, quelle con più relazioni tirate verso il centro (la tabella centrale resta ferma)
+  const center = centersOf(cur.order, cur.rot, 1.15);
+  forces(group, edges, center, sizes, deg, hub);
+  separate(group, center, sizes);
+  // scambi di posizione fra due tabelle qualsiasi del gruppo, tenuti se migliorano il punteggio
+  let sc = score(center);
+  const t1 = Date.now();
+  let again = true;
+  while (again && Date.now() - t1 < budgetMs) {
+    again = false;
+    for (let i = 0; i < group.length && Date.now() - t1 < budgetMs; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const a = group[i], b = group[j];
+        const pa = center.get(a), pb = center.get(b);
+        center.set(a, pb); center.set(b, pa);
+        const next = score(center);
+        if (next < sc - 1e-6) { sc = next; again = true; } else { center.set(a, pa); center.set(b, pb); }
+      }
+    }
+  }
+  separate(group, center, sizes);
+  const raw = Object.fromEntries(group.map(n => [n, { x: center.get(n).x - sizes[n].w / 2, y: center.get(n).y - sizes[n].h / 2 }]));
+  const minX = Math.min(...group.map(n => raw[n].x)), minY = Math.min(...group.map(n => raw[n].y));
+  const pos = Object.fromEntries(group.map(n => [n, { x: raw[n].x - minX, y: raw[n].y - minY }]));
+  return { pos, w: Math.max(...group.map(n => pos[n].x + sizes[n].w)), h: Math.max(...group.map(n => pos[n].y + sizes[n].h)), crossings: Math.floor(score(center) / 1000) };
+}
+// Forze (Fruchterman–Reingold con le dimensioni delle tabelle): molle sulle relazioni, repulsione
+// tra tutte le tabelle, gravità verso il centro proporzionale alle relazioni; raffreddamento
+function forces(group, edges, c, sizes, deg, hub, iterations = 240) {
+  const ext = n => Math.hypot(sizes[n].w, sizes[n].h) / 2;
+  for (let it = 0; it < iterations; it++) {
+    const temp = 60 * (1 - it / iterations) + 2;
+    const disp = new Map(group.map(n => [n, { x: 0, y: 0 }]));
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const a = group[i], b = group[j], pa = c.get(a), pb = c.get(b);
+        let dx = pa.x - pb.x, dy = pa.y - pb.y;
+        let d = Math.hypot(dx, dy);
+        if (d < 1) { dx = 1; dy = 0; d = 1; }
+        const k = (ext(a) + ext(b)) * 0.8 + 30;
+        const f = (k * k) / d / 8;
+        disp.get(a).x += (dx / d) * f; disp.get(a).y += (dy / d) * f;
+        disp.get(b).x -= (dx / d) * f; disp.get(b).y -= (dy / d) * f;
+      }
+    }
+    for (const [a, b] of edges) {
+      const pa = c.get(a), pb = c.get(b);
+      const dx = pa.x - pb.x, dy = pa.y - pb.y, d = Math.max(1, Math.hypot(dx, dy));
+      const ideal = (ext(a) + ext(b)) * 0.7 + 50;
+      const f = ((d - ideal) * Math.abs(d - ideal)) / ideal / 6;
+      disp.get(a).x -= (dx / d) * f; disp.get(a).y -= (dy / d) * f;
+      disp.get(b).x += (dx / d) * f; disp.get(b).y += (dy / d) * f;
+    }
+    for (const n of group) {
+      if (n === hub) continue;
+      const p = c.get(n), g = 0.02 * (1 + deg(n));
+      const v = disp.get(n);
+      v.x -= p.x * g; v.y -= p.y * g;
+      const l = Math.hypot(v.x, v.y);
+      if (l > 0) c.set(n, { ...p, x: p.x + (v.x / l) * Math.min(l, temp), y: p.y + (v.y / l) * Math.min(l, temp) });
+    }
+  }
+}
+// Tabelle sovrapposte (con un margine) spostate lungo l'asse di minor sovrapposizione
+function separate(group, c, sizes, pad = 28) {
+  for (let round = 0; round < 200; round++) {
+    let moved = false;
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const a = group[i], b = group[j], pa = c.get(a), pb = c.get(b);
+        const ox = (sizes[a].w + sizes[b].w) / 2 + pad - Math.abs(pa.x - pb.x);
+        const oy = (sizes[a].h + sizes[b].h) / 2 + pad - Math.abs(pa.y - pb.y);
+        if (ox <= 0 || oy <= 0) continue;
+        moved = true;
+        if (ox < oy) { const s = (pa.x < pb.x ? -1 : 1) * ox / 2; c.set(a, { ...pa, x: pa.x + s }); c.set(b, { ...pb, x: pb.x - s }); }
+        else { const s = (pa.y < pb.y ? -1 : 1) * oy / 2; c.set(a, { ...pa, y: pa.y + s }); c.set(b, { ...pb, y: pb.y - s }); }
+      }
+    }
+    if (!moved) break;
+  }
+}
+// incrocio proprio di due segmenti (estremi esclusi)
+export function segmentsCross(p1, p2, p3, p4) {
+  const d = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  const d1 = d(p3, p4, p1), d2 = d(p3, p4, p2), d3 = d(p1, p2, p3), d4 = d(p1, p2, p4);
+  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+}
+// il segmento attraversa il rettangolo (Liang–Barsky)
+export function segmentHitsBox(p1, p2, x1, y1, x2, y2) {
+  let t0 = 0, t1 = 1;
+  const dx = p2.x - p1.x, dy = p2.y - p1.y;
+  for (const [p, q] of [[-dx, p1.x - x1], [dx, x2 - p1.x], [-dy, p1.y - y1], [dy, y2 - p1.y]]) {
+    if (p === 0) { if (q < 0) return false; continue; }
+    const r = q / p;
+    if (p < 0) { if (r > t1) return false; if (r > t0) t0 = r; } else { if (r < t0) return false; if (r < t1) t1 = r; }
+  }
+  return t0 < t1;
+}
+function overlaps(group, center, sizes, pad = 24) {
+  const box = n => ({ x1: center.get(n).x - sizes[n].w / 2 - pad, y1: center.get(n).y - sizes[n].h / 2 - pad, x2: center.get(n).x + sizes[n].w / 2 + pad, y2: center.get(n).y + sizes[n].h / 2 + pad });
+  const b = group.map(box);
+  for (let i = 0; i < b.length; i++) for (let j = i + 1; j < b.length; j++) {
+    if (b[i].x1 < b[j].x2 && b[j].x1 < b[i].x2 && b[i].y1 < b[j].y2 && b[j].y1 < b[i].y2) return true;
+  }
+  return false;
+}
+
+// Tabelle senza relazioni intorno alle altre: sui quattro lati, ognuno riempito in proporzione
+// alla sua lunghezza; senza altre tabelle, in griglia
+function placeOnBorder(isolated, sizes, pos) {
+  if (!isolated.length) return;
+  const placed = Object.keys(pos);
+  if (!placed.length) {
+    const cols = Math.max(1, Math.round(Math.sqrt(isolated.length * 1.6)));
+    let x = 0, y = 0, rowH = 0;
+    isolated.forEach((n, i) => {
+      if (i && i % cols === 0) { x = 0; y += rowH + G.gapY; rowH = 0; }
+      pos[n] = { x, y }; x += sizes[n].w + G.gapX / 2; rowH = Math.max(rowH, sizes[n].h);
+    });
+    return;
+  }
+  const margin = G.gapX * 1.2;
+  let box = {
+    x1: Math.min(...placed.map(n => pos[n].x)), y1: Math.min(...placed.map(n => pos[n].y)),
+    x2: Math.max(...placed.map(n => pos[n].x + sizes[n].w)), y2: Math.max(...placed.map(n => pos[n].y + sizes[n].h)),
+  };
+  let rest = isolated.slice();
+  while (rest.length) {
+    const gap = G.gapX / 2;
+    const len = { top: box.x2 - box.x1 + 2 * margin, bottom: box.x2 - box.x1 + 2 * margin, left: box.y2 - box.y1 + 2 * margin, right: box.y2 - box.y1 + 2 * margin };
+    const side = { top: [], right: [], bottom: [], left: [] };
+    const used = { top: 0, right: 0, bottom: 0, left: 0 };
+    const along = (s, n) => (s === 'top' || s === 'bottom' ? sizes[n].w : sizes[n].h) + gap;
+    const left = [];
+    for (const n of rest) {
+      // il lato meno pieno (in proporzione) dove la tabella entra ancora
+      const fits = Object.keys(side).filter(s => used[s] + along(s, n) <= len[s]).sort((a, b) => used[a] / len[a] - used[b] / len[b]);
+      if (!fits.length) { left.push(n); continue; }
+      const s = fits[0];
+      side[s].push(n); used[s] += along(s, n);
+    }
+    if (left.length === rest.length) { // nemmeno una: lati troppo corti per queste tabelle
+      const n = left.shift();
+      side.right.push(n); used.right += along('right', n);
+    }
+    const ext = { top: 0, right: 0, bottom: 0, left: 0 };
+    for (const [s, list] of Object.entries(side)) {
+      let c = (len[s] - used[s]) / 2; // centrate sul lato
+      for (const n of list) {
+        const { w, h } = sizes[n];
+        if (s === 'top') { pos[n] = { x: box.x1 - margin + c, y: box.y1 - margin - h }; c += w + gap; ext.top = Math.max(ext.top, h); }
+        if (s === 'bottom') { pos[n] = { x: box.x1 - margin + c, y: box.y2 + margin }; c += w + gap; ext.bottom = Math.max(ext.bottom, h); }
+        if (s === 'left') { pos[n] = { x: box.x1 - margin - w, y: box.y1 - margin + c }; c += h + gap; ext.left = Math.max(ext.left, w); }
+        if (s === 'right') { pos[n] = { x: box.x2 + margin, y: box.y1 - margin + c }; c += h + gap; ext.right = Math.max(ext.right, w); }
+      }
+    }
+    rest = left;
+    // anello successivo, fuori da quello appena riempito
+    box = { x1: box.x1 - margin - ext.left, y1: box.y1 - margin - ext.top, x2: box.x2 + margin + ext.right, y2: box.y2 + margin + ext.bottom };
+  }
+  for (const n of isolated) pos[n] = { x: Math.round(pos[n].x), y: Math.round(pos[n].y) };
 }
 
 // ---- disegno: elenco di forme, uguale per vista, SVG, PNG e PDF ----
 // theme: colori (stringhe CSS; a schermo variabili var(--…), nell'export colori veri)
 export const PRINT_THEME = { bg: '#ffffff', table: '#ffffff', head: '#eaf1fb', headView: '#f1ecfb', headText: '#0b1f3a', text: '#1f2328', muted: '#6e7781', border: '#9aa4b0', pk: '#b7791f', fk: '#2f6fd1', edge: '#6e7781', edgeHl: '#2f6fd1', sel: '#2f6fd1' };
 
-export function buildDrawing(schema, { positions, mode = 'all', visible = null, highlight = new Set(), selected = null, theme = PRINT_THEME }) {
+export function buildDrawing(schema, { positions, mode = 'all', visible = null, highlight = new Set(), selected = null, theme = PRINT_THEME, legend = null }) {
   const tables = schema.tables.filter(t => !visible || visible.has(t.name));
   const sizes = Object.fromEntries(tables.map(t => [t.name, tableSize(t, mode)]));
   const items = [];
@@ -89,7 +384,7 @@ export function buildDrawing(schema, { positions, mode = 'all', visible = null, 
     boxes[t.name] = { x: p.x, y: p.y, ...sizes[t.name], cols: shownColumns(t, mode) };
   }
   const minX = Math.min(0, ...Object.values(boxes).map(b => b.x)), minY = Math.min(0, ...Object.values(boxes).map(b => b.y));
-  const ox = 24 - minX, oy = 24 - minY;
+  let ox = 24 - minX, oy = 24 - minY;
   for (const b of Object.values(boxes)) { b.x += ox; b.y += oy; }
   const rowY = (b, col) => { const i = b.cols.findIndex(c => c.name === col); return i < 0 ? b.y + G.head / 2 : b.y + G.head + 3 + i * G.row + G.row / 2; };
 
@@ -109,10 +404,17 @@ export function buildDrawing(schema, { positions, mode = 'all', visible = null, 
         crowFoot(items, x, y1, 1, color, sw); bar(items, x, y2, 1, color, sw);
         continue;
       }
-      const right = a.x + a.w / 2 < b.x + b.w / 2; // la figlia è a sinistra
-      const x1 = right ? a.x + a.w : a.x, x2 = right ? b.x : b.x + b.w;
-      const d1 = right ? 1 : -1, d2 = right ? -1 : 1;
-      const k = Math.max(30, Math.abs(x2 - x1) / 2);
+      // lati delle due tabelle (sinistro o destro) con il percorso più corto, senza tornare
+      // indietro attraverso la propria tabella; tabelle una sopra l'altra: stesso lato, ad arco
+      let best = null;
+      for (const d1 of [-1, 1]) for (const d2 of [-1, 1]) {
+        const x1 = d1 > 0 ? a.x + a.w : a.x, x2 = d2 > 0 ? b.x + b.w : b.x;
+        const s1 = x1 + d1 * 20, s2 = x2 + d2 * 20;
+        const cost = Math.abs(s2 - s1) + Math.abs(y2 - y1) * 0.2 + (d1 * (x2 - x1) < -10 ? 600 : 0) + (d2 * (x1 - x2) < -10 ? 600 : 0);
+        if (!best || cost < best.cost) best = { cost, x1, x2, d1, d2 };
+      }
+      const { x1, x2, d1, d2 } = best;
+      const k = d1 === d2 ? 40 + Math.abs(y2 - y1) * 0.12 + Math.abs(x2 - x1) / 2 : Math.max(30, Math.abs(x2 - x1) / 2);
       items.push({ k: 'curve', x1: x1 + d1 * 10, y1, c1x: x1 + d1 * k, c1y: y1, c2x: x2 + d2 * k, c2y: y2, x2: x2 + d2 * 10, y2, color, sw, dash: nullable, ...meta });
       crowFoot(items, x1, y1, d1, color, sw);
       bar(items, x2, y2, d2, color, sw);
@@ -138,9 +440,61 @@ export function buildDrawing(schema, { positions, mode = 'all', visible = null, 
       items.push({ k: 'text', x: b.x + b.w - G.padX, y, text: fit(c.type + (c.nullable ? '' : ''), G.rowSize, typeW), size: G.rowSize, color: theme.muted, anchor: 'end', g });
     });
   }
-  const width = Math.max(200, ...Object.values(boxes).map(b => b.x + b.w + 60));
-  const height = Math.max(120, ...Object.values(boxes).map(b => b.y + b.h + 24));
+  // anche le linee dentro il disegno (le curve sullo stesso lato escono dalle tabelle)
+  const xs = items.flatMap(i => [i.x, i.x1, i.x2, i.c1x, i.c2x].filter(v => v != null));
+  const ys = items.flatMap(i => [i.y, i.y1, i.y2, i.c1y, i.c2y].filter(v => v != null));
+  const dx = Math.max(0, 16 - Math.min(16, ...xs)), dy = Math.max(0, 16 - Math.min(16, ...ys));
+  if (dx || dy) {
+    items.forEach((it, i) => { items[i] = shift(it, dx, dy); });
+    for (const b of Object.values(boxes)) { b.x += dx; b.y += dy; }
+    ox += dx; oy += dy;
+  }
+  let width = Math.max(200, ...Object.values(boxes).map(b => b.x + b.w + 60), ...xs.map(v => v + dx + 16));
+  let height = Math.max(120, ...Object.values(boxes).map(b => b.y + b.h + 24), ...ys.map(v => v + dy + 16));
+  // legenda (export): in basso a sinistra, sotto le tabelle
+  if (legend) {
+    const lg = legendDrawing(legend, theme);
+    for (const it of lg.items) items.push(shift(it, 24, height + 8));
+    items.push({ k: 'rect', x: 24, y: height + 8, w: lg.width, h: lg.height, r: 6, fill: 'none', stroke: theme.border, sw: 0.6 });
+    width = Math.max(width, lg.width + 48);
+    height += lg.height + 32;
+  }
   return { width, height, items, boxes, offset: { x: ox, y: oy } };
+}
+const shift = (it, dx, dy) => {
+  const o = { ...it };
+  for (const k of ['x', 'x1', 'x2', 'c1x', 'c2x']) if (o[k] != null) o[k] += dx;
+  for (const k of ['y', 'y1', 'y2', 'c1y', 'c2y']) if (o[k] != null) o[k] += dy;
+  return o;
+};
+
+// Legenda: linee continue e tratteggiate, molti e uno, chiavi, viste. labels: testi tradotti
+// { title, required, optional, many, one, pk, fk, view }
+export function legendDrawing(labels, theme = PRINT_THEME) {
+  const items = [], row = 20, x = 12, tx = 66, size = 10;
+  let y = 12;
+  const text = (t, yy, opts = {}) => items.push({ k: 'text', x: opts.x ?? tx, y: yy, text: t, size: opts.size ?? size, bold: !!opts.bold, color: opts.color ?? theme.text });
+  if (labels.title) { text(labels.title, y + 4, { x, bold: true, size: 10.5 }); y += row; }
+  items.push({ k: 'line', x1: x, y1: y, x2: x + 44, y2: y, color: theme.edge, sw: 1.3 });
+  text(labels.required, y + 3.5); y += row;
+  items.push({ k: 'line', x1: x, y1: y, x2: x + 44, y2: y, color: theme.edge, sw: 1.3, dash: true });
+  text(labels.optional, y + 3.5); y += row;
+  // bordo di una tabella (il lato da cui parte la relazione) e la relazione
+  const edge = (ex, yy) => items.push({ k: 'rect', x: ex, y: yy - 8, w: 6, h: 16, r: 1, fill: theme.table, stroke: theme.border, sw: 0.8 });
+  edge(x, y);
+  crowFoot(items, x + 6, y, 1, theme.edge, 1.3);
+  items.push({ k: 'line', x1: x + 16, y1: y, x2: x + 50, y2: y, color: theme.edge, sw: 1.3 });
+  text(labels.many, y + 3.5); y += row;
+  items.push({ k: 'line', x1: x, y1: y, x2: x + 34, y2: y, color: theme.edge, sw: 1.3 });
+  bar(items, x + 44, y, -1, theme.edge, 1.3);
+  edge(x + 44, y);
+  text(labels.one, y + 3.5); y += row;
+  text('PK', y + 3, { x, bold: true, size: 8, color: theme.pk }); text(labels.pk, y + 3.5); y += row;
+  text('FK', y + 3, { x, bold: true, size: 8, color: theme.fk }); text(labels.fk, y + 3.5); y += row;
+  items.push({ k: 'rect', x, y: y - 7, w: 44, h: 14, r: 3, fill: theme.headView, stroke: theme.border, sw: 0.6 });
+  text(labels.view, y + 3.5);
+  const width = tx + Math.max(...items.filter(i => i.k === 'text' && i.x === tx).map(i => textWidth(i.text, size)), labels.title ? textWidth(labels.title, 10.5, true) - tx + x : 0) + 14;
+  return { width, height: y + 14, items };
 }
 function crowFoot(items, x, y, dir, color, sw) {
   for (const dy of [-6, 0, 6]) items.push({ k: 'line', x1: x, y1: y + dy, x2: x + dir * 10, y2: y, color, sw });
@@ -227,9 +581,11 @@ export function toPdf(d, { title = '', subtitle = '', background = '#ffffff' } =
         ln(x, y + r); cv(x, y + r - K * r, x + r - K * r, y, x + r, y); p.push('h');
       }
       const hasStroke = it.stroke && it.stroke !== 'none' && it.sw > 0;
-      ops.push(`${fill(it.fill)}${hasStroke ? ` ${stroke(it.stroke)} ${n2(it.sw * scale)} w` : ''} ${p.join(' ')} ${hasStroke ? 'B' : 'f'}`);
+      const hasFill = it.fill && it.fill !== 'none';
+      if (!hasStroke && !hasFill) continue;
+      ops.push(`${hasFill ? fill(it.fill) : ''}${hasStroke ? ` ${stroke(it.stroke)} ${n2(it.sw * scale)} w [] 0 d` : ''} ${p.join(' ')} ${hasStroke && hasFill ? 'B' : hasFill ? 'f' : 'S'}`);
     } else if (it.k === 'line') {
-      ops.push(`${stroke(it.color)} ${n2(it.sw * scale)} w [] 0 d ${X(it.x1)} ${Y(it.y1)} m ${X(it.x2)} ${Y(it.y2)} l S`);
+      ops.push(`${stroke(it.color)} ${n2(it.sw * scale)} w ${it.dash ? `[${n2(5 * scale)} ${n2(4 * scale)}] 0 d` : '[] 0 d'} ${X(it.x1)} ${Y(it.y1)} m ${X(it.x2)} ${Y(it.y2)} l S`);
     } else if (it.k === 'curve') {
       ops.push(`${stroke(it.color)} ${n2(it.sw * scale)} w ${it.dash ? `[${n2(5 * scale)} ${n2(4 * scale)}] 0 d` : '[] 0 d'} ${X(it.x1)} ${Y(it.y1)} m ${X(it.c1x)} ${Y(it.c1y)} ${X(it.c2x)} ${Y(it.c2y)} ${X(it.x2)} ${Y(it.y2)} c S`);
     } else if (it.k === 'text') {
@@ -303,13 +659,17 @@ function mountDiagram(ctx, host, el, state, tab) {
       </span>
       <button class="btn btn-ghost btn-sm" data-act="layout" title="${esc(t('relayoutTitle'))}">${ctx.ui.icon('layout-grid')} ${esc(t('relayout'))}</button>
       <button class="btn btn-ghost btn-sm" data-act="reload" title="${esc(t('reload'))}">${ctx.ui.icon('refresh-cw')}</button>
+      <button class="btn btn-ghost btn-sm erd-legend-btn" data-act="legend" title="${esc(t('legend.toggle'))}">${ctx.ui.icon('info')} ${esc(t('legend.button'))}</button>
       <span class="erd-group erd-export">
         <button class="btn btn-sm" data-act="pdf" title="${esc(t('export.pdfTitle'))}">${ctx.ui.icon('file-down')} PDF</button>
         <button class="btn btn-ghost btn-sm" data-act="svg" title="${esc(t('export.svgTitle'))}">SVG</button>
         <button class="btn btn-ghost btn-sm" data-act="png" title="${esc(t('export.pngTitle'))}">PNG</button>
       </span>
     </div>
-    <div class="erd-canvas" data-role="canvas"><p class="erd-muted erd-pad">${esc(t('loading'))}</p></div>
+    <div class="erd-body">
+      <div class="erd-canvas" data-role="canvas"><p class="erd-muted erd-pad">${esc(t('loading'))}</p></div>
+      <div class="erd-legend" data-role="legend" hidden></div>
+    </div>
   </div>`;
 
   const visibleSet = () => {
@@ -320,7 +680,20 @@ function mountDiagram(ctx, host, el, state, tab) {
     if (f) names = names.filter(n => n.toLowerCase().includes(f) || (focus && n === focus));
     return new Set(names);
   };
-  const drawingOf = (theme, forExport = false) => buildDrawing(schema, { positions, mode, visible: visibleSet(), highlight: forExport ? new Set() : new Set([selected, hover].filter(Boolean)), selected: forExport ? null : selected, theme });
+  const legendLabels = () => Object.fromEntries(['title', 'required', 'optional', 'many', 'one', 'pk', 'fk', 'view'].map(k => [k, t(`legend.${k}`)]));
+  const drawingOf = (theme, forExport = false) => buildDrawing(schema, { positions, mode, visible: visibleSet(), highlight: forExport ? new Set() : new Set([selected, hover].filter(Boolean)), selected: forExport ? null : selected, theme, legend: forExport ? legendLabels() : null });
+  // legenda a schermo: riquadro in basso a sinistra, mostrato o nascosto (ricordato dal browser)
+  const LEGEND_KEY = 'kelbo.db-diagram.legend';
+  let showLegend = true;
+  try { showLegend = localStorage.getItem(LEGEND_KEY) !== '0'; } catch { /* sempre visibile */ }
+  function renderLegend() {
+    const box = q('[data-role="legend"]');
+    q('[data-act="legend"]').classList.toggle('active', showLegend);
+    box.hidden = !showLegend || !schema || !!error;
+    if (box.hidden) return;
+    const lg = legendDrawing(legendLabels(), SCREEN_THEME);
+    box.innerHTML = toSvg({ width: lg.width, height: lg.height, items: lg.items });
+  }
 
   function render() {
     q('[data-role="title"]').textContent = state.database;
@@ -339,6 +712,7 @@ function mountDiagram(ctx, host, el, state, tab) {
     const scrollL = canvas.scrollLeft, scrollT = canvas.scrollTop;
     canvas.innerHTML = `<div class="erd-stage" style="width:${d.width * zoom}px;height:${d.height * zoom}px">${svg.replace('<svg ', `<svg style="transform:scale(${zoom});transform-origin:0 0" `)}</div>`;
     canvas.scrollLeft = scrollL; canvas.scrollTop = scrollT;
+    renderLegend();
   }
   let lastOffset = { x: 0, y: 0 };
 
@@ -419,6 +793,7 @@ function mountDiagram(ctx, host, el, state, tab) {
     else if (act === 'zoom-out') { zoom = Math.max(0.2, Math.round((zoom - 0.1) * 10) / 10); render(); }
     else if (act === 'fit') fitZoom();
     else if (act === 'reload') load();
+    else if (act === 'legend') { showLegend = !showLegend; try { localStorage.setItem(LEGEND_KEY, showLegend ? '1' : '0'); } catch { /* solo ora */ } renderLegend(); }
     else if (act === 'unfocus') { focus = null; tab.setState({ focus: null }); render(); }
     else if (act === 'layout') {
       if (!schema || !confirm(t('relayoutConfirm'))) return;

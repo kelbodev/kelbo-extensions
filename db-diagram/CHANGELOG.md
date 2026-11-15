@@ -4,6 +4,14 @@ All notable changes to the `db-diagram` extension. The format follows [Keep a Ch
 
 ## [Unreleased]
 
+### Changed
+- **Automatic layout by relations**: tables are grouped by their relations (each group is a set of connected tables) with the table having most relations at the centre of its group and the others around it by distance; tables without relations go on the outer edges of the diagram, spread over the four sides.
+- **Fewer crossings**: the order of the tables around the centre is chosen to keep relations from crossing (barycentre sweeps, then swaps and rotations kept only when they help), then refined with forces (relations pull, tables push each other away, tables with more relations pulled towards the centre) and swaps of positions; the score weighs crossings first, then relations passing over a table, then the total length. Tables never overlap.
+- Relations leave each table from the side that gives the shortest path (both from the same side, as an arc, for tables one above the other), and lines that go out of the tables stay inside the drawing and the exports.
+
+### Added
+- **Legend**: solid line (required relation: the foreign key cannot be `NULL`), dashed line (optional relation: it can be `NULL`), the "many" and "one" sides, PK, FK and views — as a panel in the corner of the diagram, shown or hidden with *Legend*, and at the bottom of the PDF, SVG and PNG exports.
+
 ## [1.0.0] - 2026-11-14
 
 ### Added

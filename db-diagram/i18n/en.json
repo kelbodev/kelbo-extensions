@@ -36,5 +36,15 @@
   "export.failed": "Export failed: {error}",
   "errors.connection_invalid": "Invalid connection",
   "errors.database_invalid": "Invalid database name",
-  "errors.layouts_invalid": "Invalid diagram positions"
+  "errors.layouts_invalid": "Invalid diagram positions",
+  "legend.button": "Legend",
+  "legend.toggle": "Show or hide the legend",
+  "legend.title": "Legend",
+  "legend.required": "Required relation: the foreign key cannot be NULL",
+  "legend.optional": "Optional relation: the foreign key can be NULL",
+  "legend.many": "\"Many\" side: the table with the foreign key",
+  "legend.one": "\"One\" side: the referenced table",
+  "legend.pk": "Primary key",
+  "legend.fk": "Foreign key",
+  "legend.view": "View"
 }
