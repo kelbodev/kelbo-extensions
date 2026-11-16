@@ -28,5 +28,6 @@
   "errors.title_invalid": "Invalid name",
   "errors.file_not_found": "File not found",
   "addon.runInShell": "Run in shell",
-  "addon.runInShellTitle": "Opens a terminal in the project folder and runs {command}"
+  "addon.runInShellTitle": "Opens a terminal in the project folder and runs {command}",
+  "addon.tunnelFailed": "Tunnel not started, the script runs anyway: {reason}"
 }
