@@ -74,8 +74,6 @@
   "json.unescape": "Da stringa",
   "json.indent": "Rientro",
   "json.sort": "Chiavi in ordine",
-  "json.viewText": "Testo",
-  "json.viewTree": "Albero",
   "json.input": "JSON",
   "json.hint": "Incolla un JSON: viene validato mentre scrivi. In stringa: il testo come stringa JSON (con le virgolette e gli escape); da stringa: il contrario.",
   "json.valid": "JSON valido: {type}, {size} caratteri",

@@ -48,9 +48,6 @@
 .tb-tall{min-height:340px}
 .tb-out{min-height:340px}
 .tb-err-pre{color:var(--danger)}
-.tb-tree{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;overflow:auto;max-height:70vh;font-size:12px;line-height:1.6}
-.tb-tree summary{cursor:pointer}
-.tb-tree-in{padding-inline-start:16px;border-inline-start:1px dashed var(--border);margin-inline-start:4px}
 .tb-tk{color:var(--info,#79c0ff)}
 .tb-tm{color:var(--muted)}
 .tb-t-string{color:var(--success)}
@@ -79,3 +76,6 @@
 .tb-p-added .tb-badge{color:var(--success)}
 .tb-p-removed .tb-badge{color:var(--danger)}
 .tb-p-changed .tb-badge{color:var(--warning)}
+.tb-json-out{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;overflow:auto;max-height:70vh;min-height:120px;background:var(--bg)}
+.tb-json-text{margin:0;font-family:var(--font);font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.tb-json-scope{display:flex;flex-direction:column;gap:6px}

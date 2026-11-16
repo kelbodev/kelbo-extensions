@@ -363,6 +363,8 @@ export default {
     const $ = role => ctx.root.querySelector(`[data-role="${role}"]`);
     const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* solo per questa sessione */ } } };
 
+    const TREE_MAX = 2 * 1024 * 1024; // oltre: testo colorato, senza albero
+    ctx.ui.json.bind(ctx.root); // ▾, Alt+clic, Espandi/Comprimi, editor colorati
     let tab = TABS.includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'jwt';
     let httpTokens = null; // { available, tokens }
     const state = {
@@ -443,17 +445,6 @@ export default {
       return r;
     }
     const typeOf = v => (v === null ? 'null' : Array.isArray(v) ? 'array' : typeof v);
-    function treeHtml(v, key, depth, budget) {
-      if (budget.n-- <= 0) return '';
-      const k = key != null ? `<span class="tb-tk">${esc(key)}</span>: ` : '';
-      if (v && typeof v === 'object') {
-        const entries = Array.isArray(v) ? v.map((x, i) => [i, x]) : Object.entries(v);
-        const label = Array.isArray(v) ? `[${fmt.number(entries.length)}]` : `{${fmt.number(entries.length)}}`;
-        return `<details ${depth < 2 ? 'open' : ''}><summary>${k}<span class="tb-tm">${label}</span></summary>
-          <div class="tb-tree-in">${entries.map(([kk, x]) => treeHtml(x, kk, depth + 1, budget)).join('')}${budget.n <= 0 ? '<div class="tb-muted">…</div>' : ''}</div></details>`;
-      }
-      return `<div class="tb-leaf">${k}<span class="tb-tv tb-t-${typeOf(v)}">${esc(JSON.stringify(v))}</span></div>`;
-    }
     function jsonResultHtml() {
       const r = jsonResult();
       if (r.empty) return `<p class="tb-muted">${esc(t('json.hint'))}</p>`;
@@ -470,21 +461,28 @@ export default {
       const stats = r.value !== undefined ? t('json.valid', { type: t(`json.type.${typeOf(r.value)}`), size: fmt.number(r.text.length) }) : t('json.chars', { size: fmt.number(r.text.length) });
       const head = `<div class="tb-row-head"><span class="tb-ok">${ctx.ui.icon('check')} ${esc(stats)}</span>
         <span>${copyBtn(r.text)}<button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.jsonUse()" title="${esc(t('json.useTitle'))}">${ctx.ui.icon('arrow-left')} ${esc(t('json.use'))}</button></span></div>`;
-      if (state.jsonView === 'tree' && r.value !== undefined && state.jsonAction !== 'escape' && state.jsonAction !== 'unescape') {
-        return `${head}<div class="tb-tree tb-mono">${treeHtml(r.value, null, 0, { n: 3000 })}</div>`;
+      // formattato: albero colorato e richiudibile (core, come le risposte dell'HTTP); compresso,
+      // escape e unescape: testo colorato
+      if (state.jsonAction === 'format' && r.value !== undefined && r.text.length <= TREE_MAX) {
+        let node = null;
+        try { node = ctx.ui.json.parse(r.text); } catch { /* resta il testo */ }
+        if (node) return `${head}<div class="jv-scope tb-json-scope">${ctx.ui.json.tools()}<div class="tb-json-out">${ctx.ui.json.tree(node)}</div></div>`;
       }
-      return `${head}<textarea class="form-input tb-area tb-mono tb-out" rows="18" readonly spellcheck="false">${esc(r.text)}</textarea>`;
+      return `${head}<pre class="tb-json-out tb-json-text">${ctx.ui.json.highlight(r.text)}</pre>`;
     }
+    // input di Confronta: colorato in modalità JSON
+    const diffInput = (field, label) => (state.diffMode === 'json'
+      ? ctx.ui.json.editor(state[field], `data-field="${field}" aria-label="${esc(label)}"`, '200px')
+      : `<textarea class="form-input tb-area tb-mono" data-field="${field}" rows="9" spellcheck="false" aria-label="${esc(label)}">${esc(state[field])}</textarea>`);
     function jsonHtml() {
       const seg = (field, list) => `<div class="tb-seg">${list.map(([v, label]) => `<button class="${state[field] === v ? 'active' : ''}" onclick="Ext.toolbox.set(${js(field)}, ${js(v)})">${esc(label)}</button>`).join('')}</div>`;
       return `<div class="tb-toolbar">
           ${seg('jsonAction', [['format', t('json.format')], ['minify', t('json.minify')], ['escape', t('json.escape')], ['unescape', t('json.unescape')]])}
           <label class="tb-check">${esc(t('json.indent'))} <select class="form-input" data-field="jsonIndent">${[['2', '2'], ['4', '4'], ['tab', 'Tab']].map(([v, l]) => `<option value="${v}" ${state.jsonIndent === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
           <label class="tb-check"><input type="checkbox" data-field="jsonSort" ${state.jsonSort ? 'checked' : ''}> ${esc(t('json.sort'))}</label>
-          ${seg('jsonView', [['text', t('json.viewText')], ['tree', t('json.viewTree')]])}
         </div>
         <div class="tb-grid">
-          <div class="tb-col"><label>${esc(t('json.input'))}</label><textarea class="form-input tb-area tb-mono tb-tall" data-field="jsonIn" rows="20" spellcheck="false" placeholder='{"a": 1}'>${esc(state.jsonIn)}</textarea></div>
+          <div class="tb-col"><label>${esc(t('json.input'))}</label>${ctx.ui.json.editor(state.jsonIn, `data-field="jsonIn" placeholder='{"a": 1}' aria-label="${esc(t('json.input'))}"`, '460px')}</div>
           <div class="tb-col" data-role="result">${jsonResultHtml()}</div>
         </div>`;
     }
@@ -553,8 +551,8 @@ export default {
           <button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.diffSwap()">${ctx.ui.icon('arrow-left-right')} ${esc(t('diff.swap'))}</button>
         </div>
         <div class="tb-grid">
-          <div class="tb-col"><label>${esc(t('diff.left'))}</label><textarea class="form-input tb-area tb-mono" data-field="diffLeft" rows="9" spellcheck="false">${esc(state.diffLeft)}</textarea></div>
-          <div class="tb-col"><label>${esc(t('diff.right'))}</label><textarea class="form-input tb-area tb-mono" data-field="diffRight" rows="9" spellcheck="false">${esc(state.diffRight)}</textarea></div>
+          <div class="tb-col"><label>${esc(t('diff.left'))}</label>${diffInput('diffLeft', t('diff.left'))}</div>
+          <div class="tb-col"><label>${esc(t('diff.right'))}</label>${diffInput('diffRight', t('diff.right'))}</div>
         </div>
         <div data-role="result">${diffResultHtml()}</div>`;
     }

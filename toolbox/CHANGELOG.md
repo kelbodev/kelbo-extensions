@@ -4,6 +4,9 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+### Changed
+- JSON shown like the responses of the HTTP section (Kelbo ≥ 2.43): the formatted result is a coloured tree with ▾ to close a level, Alt+click for the ones inside, *Expand* and *Collapse*; minified, *To string* and *From string* results are coloured text; the input — and the Compare inputs in JSON mode — are coloured while you type, also when the JSON is on one line or not valid yet. The Text/Tree switch is gone: the tree is the formatted view.
+
 ## [1.2.0] - 2026-11-16
 
 ### Added

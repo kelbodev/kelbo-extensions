@@ -74,8 +74,6 @@
   "json.unescape": "From string",
   "json.indent": "Indent",
   "json.sort": "Sorted keys",
-  "json.viewText": "Text",
-  "json.viewTree": "Tree",
   "json.input": "JSON",
   "json.hint": "Paste a JSON: it is validated as you type. To string: the text as a JSON string (with quotes and escapes); from string: the other way round.",
   "json.valid": "Valid JSON: {type}, {size} characters",
