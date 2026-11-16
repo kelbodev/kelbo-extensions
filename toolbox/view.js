@@ -738,8 +738,23 @@ export default {
 
     this.show = () => { if (tab === 'jwt') loadHttpTokens(); };
     this.refresh = () => loadHttpTokens();
-    // aperta da altre sezioni: { jwt } decodifica quel token
-    this.focus = params => { if (params?.jwt) { state.jwt = String(params.jwt); state.jwtSource = null; tab = 'jwt'; render(); } };
+    // aperta da altre sezioni: { jwt } decodifica quel token; { json } lo mostra nella scheda JSON
+    // (formattato); { compare } lo mette a destra in Confronta e sposta a sinistra quello che c'era,
+    // così due invii di fila si confrontano (modalità JSON se entrambi sono JSON)
+    this.focus = params => {
+      if (params?.jwt) { state.jwt = String(params.jwt); state.jwtSource = null; tab = 'jwt'; }
+      else if (params?.json != null) { state.jsonIn = String(params.json); state.jsonAction = 'format'; tab = 'json'; }
+      else if (params?.compare != null) {
+        state.diffLeft = state.diffRight;
+        state.diffRight = String(params.compare);
+        const isJson = x => { try { JSON.parse(x); return true; } catch { return false; } };
+        state.diffMode = state.diffLeft && isJson(state.diffLeft) && isJson(state.diffRight) ? 'json' : state.diffLeft ? 'text' : state.diffMode;
+        state.diffAll = false;
+        tab = 'diff';
+      } else return;
+      store.set(TAB_KEY, tab);
+      render();
+    };
     this.languageChanged = () => render();
   },
 };

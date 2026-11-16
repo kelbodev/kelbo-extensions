@@ -112,5 +112,9 @@
   "diff.tooLarge": "Testi troppo lunghi per il confronto (oltre 20.000 righe)",
   "diff.kind.added": "aggiunto",
   "diff.kind.removed": "tolto",
-  "diff.kind.changed": "cambiato"
+  "diff.kind.changed": "cambiato",
+  "addon.json": "JSON",
+  "addon.jsonTitle": "Apre la risposta nella scheda JSON del Coltellino (formattata, ad albero, con gli errori)",
+  "addon.compare": "Confronta",
+  "addon.compareTitle": "Manda la risposta in Confronta del Coltellino: a destra, con la precedente a sinistra"
 }

@@ -137,3 +137,11 @@ test('token dell\'HTTP client: elenco senza valori, valore solo con il vault sbl
   assert.equal(r.status, 423);
   assert.equal((await api('GET', '/api/ext/toolbox/http-tokens/..%2Fx/y')).status, 400);
 });
+
+test('add-on facoltativo dell\'HTTP: pulsanti JSON e Confronta sulla risposta', async () => {
+  const tb = (await srv.request('GET', '/api/core/extensions')).json.find(e => e.code === 'toolbox');
+  assert.deepEqual([tb.state, tb.kinds, tb.addon.host, tb.addon.optional, tb.addonActive], ['ok', ['component', 'addon'], 'http-client', true, true]);
+  const js = await srv.request('GET', '/ext/toolbox/addon.js');
+  assert.equal(js.status, 200);
+  assert.match(js.text, /addResponseAction/);
+});

@@ -112,5 +112,9 @@
   "diff.tooLarge": "Texts too long to compare (over 20,000 lines)",
   "diff.kind.added": "added",
   "diff.kind.removed": "removed",
-  "diff.kind.changed": "changed"
+  "diff.kind.changed": "changed",
+  "addon.json": "JSON",
+  "addon.jsonTitle": "Opens the response in the JSON tab of the Toolbox (formatted, as a tree, with errors)",
+  "addon.compare": "Compare",
+  "addon.compareTitle": "Sends the response to Compare in the Toolbox: on the right, with the previous one on the left"
 }

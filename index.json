@@ -380,12 +380,18 @@
       },
       "icon": "wrench",
       "version": "1.1.1",
-      "kelbo": "^2.35",
+      "kelbo": "^2.42",
       "kinds": [
-        "component"
+        "component",
+        "addon"
       ],
       "repo": "https://github.com/kelbodev/kelbo-extensions.git",
-      "path": "toolbox"
+      "path": "toolbox",
+      "addon": {
+        "host": "http-client",
+        "version": ">=1.2",
+        "optional": true
+      }
     }
   ]
 }
