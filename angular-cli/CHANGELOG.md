@@ -4,6 +4,8 @@ All notable changes to the `angular-cli` extension. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-16
+
 ### Changed
 - New icon: `shield-plus`.
 
