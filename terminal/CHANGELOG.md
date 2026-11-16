@@ -4,6 +4,8 @@ All notable changes to the `terminal` extension. The format follows [Keep a Chan
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-16
+
 ### Fixed
 - **Run in shell** starts the tunnels linked to the project first, as **Run** of the NPM section does (NPM ≥ 1.2); a tunnel that does not start is reported and the script runs anyway.
 
