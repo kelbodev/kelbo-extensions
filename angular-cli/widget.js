@@ -23,7 +23,7 @@ export default {
     ctx.widget.setBadge(ws.cli ? `v${ws.cli}` : null);
     if (!ws.installed) {
       ctx.ui.patch(el, `<div class="ngc-w"><p class="ngc-muted">${esc(t(ws.nodeModules ? 'notInstalledCli' : 'notInstalled'))}</p>
-        <button class="btn btn-ghost btn-sm" data-open="1">${icon('triangle')} ${esc(t('widget.open'))}</button></div>`);
+        <button class="btn btn-ghost btn-sm" data-open="1">${icon('shield-plus')} ${esc(t('widget.open'))}</button></div>`);
       return;
     }
     const available = new Set((ws.collections.find(c => c.name === '@schematics/angular')?.schematics || []).map(s => s.name));

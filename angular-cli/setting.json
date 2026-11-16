@@ -12,7 +12,7 @@
     "en": "Angular CLI generators of the Angular workspaces (component, service, guard… and those of Material, NgRx) with a form from their options and a preview of the files before they are written; ng add and ng update"
   },
   "color": "#dd0031",
-  "icon": "triangle",
+  "icon": "shield-plus",
   "position": "tab",
   "order": 27,
   "projectTraits": [

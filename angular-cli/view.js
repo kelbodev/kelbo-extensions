@@ -52,7 +52,7 @@ export default {
       ctx.ui.patch(el, ctx.projects.tree(folders, projects, p => `
         <div class="sb-item ${activeProject === p.id ? 'active' : ''}" role="button" tabindex="0"
              onclick="Ext['angular-cli'].select(${js(p.id)})" onkeydown="if(event.key==='Enter')Ext['angular-cli'].select(${js(p.id)})">
-          <span class="sb-icon">${ctx.ui.icon('triangle')}</span><span class="ngc-proj-label">${esc(p.label)}</span>
+          <span class="sb-icon">${ctx.ui.icon('shield-plus')}</span><span class="ngc-proj-label">${esc(p.label)}</span>
         </div>`) + ctx.projects.hiddenNote(hidden));
     }
 
