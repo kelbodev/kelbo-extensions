@@ -4,6 +4,8 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-16
+
 ### Added
 - **JSON** and **Compare** on the response of a request in the HTTP section: the Toolbox is an *optional add-on* of HTTP (Kelbo ≥ 2.42, HTTP ≥ 1.2). **JSON** opens a JSON response in the JSON tab, formatted; **Compare** puts the response on the right of the Compare tab and moves the previous one to the left, so two sends in a row are compared (by JSON path when both are JSON). Without the HTTP section the Toolbox works as before.
 - Other sections can open the Toolbox with `{ json }` or `{ compare }` as well as `{ jwt }`.
