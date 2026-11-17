@@ -79,3 +79,5 @@
 .tb-json-out{border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;overflow:auto;max-height:70vh;min-height:120px;background:var(--bg)}
 .tb-json-text{margin:0;font-family:var(--font);font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
 .tb-json-scope{display:flex;flex-direction:column;gap:6px}
+.tb-origin{display:flex;align-items:center;gap:8px;padding:6px 10px;margin-bottom:8px;border:1px solid color-mix(in srgb,var(--ext-color) 45%,var(--border));border-radius:var(--radius);background:color-mix(in srgb,var(--ext-color) 8%,transparent);font-size:12.5px}
+.tb-origin > span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

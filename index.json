@@ -380,7 +380,7 @@
       },
       "icon": "wrench",
       "version": "1.3.0",
-      "kelbo": "^2.43",
+      "kelbo": "^2.45",
       "kinds": [
         "component",
         "addon"

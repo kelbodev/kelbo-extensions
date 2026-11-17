@@ -114,5 +114,17 @@
   "addon.json": "JSON",
   "addon.jsonTitle": "Opens the response in the JSON tab of the Toolbox (formatted, as a tree, with errors)",
   "addon.compare": "Compare",
-  "addon.compareTitle": "Sends the response to Compare in the Toolbox: on the right, with the previous one on the left"
+  "addon.compareTitle": "Sends the response to Compare in the Toolbox: on the right, with the previous one on the left",
+  "json.origin": "From {label}",
+  "json.saveOrigin": "Save to the response",
+  "json.dropOrigin": "Stop linking to this response",
+  "json.originSaved": "Saved to {label}",
+  "json.originInvalid": "Invalid JSON, not saved: {error}",
+  "addon.mockEdit": "Edit in the Toolbox",
+  "addon.mockEditTitle": "Opens the body in the JSON tab of the Toolbox; from there “Save to the response” puts it back in this route (other unsaved changes of the dialog are lost)",
+  "addon.mockImport": "Import from the Toolbox",
+  "addon.mockImportTitle": "Puts the JSON of the Toolbox JSON tab into the body",
+  "addon.mockImportEmpty": "There is nothing to import in the JSON tab of the Toolbox",
+  "addon.mockImportInvalid": "The JSON of the Toolbox is not valid: {error}",
+  "addon.mockImported": "Toolbox JSON in the body: save the route to apply it"
 }

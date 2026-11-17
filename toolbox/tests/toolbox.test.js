@@ -141,7 +141,10 @@ test('token dell\'HTTP client: elenco senza valori, valore solo con il vault sbl
 test('add-on facoltativo dell\'HTTP: pulsanti JSON e Confronta sulla risposta', async () => {
   const tb = (await srv.request('GET', '/api/core/extensions')).json.find(e => e.code === 'toolbox');
   assert.deepEqual([tb.state, tb.kinds, tb.addon.host, tb.addon.optional, tb.addonActive], ['ok', ['component', 'addon'], 'http-client', true, true]);
+  // anche del Mock: un modulo per due host
+  assert.deepEqual(tb.addons.map(a => [a.host, a.js, a.optional, a.active]), [['http-client', 'addon.js', true, true], ['mock-server', 'addon.js', true, true]]);
   const js = await srv.request('GET', '/ext/toolbox/addon.js');
   assert.equal(js.status, 200);
   assert.match(js.text, /addResponseAction/);
+  assert.match(js.text, /addBodyAction/);
 });

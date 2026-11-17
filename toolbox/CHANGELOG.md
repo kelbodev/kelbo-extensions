@@ -4,6 +4,10 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- **Mock**: the Toolbox is also an optional add-on of the Mock section (Kelbo ≥ 2.45, Mock ≥ 1.1). In the dialog of a route, *Edit in the Toolbox* opens the JSON body in the JSON tab with a bar *From Shop · GET /users/:id* and **Save to the response**, which writes the edited JSON back into the route; *Import from the Toolbox* puts the JSON of the JSON tab into the body of the route being edited (also a new one).
+- The last JSON of the JSON tab is kept when the page is reloaded.
+
 ## [1.3.0] - 2026-11-16
 
 ### Changed

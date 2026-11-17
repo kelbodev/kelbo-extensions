@@ -355,6 +355,8 @@ export {
 const TABS = ['jwt', 'json', 'diff', 'codec', 'hash', 'generate'];
 const HASHES = ['md5', 'sha1', 'sha256', 'sha384', 'sha512'];
 const TAB_KEY = 'kelbo.toolbox.tab';
+const JSON_KEY = 'kelbo.toolbox.json'; // ultimo JSON della scheda JSON: resta ricaricando, lo leggono gli add-on
+const JSON_KEEP_MAX = 512 * 1024;
 
 export default {
   async mount(ctx) {
@@ -363,7 +365,8 @@ export default {
     const $ = role => ctx.root.querySelector(`[data-role="${role}"]`);
     const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* solo per questa sessione */ } } };
 
-    const TREE_MAX = 2 * 1024 * 1024; // oltre: testo colorato, senza albero
+    const TREE_MAX = 2 * 1024 * 1024;
+    ctx.bus.on('toolbox:json', d => d?.reply?.(state.jsonIn)); // l'add-on (es. nel Mock) chiede il JSON di adesso // oltre: testo colorato, senza albero
     ctx.ui.json.bind(ctx.root); // ▾, Alt+clic, Espandi/Comprimi, editor colorati
     let tab = TABS.includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'jwt';
     let httpTokens = null; // { available, tokens }
@@ -372,7 +375,7 @@ export default {
       codec: 'base64', direction: 'encode', codecIn: '',
       hashIn: '', hashKey: '', hashFormat: 'hex', hashFile: null, hashes: {},
       uuidVersion: '4', uuidCount: 5, uuids: [], randLength: 32, randCharset: 'alnum', rand: '', timeIn: '',
-      jsonIn: '', jsonIndent: '2', jsonSort: false, jsonAction: 'format', jsonView: 'text',
+      jsonIn: store.get(JSON_KEY, ''), jsonIndent: '2', jsonSort: false, jsonAction: 'format', jsonView: 'text',
       diffLeft: '', diffRight: '', diffMode: 'text', diffView: 'split', diffWs: false, diffCase: false, diffAll: false,
     };
 
@@ -474,9 +477,17 @@ export default {
     const diffInput = (field, label) => (state.diffMode === 'json'
       ? ctx.ui.json.editor(state[field], `data-field="${field}" aria-label="${esc(label)}"`, '200px')
       : `<textarea class="form-input tb-area tb-mono" data-field="${field}" rows="9" spellcheck="false" aria-label="${esc(label)}">${esc(state[field])}</textarea>`);
+    // JSON arrivato da un'altra sezione con un posto dove rimandarlo (es. la risposta di una rotta mock)
+    let jsonOrigin = null; // { label, save(text) }
+    const originHtml = () => (jsonOrigin ? `<div class="tb-origin">${ctx.ui.icon('corner-up-left')}
+        <span>${esc(t('json.origin', { label: jsonOrigin.label }))}</span>
+        <button class="btn btn-primary btn-sm" onclick="Ext.toolbox.saveOrigin()">${ctx.ui.icon('save')} ${esc(t('json.saveOrigin'))}</button>
+        <button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.dropOrigin()" title="${esc(t('json.dropOrigin'))}" aria-label="${esc(t('json.dropOrigin'))}">${ctx.ui.icon('x')}</button></div>` : '');
+    const keepJson = () => { if (state.jsonIn.length <= JSON_KEEP_MAX) store.set(JSON_KEY, state.jsonIn); };
+
     function jsonHtml() {
       const seg = (field, list) => `<div class="tb-seg">${list.map(([v, label]) => `<button class="${state[field] === v ? 'active' : ''}" onclick="Ext.toolbox.set(${js(field)}, ${js(v)})">${esc(label)}</button>`).join('')}</div>`;
-      return `<div class="tb-toolbar">
+      return `${originHtml()}<div class="tb-toolbar">
           ${seg('jsonAction', [['format', t('json.format')], ['minify', t('json.minify')], ['escape', t('json.escape')], ['unescape', t('json.unescape')]])}
           <label class="tb-check">${esc(t('json.indent'))} <select class="form-input" data-field="jsonIndent">${[['2', '2'], ['4', '4'], ['tab', 'Tab']].map(([v, l]) => `<option value="${v}" ${state.jsonIndent === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>
           <label class="tb-check"><input type="checkbox" data-field="jsonSort" ${state.jsonSort ? 'checked' : ''}> ${esc(t('json.sort'))}</label>
@@ -656,7 +667,7 @@ export default {
       if (f === 'jwt') { state.jwtVerify = null; state.jwtSource = null; }
       if (f === 'jwtKey') state.jwtVerify = null;
       if (f === 'hashIn' || f === 'hashKey') { computeHashes(); return; }
-      if (f === 'jsonIn') { renderResult(120); return; }
+      if (f === 'jsonIn') { keepJson(); renderResult(120); return; }
       if (f === 'diffLeft' || f === 'diffRight') { state.diffAll = false; renderResult(200); return; }
       if (['jwt', 'codecIn', 'timeIn'].includes(f)) renderBody();
     });
@@ -682,7 +693,17 @@ export default {
         state[field] = value;
         renderBody();
       },
-      jsonUse() { const r = jsonResult(); if (r.ok) { state.jsonIn = r.text; state.jsonAction = 'format'; renderBody(); } },
+      jsonUse() { const r = jsonResult(); if (r.ok) { state.jsonIn = r.text; state.jsonAction = 'format'; keepJson(); renderBody(); } },
+      // rimanda il JSON dov'era (es. nella risposta della rotta mock): solo JSON valido
+      async saveOrigin() {
+        if (!jsonOrigin) return;
+        try { JSON.parse(state.jsonIn); } catch (e) { toast(t('json.originInvalid', { error: e.message }), 'error'); return; }
+        try {
+          await jsonOrigin.save(state.jsonIn);
+          toast(t('json.originSaved', { label: jsonOrigin.label }), 'success');
+        } catch (e) { toast(e.message, 'error'); }
+      },
+      dropOrigin() { jsonOrigin = null; renderBody(); },
       diffSwap() { [state.diffLeft, state.diffRight] = [state.diffRight, state.diffLeft]; renderBody(); },
       swap() {
         try { state.codecIn = CODECS[state.codec][state.direction](state.codecIn); state.direction = state.direction === 'encode' ? 'decode' : 'encode'; renderBody(); } catch { /* niente da scambiare */ }
@@ -741,7 +762,11 @@ export default {
     // così due invii di fila si confrontano (modalità JSON se entrambi sono JSON)
     this.focus = params => {
       if (params?.jwt) { state.jwt = String(params.jwt); state.jwtSource = null; tab = 'jwt'; }
-      else if (params?.json != null) { state.jsonIn = String(params.json); state.jsonAction = 'format'; tab = 'json'; }
+      else if (params?.json != null) {
+        state.jsonIn = String(params.json); state.jsonAction = 'format'; tab = 'json';
+        jsonOrigin = params.origin && typeof params.origin.save === 'function' ? { label: String(params.origin.label || ''), save: params.origin.save } : null;
+        keepJson();
+      }
       else if (params?.compare != null) {
         state.diffLeft = state.diffRight;
         state.diffRight = String(params.compare);

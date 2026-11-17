@@ -22,7 +22,11 @@ function build() {
     return {
       code: m.code, name: m.name, description: m.description || '', icon: m.icon || null,
       version: m.version, kelbo: m.kelbo, kinds: extensionKinds(m), repo: REPO, path: folder,
-      ...(m.addon ? { addon: { host: m.addon.host, version: m.addon.version, ...(m.addon.optional ? { optional: true } : {}) } } : {}),
+      // addon: un host (oggetto) o più host (lista), come nel manifest
+      ...(m.addon ? (() => {
+        const parts = (Array.isArray(m.addon) ? m.addon : [m.addon]).map(a => ({ host: a.host, version: a.version, ...(a.optional ? { optional: true } : {}) }));
+        return { addon: parts.length === 1 ? parts[0] : parts }; // un oggetto, come prima, quando l'host è uno
+      })() : {}),
     };
   });
   return JSON.stringify({ name: 'Kelbo official extensions', extensions }, null, 2) + '\n';
