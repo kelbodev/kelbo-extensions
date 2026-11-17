@@ -24,7 +24,7 @@ function build() {
       version: m.version, kelbo: m.kelbo, kinds: extensionKinds(m), repo: REPO, path: folder,
       // addon: un host (oggetto) o più host (lista), come nel manifest
       ...(m.addon ? (() => {
-        const parts = (Array.isArray(m.addon) ? m.addon : [m.addon]).map(a => ({ host: a.host, version: a.version, ...(a.optional ? { optional: true } : {}) }));
+        const parts = (m.addons || [m.addon]).map(a => ({ host: a.host, version: a.version, ...(a.optional ? { optional: true } : {}) }));
         return { addon: parts.length === 1 ? parts[0] : parts }; // un oggetto, come prima, quando l'host è uno
       })() : {}),
     };
