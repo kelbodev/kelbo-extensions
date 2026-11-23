@@ -4,6 +4,12 @@ All notable changes to the `toolbox` extension. The format follows [Keep a Chang
 
 ## [Unreleased]
 
+### Added
+- JWT signing: an **Header** field (JSON) for extra entries such as `kid`, `typ` or `x5t`; `alg` is the one chosen in the menu and comes first.
+- JWT signing with a **private key**: RS256/384/512, PS256/384/512 and ES256/384/512 besides HS256/384/512. **Open file…** reads the key from a `.key`/`.pem` file: PEM PKCS#8 (`BEGIN PRIVATE KEY`), PKCS#1 (`BEGIN RSA PRIVATE KEY`), SEC1 (`BEGIN EC PRIVATE KEY`) or JWK. A key encrypted with a password is reported with the command to decrypt it.
+- JWT verification: **Open file…** reads the public key from a `.pub` file: PEM SPKI (`BEGIN PUBLIC KEY`), PKCS#1 (`BEGIN RSA PUBLIC KEY`), an OpenSSH line (`ssh-rsa …`, `ecdsa-sha2-nistp256/384/521 …`) or JWK. Clear errors for a private key given instead of the public one and for a key that does not fit the algorithm.
+- Keys and secrets never leave the browser.
+
 ## [1.4.0] - 2026-11-17
 
 ### Added

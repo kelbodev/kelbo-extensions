@@ -64,7 +64,57 @@ test('JWT: decodifica, scadenza, firma e verifica HS256, RS256, ES256', async ()
     assert.equal(await c.verifyJwt(`${input}.${sig.slice(0, -4)}AAAA`, pem), false, `${alg} alterato`);
   }
   await assert.rejects(c.verifyJwt(`${c.b64urlEncodeBytes(c.toBytes('{"alg":"RS256"}'))}.e30.x`, 'nope'), /jwt_key/);
-  await assert.rejects(c.signJwt({ alg: 'RS256' }, {}, 'k'), /jwt_sign_alg/);
+  await assert.rejects(c.signJwt({ alg: 'RS256' }, {}, 'k'), /jwt_private_key/);
+});
+
+test('JWT: firma con chiave privata (.key) e voci in più nell\'header, verifica con la pubblica (.pub) in ogni formato', async () => {
+  const c = await load();
+  const nodeCrypto = require('crypto');
+  // OpenSSH (.pub di ssh-keygen): stringhe con lunghezza a 4 byte, numeri come mpint
+  const sshString = b => { const len = Buffer.alloc(4); len.writeUInt32BE(b.length); return Buffer.concat([len, b]); };
+  const mpint = b => (b[0] & 0x80 ? Buffer.concat([Buffer.from([0]), b]) : b);
+  const sshPub = (type, ...parts) => `${type} ${Buffer.concat([sshString(Buffer.from(type)), ...parts.map(sshString)]).toString('base64')} utente@host`;
+  const rsa = nodeCrypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const ec = nodeCrypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
+  const ec384 = nodeCrypto.generateKeyPairSync('ec', { namedCurve: 'P-384' });
+  const jwkOf = k => k.export({ format: 'jwk' });
+  const rsaJwk = jwkOf(rsa.publicKey), ecJwk = jwkOf(ec.publicKey);
+  const keys = {
+    rsa: {
+      priv: [rsa.privateKey.export({ type: 'pkcs8', format: 'pem' }), rsa.privateKey.export({ type: 'pkcs1', format: 'pem' }), JSON.stringify(jwkOf(rsa.privateKey))],
+      pub: [rsa.publicKey.export({ type: 'spki', format: 'pem' }), rsa.publicKey.export({ type: 'pkcs1', format: 'pem' }), JSON.stringify(rsaJwk),
+        sshPub('ssh-rsa', mpint(Buffer.from(rsaJwk.e, 'base64url')), mpint(Buffer.from(rsaJwk.n, 'base64url')))],
+    },
+    ec: {
+      priv: [ec.privateKey.export({ type: 'pkcs8', format: 'pem' }), ec.privateKey.export({ type: 'sec1', format: 'pem' }), JSON.stringify(jwkOf(ec.privateKey))],
+      pub: [ec.publicKey.export({ type: 'spki', format: 'pem' }), JSON.stringify(ecJwk),
+        sshPub('ecdsa-sha2-nistp256', Buffer.from('nistp256'), Buffer.concat([Buffer.from([4]), Buffer.from(ecJwk.x, 'base64url'), Buffer.from(ecJwk.y, 'base64url')]))],
+    },
+  };
+  const header = { kid: 'chiave-2026', x5t: 'abc', typ: 'at+jwt' };
+  for (const [alg, kind] of [['RS256', 'rsa'], ['RS512', 'rsa'], ['PS384', 'rsa'], ['ES256', 'ec']]) {
+    for (const priv of keys[kind].priv) {
+      const tok = await c.signJwt({ ...header, alg }, { sub: '7' }, priv);
+      const d = c.decodeJwt(tok);
+      assert.deepEqual([d.header.alg, d.header.kid, d.header.x5t, d.header.typ], [alg, 'chiave-2026', 'abc', 'at+jwt'], `${alg} header`);
+      for (const pub of keys[kind].pub) assert.equal(await c.verifyJwt(tok, pub), true, `${alg} ${priv.slice(0, 30)} → ${pub.slice(0, 30)}`);
+      // firma riconosciuta anche da Node (JWS: ECDSA in r||s)
+      const [h, p, sig] = tok.split('.');
+      const opts = alg.startsWith('PS') ? { key: rsa.publicKey, padding: nodeCrypto.constants.RSA_PKCS1_PSS_PADDING, saltLength: 48 }
+        : kind === 'ec' ? { key: ec.publicKey, dsaEncoding: 'ieee-p1363' } : rsa.publicKey;
+      assert.equal(nodeCrypto.verify(`sha${alg.slice(2)}`, Buffer.from(`${h}.${p}`), opts, Buffer.from(sig, 'base64url')), true, `${alg} node`);
+    }
+  }
+  // errori chiari: chiave cifrata, privata al posto della pubblica, chiave dell'altro tipo, curva diversa
+  const encrypted = rsa.privateKey.export({ type: 'pkcs8', format: 'pem', cipher: 'aes-256-cbc', passphrase: 'x' });
+  await assert.rejects(c.signJwt({ alg: 'RS256' }, {}, encrypted), /jwt_key_encrypted/);
+  const tok = await c.signJwt({ alg: 'RS256' }, {}, keys.rsa.priv[0]);
+  await assert.rejects(c.verifyJwt(tok, keys.rsa.priv[0]), /jwt_need_public/);
+  await assert.rejects(c.signJwt({ alg: 'ES256' }, {}, keys.rsa.priv[1]), /jwt_key_mismatch/);
+  await assert.rejects(c.verifyJwt(tok, keys.ec.pub[2]), /jwt_key_mismatch/);
+  const es384 = await c.signJwt({ alg: 'ES384' }, {}, ec384.privateKey.export({ type: 'sec1', format: 'pem' }));
+  assert.equal(await c.verifyJwt(es384, ec384.publicKey.export({ type: 'spki', format: 'pem' })), true);
+  await assert.rejects(c.verifyJwt(es384, keys.ec.pub[2]), /jwt_key_mismatch/);
 });
 
 test('JSON: formattazione, compressione, chiavi in ordine, errori con riga e colonna', async () => {

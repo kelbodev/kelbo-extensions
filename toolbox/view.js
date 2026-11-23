@@ -131,13 +131,83 @@ function jwtAlgorithm(alg) {
   const curve = { 256: 'P-256', 384: 'P-384', 512: 'P-521' }[bits[2]];
   return { kind: 'ec', import: { name: 'ECDSA', namedCurve: curve }, verify: { name: 'ECDSA', hash } };
 }
-// chiave pubblica in PEM (SPKI) o JWK
+// ---- chiavi: PEM (PKCS#8, PKCS#1, SEC1, SPKI), JWK, OpenSSH (.pub) ----
+// WebCrypto importa solo PKCS#8 (privata), SPKI (pubblica) e JWK: gli altri formati si avvolgono
+// in DER prima di importarli
+const derLen = n => (n < 0x80 ? [n] : n < 0x100 ? [0x81, n] : n < 0x10000 ? [0x82, n >> 8, n & 255] : [0x83, n >> 16, (n >> 8) & 255, n & 255]);
+const der = (tag, ...parts) => {
+  const body = parts.flatMap(p => [...p]);
+  return Uint8Array.from([tag, ...derLen(body.length), ...body]);
+};
+const derInt = bytes => { let b = [...bytes]; while (b.length > 1 && b[0] === 0 && !(b[1] & 0x80)) b = b.slice(1); if (b[0] & 0x80) b = [0, ...b]; return der(0x02, b); };
+const OID = {
+  rsa: [0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01],
+  ec: [0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01],
+  'P-256': [0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07],
+  'P-384': [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x22],
+  'P-521': [0x06, 0x05, 0x2b, 0x81, 0x04, 0x00, 0x23],
+};
+const NULL = [0x05, 0x00];
+const algId = algo => (algo.kind === 'ec' ? der(0x30, OID.ec, OID[algo.import.namedCurve]) : der(0x30, OID.rsa, NULL));
+// PKCS#1 RSA o SEC1 EC (chiave privata) → PKCS#8
+const toPkcs8 = (inner, algo) => der(0x30, [0x02, 0x01, 0x00], algId(algo), der(0x04, inner));
+// chiave pubblica "nuda" (PKCS#1 RSAPublicKey o punto EC) → SPKI
+const toSpki = (inner, algo) => der(0x30, algId(algo), der(0x03, [0x00, ...inner]));
+
+function pemBlocks(text) {
+  const out = [];
+  const re = /-----BEGIN ([A-Z0-9 ]+)-----([\s\S]+?)-----END \1-----/g;
+  let m;
+  while ((m = re.exec(text))) out.push({ type: m[1], bytes: base64ToBytes(m[2].replace(/^[A-Za-z-]+:.*$/gm, '').replace(/\s+/g, '')) });
+  return out;
+}
+const keyUsage = (algo, priv) => (priv ? ['sign'] : ['verify']);
+
+// chiave privata (firma): PEM PKCS#8 / PKCS#1 / SEC1 o JWK
+async function importPrivateKey(text, algo) {
+  const t = String(text).trim();
+  if (t.startsWith('{')) return subtle().importKey('jwk', JSON.parse(t), algo.import, false, keyUsage(algo, true));
+  const blocks = pemBlocks(t).filter(b => b.type !== 'EC PARAMETERS');
+  if (blocks.some(b => b.type === 'ENCRYPTED PRIVATE KEY' || /Proc-Type: 4,ENCRYPTED/.test(t))) throw new Error('jwt_key_encrypted');
+  const b = blocks.find(x => /PRIVATE KEY$/.test(x.type));
+  if (!b) throw new Error('jwt_private_key');
+  const pkcs8 = b.type === 'PRIVATE KEY' ? b.bytes
+    : b.type === 'RSA PRIVATE KEY' && algo.kind === 'rsa' ? toPkcs8(b.bytes, algo)
+    : b.type === 'EC PRIVATE KEY' && algo.kind === 'ec' ? toPkcs8(b.bytes, algo)
+    : null;
+  if (!pkcs8) throw new Error('jwt_key_mismatch');
+  return subtle().importKey('pkcs8', pkcs8, algo.import, false, ['sign']);
+}
+
+// OpenSSH (.pub di ssh-keygen): "ssh-rsa AAAA… commento", "ecdsa-sha2-nistp256 AAAA…"
+function sshPublicToSpki(text, algo) {
+  const m = /^(ssh-rsa|ecdsa-sha2-nistp(?:256|384|521))\s+([A-Za-z0-9+/=]+)/.exec(text.trim());
+  if (!m) return null;
+  const buf = base64ToBytes(m[2]);
+  let i = 0;
+  const next = () => { const n = (buf[i] << 24 | buf[i + 1] << 16 | buf[i + 2] << 8 | buf[i + 3]) >>> 0; const v = buf.slice(i + 4, i + 4 + n); i += 4 + n; return v; };
+  const type = fromBytes(next());
+  if (type === 'ssh-rsa') {
+    if (algo.kind !== 'rsa') throw new Error('jwt_key_mismatch');
+    const e = next(), n = next();
+    return toSpki(der(0x30, derInt(n), derInt(e)), algo);
+  }
+  if (algo.kind !== 'ec') throw new Error('jwt_key_mismatch');
+  const curve = { nistp256: 'P-256', nistp384: 'P-384', nistp521: 'P-521' }[fromBytes(next())];
+  if (curve !== algo.import.namedCurve) throw new Error('jwt_key_mismatch');
+  return toSpki(next(), algo);
+}
+
+// chiave pubblica (verifica): PEM SPKI / PKCS#1, JWK, OpenSSH
 async function importPublicKey(text, algo) {
   const t = String(text).trim();
   if (t.startsWith('{')) return subtle().importKey('jwk', JSON.parse(t), algo.import, false, ['verify']);
-  const m = /-----BEGIN PUBLIC KEY-----([\s\S]+?)-----END PUBLIC KEY-----/.exec(t);
-  if (!m) throw new Error('jwt_key');
-  return subtle().importKey('spki', base64ToBytes(m[1]), algo.import, false, ['verify']);
+  const ssh = sshPublicToSpki(t, algo);
+  if (ssh) return subtle().importKey('spki', ssh, algo.import, false, ['verify']);
+  const b = pemBlocks(t).find(x => x.type === 'PUBLIC KEY' || x.type === 'RSA PUBLIC KEY');
+  if (!b) throw new Error(/PRIVATE KEY/.test(t) ? 'jwt_need_public' : 'jwt_key');
+  if (b.type === 'RSA PUBLIC KEY' && algo.kind !== 'rsa') throw new Error('jwt_key_mismatch');
+  return subtle().importKey('spki', b.type === 'PUBLIC KEY' ? b.bytes : toSpki(b.bytes, algo), algo.import, false, ['verify']);
 }
 // true / false; key: il segreto (HS*) o la chiave pubblica (RS*, PS*, ES*)
 async function verifyJwt(token, key) {
@@ -148,13 +218,16 @@ async function verifyJwt(token, key) {
     : await importPublicKey(key, algo);
   return subtle().verify(algo.verify, k, b64urlDecodeBytes(d.signature), toBytes(d.signingInput));
 }
-// token HS256/384/512 da header e payload (oggetti) e segreto
-async function signJwt(header, payload, secret) {
-  const algo = jwtAlgorithm(header.alg || 'HS256');
-  if (algo.kind !== 'hmac') throw new Error('jwt_sign_alg');
-  const input = `${b64urlEncodeBytes(toBytes(JSON.stringify({ typ: 'JWT', ...header })))}.${b64urlEncodeBytes(toBytes(JSON.stringify(payload)))}`;
-  const k = await subtle().importKey('raw', toBytes(secret), algo.import, false, ['sign']);
-  return `${input}.${b64urlEncodeBytes(new Uint8Array(await subtle().sign('HMAC', k, toBytes(input))))}`;
+// token da header (oggetto: voci in più come kid; alg obbligatorio) e payload, con il segreto
+// (HS*) o la chiave privata (RS*, PS*, ES*)
+async function signJwt(header, payload, key) {
+  const { alg = 'HS256', ...rest } = header;
+  const algo = jwtAlgorithm(alg);
+  const input = `${b64urlEncodeBytes(toBytes(JSON.stringify({ alg, typ: 'JWT', ...rest })))}.${b64urlEncodeBytes(toBytes(JSON.stringify(payload)))}`;
+  const k = algo.kind === 'hmac'
+    ? await subtle().importKey('raw', toBytes(key), algo.import, false, ['sign'])
+    : await importPrivateKey(key, algo);
+  return `${input}.${b64urlEncodeBytes(new Uint8Array(await subtle().sign(algo.verify, k, toBytes(input))))}`;
 }
 
 // ---- generatori ----
@@ -347,7 +420,7 @@ function diffJson(a, b, path = '$', out = []) {
 
 export {
   toBytes, fromBytes, bytesToBase64, base64ToBytes, b64urlEncodeBytes, b64urlDecodeBytes, toHex, fromHex, CODECS,
-  md5, digest, decodeJwt, verifyJwt, signJwt, jwtAlgorithm, uuid4, uuid7, randomString, parseTime,
+  md5, digest, decodeJwt, verifyJwt, signJwt, jwtAlgorithm, importPrivateKey, importPublicKey, uuid4, uuid7, randomString, parseTime,
   jsonFormat, jsonError, jsonErrorAt, sortKeys, myers, diffText, diffChars, diffJson,
 };
 
@@ -366,12 +439,21 @@ export default {
     const store = { get: (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* solo per questa sessione */ } } };
 
     const TREE_MAX = 2 * 1024 * 1024;
+    const SIGN_ALGS = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'PS256', 'PS384', 'PS512', 'ES256', 'ES384', 'ES512'];
+    const KEY_FILE_MAX = 64 * 1024;
+    const decodeSafe = () => { try { return decodeJwt(state.jwt); } catch { return null; } };
+    // "Apri file…" per una chiave: il testo del file nel campo (resta nel browser)
+    const keyFileButton = (field, accept) => `<label class="btn btn-ghost btn-sm tb-file" title="${esc(t('jwt.openFileTitle'))}">${ctx.ui.icon('folder-open')} ${esc(t('jwt.openFile'))}<input type="file" data-key-file="${field}" ${accept ? `accept="${accept}"` : ''} hidden></label>`;
     ctx.bus.on('toolbox:json', d => d?.reply?.(state.jsonIn)); // l'add-on (es. nel Mock) chiede il JSON di adesso // oltre: testo colorato, senza albero
     ctx.ui.json.bind(ctx.root); // ▾, Alt+clic, Espandi/Comprimi, editor colorati
     let tab = TABS.includes(store.get(TAB_KEY)) ? store.get(TAB_KEY) : 'jwt';
     let httpTokens = null; // { available, tokens }
     const state = {
       jwt: '', jwtKey: '', jwtVerify: null, jwtSource: null,
+      // firma: header (voci in più: kid, typ…), payload, algoritmo, segreto o chiave privata
+      signHeader: '{\n  "typ": "JWT"\n}',
+      signPayload: `{\n  "sub": "1234567890",\n  "iat": ${Math.floor(Date.now() / 1000)},\n  "exp": ${Math.floor(Date.now() / 1000) + 3600}\n}`,
+      signAlg: 'HS256', signKey: '', signOpen: false,
       codec: 'base64', direction: 'encode', codecIn: '',
       hashIn: '', hashKey: '', hashFormat: 'hex', hashFile: null, hashes: {},
       uuidVersion: '4', uuidCount: 5, uuids: [], randLength: 32, randCharset: 'alnum', rand: '', timeIn: '',
@@ -392,6 +474,7 @@ export default {
     // ---- JWT ----
     const json = v => esc(JSON.stringify(v, null, 2));
     function jwtHtml() {
+      const hmacSign = state.signAlg.startsWith('HS');
       let d = null, err = null;
       if (state.jwt.trim()) { try { d = decodeJwt(state.jwt); } catch (e) { err = t(`errors.${e.message}`); } }
       const tokens = httpTokens?.tokens?.filter(x => x.hasToken) || [];
@@ -406,18 +489,26 @@ export default {
           ${state.jwtSource ? `<div class="tb-muted">${ctx.ui.icon('send')} ${esc(t('jwt.source', state.jwtSource))}</div>` : ''}
           ${err ? `<p class="tb-error">${esc(err)}</p>` : ''}
           ${d ? `<div class="tb-verify">
-              <label for="tb_jwt_key">${esc(t(/^HS/.test(d.header.alg || '') ? 'jwt.secret' : 'jwt.publicKey'))}</label>
+              <div class="tb-row-head"><label for="tb_jwt_key">${esc(t(/^HS/.test(d.header.alg || '') ? 'jwt.secret' : 'jwt.publicKey'))}</label>${keyFileButton('jwtKey', /^HS/.test(d.header.alg || '') ? '' : '.pub,.pem,.json,.txt')}</div>
               <textarea class="form-input tb-mono" id="tb_jwt_key" data-field="jwtKey" rows="${/^HS/.test(d.header.alg || '') ? 1 : 4}" spellcheck="false"
-                placeholder="${esc(/^HS/.test(d.header.alg || '') ? t('jwt.secretPlaceholder') : '-----BEGIN PUBLIC KEY-----')}">${esc(state.jwtKey)}</textarea>
+                placeholder="${esc(/^HS/.test(d.header.alg || '') ? t('jwt.secretPlaceholder') : t('jwt.publicKeyPlaceholder'))}">${esc(state.jwtKey)}</textarea>
               <button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.verify()">${ctx.ui.icon('shield-check')} ${esc(t('jwt.verify'))}</button>
               ${state.jwtVerify === true ? `<span class="tb-ok">${ctx.ui.icon('check')} ${esc(t('jwt.valid'))}</span>` : state.jwtVerify === false ? `<span class="tb-bad">${ctx.ui.icon('x')} ${esc(t('jwt.invalid'))}</span>` : typeof state.jwtVerify === 'string' ? `<span class="tb-bad">${esc(state.jwtVerify)}</span>` : ''}
             </div>` : ''}
-          <details class="tb-sign"><summary>${esc(t('jwt.signTitle'))}</summary>
+          <details class="tb-sign" ${state.signOpen ? 'open' : ''} ontoggle="Ext.toolbox.signToggle(this.open)"><summary>${esc(t('jwt.signTitle'))}</summary>
             <div class="tb-sign-body">
-              <label>${esc(t('jwt.payload'))}</label><textarea class="form-input tb-mono" id="tb_sign_payload" rows="5" spellcheck="false">{\n  "sub": "1234567890",\n  "iat": ${Math.floor(Date.now() / 1000)},\n  "exp": ${Math.floor(Date.now() / 1000) + 3600}\n}</textarea>
-              <div class="tb-inline"><select class="form-input" id="tb_sign_alg"><option>HS256</option><option>HS384</option><option>HS512</option></select>
-                <input class="form-input tb-mono" id="tb_sign_secret" placeholder="${esc(t('jwt.secret'))}" spellcheck="false">
-                <button class="btn btn-ghost btn-sm" onclick="Ext.toolbox.sign()">${esc(t('jwt.sign'))}</button></div>
+              <div class="tb-sign-grid">
+                <div><label for="tb_sign_header">${esc(t('jwt.header'))}</label><textarea class="form-input tb-mono" id="tb_sign_header" data-field="signHeader" rows="5" spellcheck="false">${esc(state.signHeader)}</textarea></div>
+                <div><label for="tb_sign_payload">${esc(t('jwt.payload'))}</label><textarea class="form-input tb-mono" id="tb_sign_payload" data-field="signPayload" rows="5" spellcheck="false">${esc(state.signPayload)}</textarea></div>
+              </div>
+              <p class="tb-muted">${esc(t('jwt.headerHint'))}</p>
+              <div class="tb-row-head"><label for="tb_sign_secret">${esc(t(hmacSign ? 'jwt.secret' : 'jwt.privateKey'))}</label>
+                <span class="tb-inline"><select class="form-input" id="tb_sign_alg" data-field="signAlg" aria-label="${esc(t('jwt.alg'))}">${SIGN_ALGS.map(a => `<option ${a === state.signAlg ? 'selected' : ''}>${a}</option>`).join('')}</select>
+                ${keyFileButton('signKey', '.key,.pem,.json,.txt')}</span></div>
+              <textarea class="form-input tb-mono" id="tb_sign_secret" data-field="signKey" rows="${hmacSign ? 1 : 5}" spellcheck="false"
+                placeholder="${esc(hmacSign ? t('jwt.secret') : '-----BEGIN PRIVATE KEY-----')}">${esc(state.signKey)}</textarea>
+              <div class="tb-inline"><button class="btn btn-primary btn-sm" onclick="Ext.toolbox.sign()">${ctx.ui.icon('pen-line')} ${esc(t('jwt.sign'))}</button>
+                <span class="tb-muted">${esc(t('jwt.keysLocal'))}</span></div>
             </div></details>
         </div>
         <div class="tb-col">
@@ -676,6 +767,19 @@ export default {
       if (f === 'codec' || f === 'randCharset') { state[f] = e.target.value; renderBody(); }
       if (f === 'jsonIndent') { state.jsonIndent = e.target.value; renderResult(); }
       if (['jsonSort', 'diffWs', 'diffCase'].includes(f)) { state[f] = e.target.checked; renderResult(); }
+      const keyField = e.target.dataset.keyFile;
+      if (keyField && e.target.files?.[0]) {
+        const file = e.target.files[0];
+        if (file.size > KEY_FILE_MAX) { toast(t('jwt.fileTooLarge', { name: file.name }), 'error'); return; }
+        let text = await file.text();
+        if (keyField === 'jwtKey' && /^HS/.test(decodeSafe()?.header.alg || '') || keyField === 'signKey' && state.signAlg.startsWith('HS')) text = text.replace(/\r?\n$/, ''); // segreto: senza l'a capo finale del file
+        state[keyField] = text;
+        if (keyField === 'jwtKey') state.jwtVerify = null;
+        renderBody();
+        toast(t('jwt.fileLoaded', { name: file.name }), 'success');
+        return;
+      }
+      if (f === 'signAlg') { state.signAlg = e.target.value; renderBody(); return; }
       if (f === 'hashFile' && e.target.files?.[0]) {
         const file = e.target.files[0];
         state.hashFile = { name: file.name, bytes: new Uint8Array(await file.arrayBuffer()) };
@@ -712,16 +816,27 @@ export default {
       clearFile() { state.hashFile = null; computeHashes(); },
       async verify() {
         try { state.jwtVerify = await verifyJwt(state.jwt, state.jwtKey); }
-        catch (e) { state.jwtVerify = t(['jwt_alg', 'jwt_key', 'jwt_parts', 'jwt_json'].includes(e.message) ? `errors.${e.message}` : 'errors.jwt_verify'); }
+        catch (e) { state.jwtVerify = t(['jwt_alg', 'jwt_key', 'jwt_parts', 'jwt_json', 'jwt_need_public', 'jwt_key_mismatch'].includes(e.message) ? `errors.${e.message}` : 'errors.jwt_verify'); }
         renderBody();
       },
+      signToggle(open) { state.signOpen = open; },
+      // firma con le voci dell'header (l'algoritmo è quello scelto) e il segreto o la chiave privata;
+      // per la verifica del token firmato serve la chiave pubblica (RS/PS/ES): il campo resta vuoto
       async sign() {
+        let header, payload;
+        try { header = JSON.parse(state.signHeader || '{}'); } catch (e) { toast(t('errors.jwt_header_json', { error: e.message }), 'error'); return; }
+        if (!header || typeof header !== 'object' || Array.isArray(header)) { toast(t('errors.jwt_header_json', { error: '{…}' }), 'error'); return; }
+        try { payload = JSON.parse(state.signPayload); } catch (e) { toast(t('errors.json_invalid'), 'error'); return; }
         try {
-          const payload = JSON.parse(document.getElementById('tb_sign_payload').value);
-          const token = await signJwt({ alg: document.getElementById('tb_sign_alg').value }, payload, document.getElementById('tb_sign_secret').value);
-          state.jwt = token; state.jwtKey = document.getElementById('tb_sign_secret').value; state.jwtVerify = null; state.jwtSource = null;
+          const token = await signJwt({ ...header, alg: state.signAlg }, payload, state.signKey);
+          state.jwt = token; state.jwtVerify = null; state.jwtSource = null;
+          state.jwtKey = state.signAlg.startsWith('HS') ? state.signKey : '';
           renderBody();
-        } catch (e) { toast(e instanceof SyntaxError ? t('errors.json_invalid') : t('errors.jwt_sign'), 'error'); }
+          toast(t('jwt.signed', { alg: state.signAlg }), 'success');
+        } catch (e) {
+          const known = ['jwt_private_key', 'jwt_key_encrypted', 'jwt_key_mismatch', 'jwt_alg'];
+          toast(known.includes(e.message) ? t(`errors.${e.message}`) : t('errors.jwt_sign_detail', { error: e.message }), 'error');
+        }
       },
       // token dell'HTTP client: con il vault bloccato prima la master password
       async loadHttpToken(value) {
